@@ -53,10 +53,10 @@ local function printHelp()
 		
 		print("B: toggle enemy promo")
 		print("K: save battle params and stats")
-		print("M: cycle player weapon type")		
+		print("M: toggle phase")		
 	else 
 		print("g: undo RNBE deletion")
-		print("j: ")
+		print("j: cycle player weapon type")
 		print("l: toggle RNBE lvlUp")
 		print("u: ")
 		print("y: ")
@@ -160,8 +160,8 @@ while true do
 			printStringArray(combat.currBattleParams:toStrings(), 3)
 		end	
 		
-		if inputThisLoop.M and not inputLastLoop.M  then -- cycle player weapon type
-			combat.currBattleParams:cycleWeapon(combat.enum_PLAYER)
+		if inputThisLoop.M and not inputLastLoop.M  then
+			rnbe.togglePhase()
 		end
 		
 		if inputThisLoop.K and not inputLastLoop.K then -- save battle params & stats
@@ -222,6 +222,10 @@ while true do
 	else
 		if inputThisLoop.G and not inputLastLoop.G then 
 			rnbe.undoDelete()
+		end	
+		
+		if inputThisLoop.J and not inputLastLoop.J then 
+			combat.currBattleParams:cycleWeapon(combat.enum_PLAYER)
 		end	
 	
 		if inputThisLoop.E and not inputLastLoop.E then -- toggle feGUI.rectShiftMode

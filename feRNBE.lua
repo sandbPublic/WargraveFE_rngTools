@@ -21,17 +21,25 @@ function P.SP()
 	return EP
 end
 
-function P.togglePhase()
-	P.playerPhase = not P.playerPhase
-	if sel_RNBE_i > P.SP().length  then
-		sel_RNBE_i = P.SP().length
-	end
-end
-
 local sel_RNBE_i = 1
 local function limitSel_RNBE_i()
 	if sel_RNBE_i > P.SP().length then sel_RNBE_i = P.SP().length end
 	if sel_RNBE_i < 1 then sel_RNBE_i = 1 end -- TODO why is this needed?
+end
+
+function P.togglePhase()
+	P.playerPhase = not P.playerPhase
+	if sel_RNBE_i > P.SP().length then
+		sel_RNBE_i = P.SP().length
+	end
+	
+	if P.playerPhase then
+		feGUI.rects[feGUI.i_RNBE].color = "blue"
+	else
+		feGUI.rects[feGUI.i_RNBE].color = "red"
+	end
+	
+	print("playerPhase = " .. tostring(P.playerPhase))
 end
 
 -- go from hue 120 to hue 240 in steps of 20, jagged for contrast
@@ -355,7 +363,7 @@ function P.getByID(vID)
 			return P.SP()[i]
 		end
 	end
-	print("ID not found: " .. vID)
+	print("ID not found: " .. tostring(vID))
 end
 
 function P.incBurns(amount)
@@ -436,11 +444,11 @@ end
 
 function P.totalEvaluation()
 	local score = 0	
-	for RNBE_i = 1, P.PP.length do
-		score = score + P.PP[RNBE_i].eval
+	for RNBE_i = 1, PP.length do
+		score = score + PP[RNBE_i].eval
 	end
-	for RNBE_i = 1, P.EP.length do
-		score = score + P.EP[RNBE_i].eval
+	for RNBE_i = 1, EP.length do
+		score = score + EP[RNBE_i].eval
 	end
 	return score
 end
@@ -579,9 +587,16 @@ function P.suggestedPermutation()
 	P.setToPerm(topIndicies[1])
 	P.updateRNBEs(1)
 	
-	for RNBE_i = 1, P.SP().length do
-		P.SP()[RNBE_i]:evaluation_fn(true)
+	print()
+	for RNBE_i = 1, PP.length do		
+		PP[RNBE_i]:evaluation_fn(true)
 	end
+	print()
+	for RNBE_i = 1, EP.length do		
+		EP[RNBE_i]:evaluation_fn(true)
+	end
+	
+	print()
 	for top_j = 1, topN do
 		if not scores[topIndicies[top_j]] then
 			scores[topIndicies[top_j]] = -999

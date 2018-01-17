@@ -69,6 +69,7 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	 
 	o.ID = P.SP().length -- order in which rnbes were registered
 	o.dependency = {} -- to enforce dependencies: certain rnbes must precede others
+	o.PP = P.playerPhase
 	
 	o.unit_i = sel_Unit_i	
 	o.stats = {}
@@ -101,7 +102,7 @@ end
 -- assumes previous rnbes have updates for optimization
 function rnbeObj:update(RNBE_i)	
 	if RNBE_i == 1 then 
-		if P.playerPhase then
+		if self.PP then
 			self.startRN_i = rns.pos
 		else
 			self.startRN_i = getLast(PP).nextRN_i

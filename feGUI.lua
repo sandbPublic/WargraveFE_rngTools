@@ -79,7 +79,7 @@ function rectObj:width()
 		-- add colorized string length
 		-- don't need to do this for rnStream because it's padded with spaces
 		if (self.ID == P.i_RNBE) and (line_i % 2 == 1) then
-			stringLen = stringLen + rnbe.SP()[(line_i+1)/2].length * 3
+			stringLen = stringLen + rnbe.SPrnbes()[(line_i+1)/2].length * 3
 		end
 		
 		if stringLen > width then
@@ -219,10 +219,10 @@ function rectObj:draw()
 	
 	-- color highlighted RN strings, draw boxes
 	if self.ID == P.i_RNBE then
-		for RNBE_i = 1, rnbe.SP().length do
+		for RNBE_i = 1, rnbe.SPrnbes().length do
 			self:drawColorizedRNString(2*RNBE_i-1, 9, -- 4 digits, +, 2 digits, :, space
-				rnbe.SP()[RNBE_i].startRN_i, rnbe.SP()[RNBE_i].length)
-			rnbe.SP()[RNBE_i]:drawMyBoxes(self, RNBE_i)
+				rnbe.SPrnbes()[RNBE_i].startRN_i, rnbe.SPrnbes()[RNBE_i].length)
+			rnbe.SPrnbes()[RNBE_i]:drawMyBoxes(self, RNBE_i)
 		end
 		
 	elseif self.ID == P.i_RN_STREAM then

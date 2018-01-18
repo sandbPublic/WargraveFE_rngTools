@@ -5,10 +5,10 @@ require("feGUI")
 local P = {}
 rnbe = P -- random number block event
 
-local PP = {} -- Player Phase rnbes
-PP.length = 0
-local EP = {} -- Enemy Phase rnbes
-EP.length = 0
+local PPrnbes = {} -- Player Phase rnbes
+PPrnbes.length = 0
+local EPrnbes = {} -- Enemy Phase rnbes
+EPrnbes.length = 0
 P.playerPhase = true
 
 local function getLast(list)
@@ -16,21 +16,27 @@ local function getLast(list)
 end
 
 -- selected phase
-function P.SP()
-	if P.playerPhase then return PP end
-	return EP
+function P.SPrnbes()
+	if P.playerPhase then return PPrnbes end
+	return EPrnbes
+end
+
+-- return one or the other phase
+function P.TPrnbes(playerPhase)
+	if playerPhase then return PPrnbes end
+	return EPrnbes
 end
 
 local sel_RNBE_i = 1
 local function limitSel_RNBE_i()
-	if sel_RNBE_i > P.SP().length then sel_RNBE_i = P.SP().length end
+	if sel_RNBE_i > P.SPrnbes().length then sel_RNBE_i = P.SPrnbes().length end
 	if sel_RNBE_i < 1 then sel_RNBE_i = 1 end -- TODO why is this needed?
 end
 
 function P.togglePhase()
 	P.playerPhase = not P.playerPhase
-	if sel_RNBE_i > P.SP().length then
-		sel_RNBE_i = P.SP().length
+	if sel_RNBE_i > P.SPrnbes().length then
+		sel_RNBE_i = P.SPrnbes().length
 	end
 	
 	if P.playerPhase then
@@ -67,9 +73,9 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	setmetatable(o, self)
 	self.__index = self
 	 
-	o.ID = P.SP().length -- order in which rnbes were registered
+	o.ID = P.SPrnbes().length -- order in which rnbes were registered
 	o.dependency = {} -- to enforce dependencies: certain rnbes must precede others
-	o.PP = P.playerPhase
+	o.isPP = P.playerPhase
 	
 	o.unit_i = sel_Unit_i	
 	o.stats = {}
@@ -102,24 +108,33 @@ end
 -- assumes previous rnbes have updates for optimization
 function rnbeObj:update(RNBE_i)	
 	if RNBE_i == 1 then 
-		if self.PP then
+		if self.isPP or (PPrnbes.length == 0) then
 			self.startRN_i = rns.pos
 		else
-			self.startRN_i = getLast(PP).nextRN_i
+			self.startRN_i = getLast(PPrnbes).nextRN_i
 		end
 	else
-		self.startRN_i = P.SP()[RNBE_i-1].nextRN_i
+		self.startRN_i = P.TPrnbes(self.isPP)[RNBE_i-1].nextRN_i
 	end
 
 	self.postBurnsRN_i = self.startRN_i + self.burns
 	
 	if self.combat then	
 		self.enemyHP = self.batParams:data(combat.enum_ENEMY)[combat.i_HP]
+		
 		-- check eHP from previous combat(s) if applicable
 		if self.enemyID ~= 0 then
+			if not self.isPP then
+				for prevCombat_i = 1, PPrnbes.length do
+					if PPrnbes[prevCombat_i].enemyID == self.enemyID then
+						self.enemyHP = PPrnbes[prevCombat_i].hitSq.eHP
+					end
+				end
+			end
+			
 			for prevCombat_i = 1, RNBE_i-1 do
-				if P.SP()[prevCombat_i].enemyID == self.enemyID then
-					self.enemyHP = P.SP()[prevCombat_i].hitSq.eHP
+				if P.TPrnbes(self.isPP)[prevCombat_i].enemyID == self.enemyID then
+					self.enemyHP = P.TPrnbes(self.isPP)[prevCombat_i].hitSq.eHP
 				end
 			end
 		end
@@ -144,18 +159,19 @@ function rnbeObj:update(RNBE_i)
 	self.eval = self:evaluation_fn()
 end
 
-function P.updateRNBEs(start_i)
+function P.updateRNBEs(start_i, playerPhase)
 	start_i = start_i or sel_RNBE_i
+	playerPhase = playerPhase or P.playerPhase
 	
-	if P.playerPhase then
-		for RNBE_i = start_i, PP.length do
-			PP[RNBE_i]:update(RNBE_i)
+	if playerPhase then
+		for RNBE_i = start_i, PPrnbes.length do
+			PPrnbes[RNBE_i]:update(RNBE_i)
 		end
-		start_i = 1 -- start from beginning of EP afterwards
+		start_i = 1 -- start from beginning of EPrnbes afterwards
 	end
 	
-	for RNBE_i = start_i, EP.length do
-		EP[RNBE_i]:update(RNBE_i)
+	for RNBE_i = start_i, EPrnbes.length do
+		EPrnbes[RNBE_i]:update(RNBE_i)
 	end
 end
 
@@ -300,28 +316,28 @@ function rnbeObj:drawMyBoxes(rect, RNBE_i)
 end
 
 function P.addObj()
-	P.SP().length = P.SP().length+1
+	P.SPrnbes().length = P.SPrnbes().length+1
 
-	P.SP()[P.SP().length] = rnbeObj:new()
-	sel_RNBE_i = P.SP().length
+	P.SPrnbes()[P.SPrnbes().length] = rnbeObj:new()
+	sel_RNBE_i = P.SPrnbes().length
 	P.updateRNBEs()
 end
 
 -- decrements length of selected phase 
 -- and adjusts IDs, including dependencies
 function P.removeLastObj()
-	if P.SP().length > 0 then
-		local IDremoved = getLast(P.SP()).ID		
-		for RNBE_i = 1, P.SP().length do
-			if P.SP()[RNBE_i].ID > IDremoved then
-				P.SP()[RNBE_i].ID = P.SP()[RNBE_i].ID - 1 -- dec own ID
-				for RNBE_j = IDremoved, P.SP().length do -- dec dependency table after IDremoved
-					P.SP()[RNBE_i].dependency[RNBE_j] = P.SP()[RNBE_i].dependency[RNBE_j+1]
+	if P.SPrnbes().length > 0 then
+		local IDremoved = getLast(P.SPrnbes()).ID		
+		for RNBE_i = 1, P.SPrnbes().length do
+			if P.SPrnbes()[RNBE_i].ID > IDremoved then
+				P.SPrnbes()[RNBE_i].ID = P.SPrnbes()[RNBE_i].ID - 1 -- dec own ID
+				for RNBE_j = IDremoved, P.SPrnbes().length do -- dec dependency table after IDremoved
+					P.SPrnbes()[RNBE_i].dependency[RNBE_j] = P.SPrnbes()[RNBE_i].dependency[RNBE_j+1]
 				end
 			end
 		end
 		
-		P.SP().length = P.SP().length - 1
+		P.SPrnbes().length = P.SPrnbes().length - 1
 		limitSel_RNBE_i()
 	end
 end
@@ -330,9 +346,9 @@ end
 -- and sets ID to new highest value
 -- doesn't restore dependencies
 function P.undoDelete()	
-	if P.SP()[P.SP().length + 1] then
-		P.SP().length = P.SP().length + 1	
-		getLast(P.SP()).ID = P.SP().length
+	if P.SPrnbes()[P.SPrnbes().length + 1] then
+		P.SPrnbes().length = P.SPrnbes().length + 1	
+		getLast(P.SPrnbes()).ID = P.SPrnbes().length
 	else
 		print("No deletion to undo.")
 	end
@@ -342,26 +358,26 @@ end
 function P.toStrings()
 	local ret = {}
 	
-	if P.SP().length <= 0 then
+	if P.SPrnbes().length <= 0 then
 		ret[0] = "RNBEs empty"	
 		return ret
 	end
 	
-	for RNBE_i = 1, P.SP().length do
-		ret[2*RNBE_i-2] = P.SP()[RNBE_i]:headerString(RNBE_i)
-		ret[2*RNBE_i-1] = P.SP()[RNBE_i]:RNPrefixString()
+	for RNBE_i = 1, P.SPrnbes().length do
+		ret[2*RNBE_i-2] = P.SPrnbes()[RNBE_i]:headerString(RNBE_i)
+		ret[2*RNBE_i-1] = P.SPrnbes()[RNBE_i]:RNPrefixString()
 	end
 	return ret
 end
 
 function P.get(index)
 	index = index or sel_RNBE_i
-	return P.SP()[index]
+	return P.SPrnbes()[index]
 end
 function P.getByID(vID)
-	for i = 1, P.SP().length do
-		if P.SP()[i].ID == vID then
-			return P.SP()[i]
+	for i = 1, P.SPrnbes().length do
+		if P.SPrnbes()[i].ID == vID then
+			return P.SPrnbes()[i]
 		end
 	end
 	print("ID not found: " .. tostring(vID))
@@ -369,14 +385,14 @@ end
 
 function P.incBurns(amount)
 	amount = amount or 1
-	if sel_RNBE_i <= P.SP().length then -- check that length isn't zero while sel == 1
+	if sel_RNBE_i <= P.SPrnbes().length then -- check that length isn't zero while sel == 1
 		P.get().burns = P.get().burns + amount
 		P.updateRNBEs()
 	end
 end
 function P.decBurns(amount)
 	amount = amount or 1
-	if sel_RNBE_i <= P.SP().length then
+	if sel_RNBE_i <= P.SPrnbes().length then
 		P.get().burns = P.get().burns - amount
 		if P.get().burns < 0 then
 			P.get().burns = 0
@@ -393,63 +409,63 @@ function P.decSel()
 	limitSel_RNBE_i()
 end
 function P.swap()
-	if sel_RNBE_i < P.SP().length then
-		if P.SP()[sel_RNBE_i+1].dependency[P.get().ID] then
+	if sel_RNBE_i < P.SPrnbes().length then
+		if P.SPrnbes()[sel_RNBE_i+1].dependency[P.get().ID] then
 			print(string.format("CAN'T SWAP, %d DEPENDS ON %d, TOGGLE WITH START", 
-				P.SP()[sel_RNBE_i+1].ID, P.get().ID))
+				P.SPrnbes()[sel_RNBE_i+1].ID, P.get().ID))
 		else
-			P.SP()[sel_RNBE_i], P.SP()[sel_RNBE_i+1] = P.SP()[sel_RNBE_i+1], P.SP()[sel_RNBE_i]
+			P.SPrnbes()[sel_RNBE_i], P.SPrnbes()[sel_RNBE_i+1] = P.SPrnbes()[sel_RNBE_i+1], P.SPrnbes()[sel_RNBE_i]
 			P.updateRNBEs()
 		end
 	end
 end
 function P.toggleDependency()
-	if sel_RNBE_i < P.SP().length then
-		P.SP()[sel_RNBE_i+1].dependency[P.get().ID] = 
-			not P.SP()[sel_RNBE_i+1].dependency[P.get().ID]
+	if sel_RNBE_i < P.SPrnbes().length then
+		P.SPrnbes()[sel_RNBE_i+1].dependency[P.get().ID] = 
+			not P.SPrnbes()[sel_RNBE_i+1].dependency[P.get().ID]
 		
-		if P.SP()[sel_RNBE_i+1].dependency[P.get().ID]	then
+		if P.SPrnbes()[sel_RNBE_i+1].dependency[P.get().ID]	then
 			print(string.format("%d NOW DEPENDS ON %d", 
-				P.SP()[sel_RNBE_i+1].ID, P.get().ID))
+				P.SPrnbes()[sel_RNBE_i+1].ID, P.get().ID))
 		else
 			print(string.format("%d NOW DOES NOT DEPEND ON %d", 
-				P.SP()[sel_RNBE_i+1].ID, P.get().ID))
+				P.SPrnbes()[sel_RNBE_i+1].ID, P.get().ID))
 		end
 	end
 end
 function P.changeEnemyID(amount)
-	if sel_RNBE_i <= P.SP().length then -- check for sel = 1, length = 0
+	if sel_RNBE_i <= P.SPrnbes().length then -- check for sel = 1, length = 0
 		P.get().enemyID = P.get().enemyID + amount
 		P.updateRNBEs()
 	end
 end
 
 function P.toggleCombat()
-	if sel_RNBE_i <= P.SP().length then
-		P.SP()[sel_RNBE_i].combat = not P.SP()[sel_RNBE_i].combat
+	if sel_RNBE_i <= P.SPrnbes().length then
+		P.SPrnbes()[sel_RNBE_i].combat = not P.SPrnbes()[sel_RNBE_i].combat
 		P.updateRNBEs()
 	end
 end
 function P.toggleLevel()
-	if sel_RNBE_i <= P.SP().length then
-		P.SP()[sel_RNBE_i].lvlUp = not P.SP()[sel_RNBE_i].lvlUp 
+	if sel_RNBE_i <= P.SPrnbes().length then
+		P.SPrnbes()[sel_RNBE_i].lvlUp = not P.SPrnbes()[sel_RNBE_i].lvlUp 
 		P.updateRNBEs()
 	end
 end
 function P.toggleDig()
-	if sel_RNBE_i <= P.SP().length then
-		P.SP()[sel_RNBE_i].dig = not P.SP()[sel_RNBE_i].dig 
+	if sel_RNBE_i <= P.SPrnbes().length then
+		P.SPrnbes()[sel_RNBE_i].dig = not P.SPrnbes()[sel_RNBE_i].dig 
 		P.updateRNBEs()
 	end
 end
 
 function P.totalEvaluation()
 	local score = 0	
-	for RNBE_i = 1, PP.length do
-		score = score + PP[RNBE_i].eval
+	for RNBE_i = 1, PPrnbes.length do
+		score = score + PPrnbes[RNBE_i].eval
 	end
-	for RNBE_i = 1, EP.length do
-		score = score + EP[RNBE_i].eval
+	for RNBE_i = 1, EPrnbes.length do
+		score = score + EPrnbes[RNBE_i].eval
 	end
 	return score
 end
@@ -460,18 +476,18 @@ local permsSize = 0
 -- include logic to enforce dependencies
 local function recursivePerm(usedNums, currPerm, currSize)
 	-- base case
-	if currSize == P.SP().length then
+	if currSize == P.SPrnbes().length then
 		permsSize = permsSize + 1
 		perms[permsSize] = currPerm
 		return
 	end
 	
-	for next_i = 1, P.SP().length do
+	for next_i = 1, P.SPrnbes().length do
 		if not usedNums[next_i] then
 			-- if depends on unused RNBE, don't use yet
 			
 			local dependencyUnused = false
-			for check_j = 1, P.SP().length do
+			for check_j = 1, P.SPrnbes().length do
 				if P.getByID(next_i).dependency[check_j] and not usedNums[check_j] then
 					dependencyUnused = true
 				end
@@ -480,7 +496,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 			if not dependencyUnused then			
 				local newUsedNums = {}
 				local newCurrPerm = {}
-				for copy_j = 1, P.SP().length do
+				for copy_j = 1, P.SPrnbes().length do
 					newUsedNums[copy_j] = usedNums[copy_j]
 					newCurrPerm[copy_j] = currPerm[copy_j]
 				end
@@ -491,7 +507,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 			end
 		end
 		if currSize == 0 then
-			print(string.format("%d/%d permutation main branches", next_i, P.SP().length))
+			print(string.format("%d/%d permutation main branches", next_i, P.SPrnbes().length))
 			emu.frameadvance() -- prevent unresponsiveness
 		end
 	end
@@ -504,7 +520,7 @@ function P.permutations()
 	-- using nil as false doesn't fill table properly, explicitly fill
 	local usedNums = {}
 	local currPerm = {}
-	for i = 1, P.SP().length do
+	for i = 1, P.SPrnbes().length do
 		usedNums[i] = false
 		currPerm[i] = 0
 	end
@@ -514,18 +530,18 @@ end
 
 function P.setToPerm(p_index)
 	local currPerm = perms[p_index]
-	local lowestSwap = P.SP().length+1 -- don't need to update from 1 to lSwap-1
+	local lowestSwap = P.SPrnbes().length+1 -- don't need to update from 1 to lSwap-1
 	-- saves a lot of time because usually only the higher RNBE are swapped
 	
-	for swapInto_i = 1, P.SP().length do
+	for swapInto_i = 1, P.SPrnbes().length do
 		local perm_ID = currPerm[swapInto_i]
 		
 		-- find RNBE with ID, previous should be in position
 		-- if current (swapInto_i) is in position, doing nothing is OK
-		for swapOutOf_j = swapInto_i+1, P.SP().length do
-			if P.SP()[swapOutOf_j].ID == perm_ID then
+		for swapOutOf_j = swapInto_i+1, P.SPrnbes().length do
+			if P.SPrnbes()[swapOutOf_j].ID == perm_ID then
 				-- swap into place
-				P.SP()[swapOutOf_j], P.SP()[swapInto_i] = P.SP()[swapInto_i], P.SP()[swapOutOf_j]
+				P.SPrnbes()[swapOutOf_j], P.SPrnbes()[swapInto_i] = P.SPrnbes()[swapInto_i], P.SPrnbes()[swapOutOf_j]
 				
 				if lowestSwap > swapInto_i then
 					lowestSwap = swapInto_i
@@ -537,11 +553,14 @@ function P.setToPerm(p_index)
 	P.updateRNBEs(lowestSwap)
 end
 
---TODO seperate enemy phase RNBE set, do not permute but account for score
-
 -- attempt every valid arrangement and score it
 -- return top three options, first is auto-set
 function P.suggestedPermutation()
+	if not P.playerPhase then
+		print("enemy phase cannot be permuted")
+		return
+	end
+
 	local timeStarted = os.clock()
 
 	-- generate array of valid permutations
@@ -589,12 +608,12 @@ function P.suggestedPermutation()
 	P.updateRNBEs(1)
 	
 	print()
-	for RNBE_i = 1, PP.length do		
-		PP[RNBE_i]:evaluation_fn(true)
+	for RNBE_i = 1, PPrnbes.length do		
+		PPrnbes[RNBE_i]:evaluation_fn(true)
 	end
 	print()
-	for RNBE_i = 1, EP.length do		
-		EP[RNBE_i]:evaluation_fn(true)
+	for RNBE_i = 1, EPrnbes.length do		
+		EPrnbes[RNBE_i]:evaluation_fn(true)
 	end
 	
 	print()

@@ -3,9 +3,6 @@ require("feClass")
 require("feCombat")
 require("feVersion")
 
--- todo store this in random numbers, or another file?
--- used for version differences like silencer, great shield, sure shot, and pierce
-
 local P = {}
 unitData = P
 
@@ -242,15 +239,15 @@ P.NAMES[7] = {
 "Karla", "Renault", "Athos"
 }
 P.DEPLOYED[7] = {
-false, false, false, false, false, 
+false, false, true, false, false, 
 false, true, false, false, false,
-true, false, false, false, false, 
-false, true, true, true, true,
-false, false, false, false, true, 
-true, false, false, false, false,
-false, false, false, false, true, 
-false, false, false, true, false,
-false, true, true
+false, false, false, false, false, 
+false, false, false, false, false,
+false, false, false, false, false, 
+false, false, false, false, false,
+false, false, false, false, false, 
+false, false, false, false, false,
+false, false, false
 }
 P.GROWTHS[7] = {
 {80, 45, 50, 40, 30, 35, 45}, -- Eliwood
@@ -305,8 +302,8 @@ P.BASE_STATS[7] = {
 {17, 04, 05, 06, 03, 01, 04, 01}, -- Rebecca
 {30, 07, 07, 06, 03, 00, 03, 03}, -- Dorcas
 {29, 09, 05, 03, 04, 00, 04, 02}, -- Bartre
---{19, 07, 04, 05, 08, 00, 03, 01}, -- Hector
-  {19, 07, 04, 05, 08, 02, 05, -19}, -- Hector GREAT_LORD7 PROMO @ 20 ICON TALIS
+{19, 07, 04, 05, 08, 00, 03, 01}, -- Hector
+--{19, 07, 04, 05, 08, 02, 05, -19}, -- Hector GREAT_LORD7 PROMO @ 20 ICON TALIS
 {28, 13, 09, 05, 13, 03, 03, 09}, -- Oswin
 {17, 02, 05, 08, 02, 05, 06, 01}, -- Serra
 {18, 04, 04, 11, 03, 00, 02, 02}, -- Matthew
@@ -410,7 +407,7 @@ classes.M.PALADIN, -- Marcus
 classes.F.ARCHER, -- Rebecca	
 classes.M.FIGHTER, -- Dorcas	
 classes.M.FIGHTER, -- Bartre	
-classes.M.GREAT_LORD7, -- Hector LORD
+classes.M.LORD, -- Hector
 classes.M.ARMOR_KNIGHT, -- Oswin	
 classes.F.CLERIC, -- Serra	
 classes.M.THIEF, -- Matthew	

@@ -30,14 +30,12 @@ end
 local sel_RNBE_i = 1
 local function limitSel_RNBE_i()
 	if sel_RNBE_i > P.SPrnbes().length then sel_RNBE_i = P.SPrnbes().length end
-	if sel_RNBE_i < 1 then sel_RNBE_i = 1 end -- TODO why is this needed?
+	if sel_RNBE_i < 1 then sel_RNBE_i = 1 end 
 end
 
 function P.togglePhase()
 	P.playerPhase = not P.playerPhase
-	if sel_RNBE_i > P.SPrnbes().length then
-		sel_RNBE_i = P.SPrnbes().length
-	end
+	limitSel_RNBE_i()
 	
 	if P.playerPhase then
 		feGUI.rects[feGUI.i_RNBE].color = "blue"
@@ -384,21 +382,21 @@ function P.getByID(vID)
 end
 
 function P.incBurns(amount)
+	if P.SPrnbes().length <= 0 then return end
+
 	amount = amount or 1
-	if sel_RNBE_i <= P.SPrnbes().length then -- check that length isn't zero while sel == 1
-		P.get().burns = P.get().burns + amount
-		P.updateRNBEs()
-	end
+	P.get().burns = P.get().burns + amount
+	P.updateRNBEs()
 end
 function P.decBurns(amount)
+	if P.SPrnbes().length <= 0 then return end
+	
 	amount = amount or 1
-	if sel_RNBE_i <= P.SPrnbes().length then
-		P.get().burns = P.get().burns - amount
-		if P.get().burns < 0 then
-			P.get().burns = 0
-		end
-		P.updateRNBEs()
+	P.get().burns = P.get().burns - amount
+	if P.get().burns < 0 then
+		P.get().burns = 0
 	end
+	P.updateRNBEs()
 end
 function P.incSel()
 	sel_RNBE_i = sel_RNBE_i + 1
@@ -434,29 +432,29 @@ function P.toggleDependency()
 	end
 end
 function P.changeEnemyID(amount)
-	if sel_RNBE_i <= P.SPrnbes().length then -- check for sel = 1, length = 0
-		P.get().enemyID = P.get().enemyID + amount
-		P.updateRNBEs()
-	end
+	if P.SPrnbes().length <= 0 then return end
+
+	P.get().enemyID = P.get().enemyID + amount
+	P.updateRNBEs()
 end
 
 function P.toggleCombat()
-	if sel_RNBE_i <= P.SPrnbes().length then
-		P.SPrnbes()[sel_RNBE_i].combat = not P.SPrnbes()[sel_RNBE_i].combat
-		P.updateRNBEs()
-	end
+	if P.SPrnbes().length <= 0 then return end
+	
+	P.SPrnbes()[sel_RNBE_i].combat = not P.SPrnbes()[sel_RNBE_i].combat
+	P.updateRNBEs()
 end
 function P.toggleLevel()
-	if sel_RNBE_i <= P.SPrnbes().length then
-		P.SPrnbes()[sel_RNBE_i].lvlUp = not P.SPrnbes()[sel_RNBE_i].lvlUp 
-		P.updateRNBEs()
-	end
+	if P.SPrnbes().length <= 0 then return end
+	
+	P.SPrnbes()[sel_RNBE_i].lvlUp = not P.SPrnbes()[sel_RNBE_i].lvlUp 
+	P.updateRNBEs()
 end
 function P.toggleDig()
-	if sel_RNBE_i <= P.SPrnbes().length then
-		P.SPrnbes()[sel_RNBE_i].dig = not P.SPrnbes()[sel_RNBE_i].dig 
-		P.updateRNBEs()
-	end
+	if P.SPrnbes().length <= 0 then return end
+	
+	P.SPrnbes()[sel_RNBE_i].dig = not P.SPrnbes()[sel_RNBE_i].dig 
+	P.updateRNBEs()
 end
 
 function P.totalEvaluation()

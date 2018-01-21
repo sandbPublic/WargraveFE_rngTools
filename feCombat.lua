@@ -303,11 +303,8 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 		
 		local silencerMult = 1
 		if silenced then
-			silencerMult = 1.8 -- pretty accurate, but not exact?
-			-- lvl 21 colm against level 17 gargoyle
-			-- 37 from kill
-			-- 65 from silence
-			-- 37*1.8 = 66.6
+			silencerMult = 2 -- doubles exp from kill?
+			-- https://serenesforest.net/forums/index.php?/topic/78394-simplifying-and-correcting-the-experience-calculations/
 		end
 		
 		-- if FE7 normal mode. note this gains a lot of exp 
@@ -321,8 +318,8 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 			playerValue = playerValue/2
 		end
 		
-		return math.min(100, math.floor(expFromDmg+math.max(0, 
-			enemyValue-playerValue + 20 + self.bonusExp))*silencerMult)
+		return math.min(100, math.floor(expFromDmg+silencerMult*math.max(0, 
+			enemyValue-playerValue + 20 + self.bonusExp)))
 	end
 	return math.floor(expFromDmg)
 end

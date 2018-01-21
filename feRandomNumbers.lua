@@ -75,6 +75,9 @@ function P.RNtoCent(rn)
 	return math.floor(100*rn/0xFFFF) 
 	-- game itself floors, as I found, 
 	-- fractional part made a difference on Tirado's 25% hit at 1647
+	-- may round differently in FE6? simply divides by 655?
+	-- https://www.gamefaqs.com/boards/468480-fire-emblem/58065405?page=1
+	-- can return 100?
 end
 
 function P.getRNasCent(index)

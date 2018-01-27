@@ -182,7 +182,8 @@ function rnbeObj:levelScore()
 	return unitData.statProcScore(self.postCombatRN_i, self.unit_i, self.stats)
 end
 function rnbeObj:digSucceed()
-	return rns.getRNasCent(self.nextRN_i - 1) < self.stats[unitData.i_LUCK]
+	return rns.getRNasCent(self.nextRN_i - 1) <= self.stats[unitData.i_LUCK]
+	-- luck+1% chance, therefore even 0 luck has 1% chance, confirmed luck 8 succeeds with rn = 8
 end
 
 function rnbeObj:resultString()

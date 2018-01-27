@@ -58,7 +58,7 @@ local function printHelp()
 		print("g: undo RNBE deletion")
 		print("j: cycle player weapon type")
 		print("l: toggle RNBE lvlUp")
-		print("u: ")
+		print("u: toggle RNBE dig")
 		print("y: ")
 	
 		print("h: switch to primary functions")		
@@ -69,7 +69,7 @@ local function printHelp()
 		
 		print("b: ")
 		print("k: ")
-		print("m: ")
+		print("m: cycle version")
 	end
 end
 
@@ -154,24 +154,33 @@ while true do
 		printHelp()
 	end	
 	
+	-- fog of war off? TODO
+	-- memory.writebyte(0x202BCFD, viewRange=3), FE8?
+	if not fogOfWar then
+		memory.writebyte(0x202BC05, 0)
+	end	
+	
 	if primaryFunctions then
-		if inputThisLoop.B and not inputLastLoop.B then -- toggle enemy promoted
-			combat.currBattleParams:togglePromo()
-			printStringArray(combat.currBattleParams:toStrings(), 3)
+		if inputThisLoop.G and not inputLastLoop.G then 
+			rnbe.removeLastObj()
 		end	
 		
-		if inputThisLoop.M and not inputLastLoop.M  then
-			rnbe.togglePhase()
+		if inputThisLoop.J and not inputLastLoop.J then 
+			rnbe.addObj()
 		end
 		
-		if inputThisLoop.K and not inputLastLoop.K then -- save battle params & stats
-			combat.currBattleParams:set()
-			printStringArray(combat.currBattleParams:toStrings(), 3)
-			
-			reprintStats = true
-			unitData.saveStats()
+		if inputThisLoop.L and not inputLastLoop.L then 
+			rnbe.toggleCombat()
+		end
+		
+		if inputThisLoop.U and not inputLastLoop.U then 
+			combat.currBattleParams:cycleEnemyClass()
 		end	
-			
+		
+		if inputThisLoop.Y and not inputLastLoop.Y then
+			combat.currBattleParams:toggleBonusExp()
+		end
+	
 		if inputThisLoop.N and not inputLastLoop.N then -- advance to next deployed
 			unitData.sel_Unit_i = unitData.nextDeployed()		
 			print(string.format("Selected: %-10.10s   (next: %s)", unitData.names(), 
@@ -194,31 +203,22 @@ while true do
 			rnbe.suggestedPermutation()
 		end	
 		
-		-- fog of war off?
-		-- memory.writebyte(0x202BCFD, viewRange=3), FE8?
-		if not fogOfWar then
-			memory.writebyte(0x202BC05, 0)
-		end
-		
-		if inputThisLoop.G and not inputLastLoop.G then 
-			rnbe.removeLastObj()
+		if inputThisLoop.B and not inputLastLoop.B then -- toggle enemy promoted
+			combat.currBattleParams:togglePromo()
+			printStringArray(combat.currBattleParams:toStrings(), 3)
 		end	
 		
-		if inputThisLoop.J and not inputLastLoop.J then 
-			rnbe.addObj()
+		if inputThisLoop.M and not inputLastLoop.M  then
+			rnbe.togglePhase()
 		end
 		
-		if inputThisLoop.L and not inputLastLoop.L then 
-			rnbe.toggleCombat()
-		end
-		
-		if inputThisLoop.U and not inputLastLoop.U then 
-			combat.currBattleParams:cycleEnemyClass()
+		if inputThisLoop.K and not inputLastLoop.K then -- save battle params & stats
+			combat.currBattleParams:set()
+			printStringArray(combat.currBattleParams:toStrings(), 3)
+			
+			reprintStats = true
+			unitData.saveStats()
 		end	
-		
-		if inputThisLoop.Y and not inputLastLoop.Y then
-			combat.currBattleParams:toggleBonusExp()
-		end
 	else
 		if inputThisLoop.G and not inputLastLoop.G then 
 			rnbe.undoDelete()
@@ -227,7 +227,11 @@ while true do
 		if inputThisLoop.J and not inputLastLoop.J then 
 			combat.currBattleParams:cycleWeapon(combat.enum_PLAYER)
 		end	
-	
+		
+		if inputThisLoop.U and not inputLastLoop.U then 
+			rnbe.toggleDig()
+		end	
+		
 		if inputThisLoop.E and not inputLastLoop.E then -- toggle feGUI.rectShiftMode
 			feGUI.rectShiftMode = not feGUI.rectShiftMode
 			
@@ -247,9 +251,12 @@ while true do
 		if inputThisLoop.L and not inputLastLoop.L then
 			rnbe.toggleLevel()
 		end
+		
+		if inputThisLoop.M and not inputLastLoop.M  then
+			cycleVersion()
+		end
 	end
-	
-	
+		
 	if reprintRNs then
 		printStringArray(rns.RNstream_strings(false, 5, 10), 5)
 	end

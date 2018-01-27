@@ -404,9 +404,12 @@ function P.combatObj:hitEvent(index, who)
 				end
 			end
 			
-			-- what about crit and devil?
+			-- crit/devil priority?
 			if self:data(who).weapon == P.i_DEVIL then
-				if (31 - self:data(who)[P.i_LUCK] > nextRn()) then
+				local devilRN = nextRn()
+			
+				if ((31 - self:data(who)[P.i_LUCK] > devilRN) and (version >= 7)) or 
+					((21 - self:data(who)[P.i_LEVEL] > devilRN) and (version == 6)) then
 					retHitEv.action = "DEV"
 					retHitEv.dmg = dmg 
 					retHitEv.expGained = false -- untested

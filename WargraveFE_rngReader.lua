@@ -65,7 +65,7 @@ local function printHelp()
 		print("n: ")
 		print("e: toggle window adjustments")
 		print("i: ")
-		print("o: ")
+		print("o: search future outcomes of RNBE[1]")
 		
 		print("b: ")
 		print("k: ")
@@ -232,7 +232,7 @@ while true do
 			rnbe.toggleDig()
 		end	
 		
-		if inputThisLoop.E and not inputLastLoop.E then -- toggle feGUI.rectShiftMode
+		if inputThisLoop.E and not inputLastLoop.E then 
 			feGUI.rectShiftMode = not feGUI.rectShiftMode
 			
 			if feGUI.rectShiftMode then
@@ -246,6 +246,10 @@ while true do
 			else
 				print("display shift mode: OFF")
 			end
+		end	
+		
+		if inputThisLoop.O and not inputLastLoop.O then			
+			rnbe.searchFutureOutcomes()
 		end	
 		
 		if inputThisLoop.L and not inputLastLoop.L then

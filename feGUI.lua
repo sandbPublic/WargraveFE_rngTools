@@ -219,7 +219,7 @@ function rectObj:draw()
 	
 	-- color highlighted RN strings, draw boxes
 	if self.ID == P.i_RNBE then
-		for RNBE_i = 1, rnbe.SPrnbes().length do
+		for RNBE_i = 1, rnbe.SPrnbes().count do
 			self:drawColorizedRNString(2*RNBE_i-1, 9, -- 4 digits, +, 2 digits, :, space
 				rnbe.SPrnbes()[RNBE_i].startRN_i, rnbe.SPrnbes()[RNBE_i].length)
 			rnbe.SPrnbes()[RNBE_i]:drawMyBoxes(self, RNBE_i)

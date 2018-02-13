@@ -9,7 +9,7 @@ local battleSimBase = {}
 battleSimBase[6] = 0x02039200
 battleSimBase[7] = 0x0203A400
 battleSimBase[8] = 0x0203A500
-P.i_MIGHT 	= 1 -- includes weapon triangle, 255 when healing (staff?)
+P.i_MIGHT 	= 1 -- includes weapon triangle, 255 when healing (staff?) or not attacking?
 P.i_DEF 	= 2 -- includes terrain bonus
 P.i_AS 		= 3 -- Attack speed
 P.i_HIT 	= 4 -- if can't attack, 255
@@ -122,6 +122,13 @@ function P.combatObj:isPlayer(who)
 	return (who == P.enum_PLAYER) or
 	(who == P.enum_ATTACKER and self:playerPhase()) or 
 	(who == P.enum_DEFENDER and not self:playerPhase())
+end
+
+-- todo
+-- level does not update, might given as 0xFF as any non-attacker
+function P.combatObj:defenderIsWall()
+	return false 
+	-- self.defender[P.i_LEVEL] < 20 and self.defender[P.i_EXP] > 99
 end
 
 function P.combatObj:data(who)
@@ -283,7 +290,7 @@ function P.combatObj:willLevel(XPgained)
 end
 
 function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
-	if not self:canLevel() then return 0 end
+	if (not self:canLevel() or self:defenderIsWall()) then return 0 end
 	
 	local playerClass = self:data(P.enum_PLAYER).class
 	local playerClassPower = classes.EXP_POWER[playerClass]	
@@ -315,7 +322,7 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 		-- final Ursula gets a "value" reduction of -20 due to being a valkyrie
 		-- so this effect is easily observable at Final
 		if enemyValue - playerValue <= 0 and version == 7 then
-			playerValue = playerValue/2
+			playerValue = math.floor(playerValue/2)
 		end
 		
 		return math.min(100, math.floor(expFromDmg+silencerMult*math.max(0, 
@@ -330,7 +337,11 @@ function P.combatObj:hitEvent(index, who)
 	retHitEv.action = "-"
 	retHitEv.RNsConsumed = 0
 	retHitEv.dmg = 0
-	retHitEv.expGained = true
+	retHitEv.expGained = true -- assume true and falsify
+	
+	if (not self:isPlayer(who)) or self:defenderIsWall() then
+		retHitEv.expGained = false
+	end
 	retHitEv.silenced = false
 	
 	local hit = self:data(who)[P.i_HIT]
@@ -387,8 +398,11 @@ function P.combatObj:hitEvent(index, who)
 			end
 			
 			if crt > nextRn() then
+				local silencerRn = 0
+				if version >= 7 then 
+					silencerRn = nextRn()
+				end
 				if classes.hasSilencer(self:data(who).class) then
-					local silencerRn = nextRn()
 					if 25 > silencerRn or -- bosses are resistant to silencer
 					(50 > silencerRn and self.bonusExp ~= 40) then
 					
@@ -405,7 +419,7 @@ function P.combatObj:hitEvent(index, who)
 			end
 			
 			-- crit/devil priority?
-			if self:data(who).weapon == P.i_DEVIL then
+			if self:data(who).weapon == P.enum_DEVIL then
 				local devilRN = nextRn()
 			
 				if ((31 - self:data(who)[P.i_LUCK] > devilRN) and (version >= 7)) or 
@@ -418,11 +432,11 @@ function P.combatObj:hitEvent(index, who)
 			end
 			
 			retHitEv.action = "X"
-				retHitEv.dmg = dmg
-				return retHitEv
+			retHitEv.dmg = dmg
+			return retHitEv
 		else
 			retHitEv.action = "O"
-		end	
+		end
 	end
 	
 	retHitEv.expGained = false

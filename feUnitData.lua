@@ -239,11 +239,11 @@ P.NAMES[7] = {
 "Karla", "Renault", "Athos"
 }
 P.DEPLOYED[7] = {
-false, false, true, false, false, 
-false, true, false, false, false,
+false, false, true, false, false, -- Marcus
+true, true, false, false, true, -- Bartre, Hector, Matthew
 false, false, false, false, false, 
-false, false, false, false, false,
-false, false, false, false, false, 
+true, false, true, false, false, -- Wil, Sain
+false, false, true, false, false, -- Dart
 false, false, false, false, false,
 false, false, false, false, false, 
 false, false, false, false, false,
@@ -350,7 +350,8 @@ P.BASE_STATS[7] = {
 -- hard mode bases?
 P.GROWTH_WEIGHTS[7] = {}
 for unit_i = 1, P.NUM_OF_UNITS[7] do
-	P.GROWTH_WEIGHTS[7][unit_i] = {2, 4, 2, 4, 3, 1, 1}
+	P.GROWTH_WEIGHTS[7][unit_i] = {2, 4, 2, 5, 3, 1, 1}
+	-- speed>str>def>skl=hp>res=luck
 end
 
 P.GROWTH_WEIGHTS[7][26] = {2, 0, 0, 2, 4, 1, 1}--Ninian/Nils
@@ -406,26 +407,26 @@ classes.M.CAVALIER, -- Lowen
 classes.M.PALADIN, -- Marcus	
 classes.F.ARCHER, -- Rebecca	
 classes.M.FIGHTER, -- Dorcas	
-classes.M.FIGHTER, -- Bartre	
+classes.M.WARRIOR, -- Bartre FIGHTER
 classes.M.LORD, -- Hector
 classes.M.ARMOR_KNIGHT, -- Oswin	
 classes.F.CLERIC, -- Serra	
 classes.M.THIEF, -- Matthew	
-classes.M.SWORDMASTER, -- Guy MYRMIDON
+classes.M.MYRMIDON, -- Guy
 classes.M.TRANSPORTER, -- Merlinus	
 classes.M.MAGE, -- Erk
 classes.F.TROUBADOUR, -- Priscilla	
 classes.F.LORD, -- Lyn	
 classes.M.ARCHER, -- Wil	
-classes.M.PALADIN, -- Kent	PROMOTED
-classes.M.PALADIN, -- Sain	CAVALIER
-classes.F.FALCO_KNIGHT, -- Florina PEGASUS_KNIGHT
-classes.M.HERO, -- Raven  PROMOTED
+classes.M.CAVALIER, -- Kent
+classes.M.PALADIN, -- Sain CAVALIER
+classes.F.PEGASUS_KNIGHT, -- Florina
+classes.M.MERCENARY, -- Raven
 classes.M.MONK, -- Lucius
 classes.M.SHAMAN, -- Canas	
 classes.M.PIRATE, -- Dart	
 classes.F.PEGASUS_KNIGHT, -- Fiora	
-classes.M.ASSASSIN, -- Legault THIEF
+classes.M.THIEF, -- Legault
 classes.F.DANCER, -- Ninian/Nils
 classes.F.PALADIN, -- Isadora	
 classes.M.WYVERN_RIDER, -- Heath	

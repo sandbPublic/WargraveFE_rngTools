@@ -12,7 +12,7 @@ EPrnbes.count = 0
 P.playerPhase = true
 
 local function getLast(list)
-	return list[list.length]
+	return list[list.count]
 end
 
 -- selected phase
@@ -63,7 +63,7 @@ local rnbeObj = {}
 
 -- INDEX FROM 1
 function rnbeObj:new(stats, combatO, sel_Unit_i)
-	stats = stats or unitData.getSavedStats()
+	stats = stats or unitData.getSavedStats() -- todo do we get enemy stats on EP?
 	combatO = combatO or combat.currBattleParams	
 	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
 
@@ -133,7 +133,8 @@ function rnbeObj:update(RNBE_i)
 			end
 			
 			for prevCombat_i = 1, RNBE_i-1 do
-				if P.TPrnbes(self.isPP)[prevCombat_i].enemyID == self.enemyID then
+				if P.TPrnbes(self.isPP)[prevCombat_i].enemyID == self.enemyID and
+					P.TPrnbes(self.isPP)[prevCombat_i].combat then
 					self.enemyHP = P.TPrnbes(self.isPP)[prevCombat_i].hitSq.eHP
 				end
 			end

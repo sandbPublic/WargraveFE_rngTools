@@ -85,6 +85,8 @@ while true do
 	local reprintStats = false
 	local reprintLvlUps = false
 	
+	rns.updateRN2()
+	
 	if rns.update() then
 		local rnPosDelta = rns.rnsLastConsumed()
 		print(string.format("rnPos %d -> %d, %d", rns.prevPos, rns.pos, rnPosDelta))

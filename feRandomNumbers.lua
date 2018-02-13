@@ -1,17 +1,14 @@
 local P = {}
 rns = P
 
--- secondary RN seems to be located at 0x03000008 in FE7
--- advanced by desert digs, blinking (suspend menu), 
--- and most usefully by merely opening a unit's item
-
 local function nextrng(r1, r2, r3)
 	return AND(XOR(SHIFT(r3, 5), SHIFT(r2, -11), SHIFT(r1, -1), SHIFT(r2, 15)),0xFFFF)
 end
 
 local rngbase=0x03000000
 
-P[-3] = 0x1496 --  5270
+P[-3] = memory.readword(rngbase+4)
+--P[-3] = 0x1496 --  5270
 P[-2] = 0x90EA -- 37098
 P[-1] = 0x3671 -- 13937	
 P.pos = 0 -- position in the rn stream relative to initial
@@ -127,5 +124,27 @@ function P.RNstream_strings(colorized, numLines, rnsPerLine)
 	end
 	return ret
 end
+
+-- secondary RN seems to be located at 0x03000008 in FE7
+-- advanced by desert digs, blinking (suspend menu), 
+-- and most usefully by merely opening a unit's item
+
+local rng2base=0x03000008
+P.rn2 = {}
+
+function P.updateRN2()
+	local currentRN2 = memory.readword(0x03000008)
+	if P.rn2 ~= currentRN2 then
+		P.rn2 = currentRN2
+		print("RN2: " .. tostring(P.rn2))
+	end
+end
+
+P.rn2[-3] = 0x1496 --  5270
+P.rn2[-2] = 0x90EA -- 37098
+P.rn2[-1] = 0x3671 -- 13937	
+P.rn2.pos = 0 
+P.rn2.prevPos = 0
+P.rn2.rnsGenerated = 0
 
 return rns

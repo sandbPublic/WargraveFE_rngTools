@@ -108,7 +108,7 @@ function rnbeObj:update(RNBE_i)
 	if RNBE_i then -- if no order given, do not update burns, used for searchFutureOutcomes
 		if RNBE_i == 1 then 
 			if self.isPP or (PPrnbes.count == 0) then
-				self.startRN_i = rns.pos
+				self.startRN_i = rns.rng1.pos
 			else
 				self.startRN_i = getLast(PPrnbes).nextRN_i
 			end
@@ -185,7 +185,7 @@ function rnbeObj:levelScore()
 	return unitData.statProcScore(self.postCombatRN_i, self.unit_i, self.stats)
 end
 function rnbeObj:digSucceed()
-	return rns.getRNasCent(self.nextRN_i - 1) <= self.stats[unitData.i_LUCK]
+	return rns.rng1:getRNasCent(self.nextRN_i - 1) <= self.stats[unitData.i_LUCK]
 	-- luck+1% chance, therefore even 0 luck has 1% chance, confirmed luck 8 succeeds with rn = 8
 end
 
@@ -290,7 +290,7 @@ function P.searchFutureOutcomes()
 	
 	local function newRecord()
 		record = PPrnbes[1]:evaluation_fn()
-		print(string.format("%4d %3d %3d %s", rns.pos + PPrnbes[1].burns, PPrnbes[1].burns, record, PPrnbes[1]:resultString()))
+		print(string.format("%4d %3d %3d %s", rns.rng1.pos + PPrnbes[1].burns, PPrnbes[1].burns, record, PPrnbes[1]:resultString()))
 	end
 	
 	print("Searching for " .. PPrnbes[1]:headerString())

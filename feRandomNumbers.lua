@@ -5,70 +5,7 @@ local function nextrng(r1, r2, r3)
 	return AND(XOR(SHIFT(r3, 5), SHIFT(r2, -11), SHIFT(r1, -1), SHIFT(r2, 15)),0xFFFF)
 end
 
-local rngbase=0x03000000
-
-P[-3] = memory.readword(rngbase+4)
---P[-3] = 0x1496 --  5270
-P[-2] = 0x90EA -- 37098
-P[-1] = 0x3671 -- 13937	
-P.pos = 0 -- position in the rn stream relative to initial
-P.prevPos = 0
-P.rnsGenerated = 0
-
-function P.rnsLastConsumed()
-	return P.pos - P.prevPos
-end
-
--- generates more if needed
-function P.getRN(pos_i)
-	while pos_i >= P.rnsGenerated do
-		-- generate more rns
-		P[P.rnsGenerated] = nextrng(
-			P[P.rnsGenerated-3], 
-			P[P.rnsGenerated-2], 
-			P[P.rnsGenerated-1])
-		P.rnsGenerated = P.rnsGenerated + 1
-	end
-	return P[pos_i]
-end
-
--- returns false if current seeds don't match previous 3 rns
-function P.atPos_bool()
-	return P.getRN(P.pos-3) == memory.readword(rngbase+4) and
-		   P.getRN(P.pos-2) == memory.readword(rngbase+2) and
-		   P.getRN(P.pos-1) == memory.readword(rngbase)
-end
-
--- returns true if updated
-function P.update()
-	if not P.atPos_bool() then
-		P.prevPos = P.pos
-		P.pos = 0
-		while not P.atPos_bool() do
-			P.pos = P.pos + 1
-
-			-- sometimes the place in memory that holds the rns
-			-- temporarily holds other values
-			-- failsafe against this
-			if P.pos > 10000 then
-				print(string.format("rns.pos %d too high, skipping frame %d, seeds %4X %4X %4X", 
-					P.pos, vba.framecount(), memory.readword(rngbase+4),
-					memory.readword(rngbase+2), memory.readword(rngbase)))
-				P.pos = 0
-				
-				emu.frameadvance()
-			end
-		end
-		return true
-	end
-	return false
-end
-
-function P.relToAbsPos(relPos_i) -- relative position
-	return relPos_i + P.pos
-end
-
-function P.RNtoCent(rn)
+local function byteToPercent(rn)
 	return math.floor(100*rn/0xFFFF) 
 	-- game itself floors, as I found, 
 	-- fractional part made a difference on Tirado's 25% hit at 1647
@@ -77,30 +14,128 @@ function P.RNtoCent(rn)
 	-- can return 100?
 end
 
-function P.getRNasCent(index)
-	return P.RNtoCent(P.getRN(index))
+-- since there is a secondary rn for desert digs in FE6/7, 
+-- make the functionality here an object
+-- will require much refactoring
+local rnStreamObj = {}
+
+function rnStreamObj:new(rngMemoryOffset, name)
+	local o = {} -- use numerical indexes as numbers in the stream
+	setmetatable(o, self)
+	self.__index = self
+	
+	o.rngAddr = rngMemoryOffset
+	o.name = name
+	
+	o[-3] = o:generator(3) --0x1496  5270
+	o[-2] = o:generator(2) --0x90EA 37098
+	o[-1] = o:generator(1) --0x3671 13937
+	
+	o.pos = 0 -- position in the rn stream relative to power on
+	o.prevPos = 0
+	o.rnsGenerated = 0
+	
+	return o
 end
 
-function P.rnToString(index)
-	return string.format("%02d", P.getRNasCent(index))
+-- gets rns that construct the next rn, initially the seed
+function rnStreamObj:generator(num)
+	return memory.readword(self.rngAddr+2*(num-1))
+end
+
+P.rng1 = rnStreamObj:new(0x03000000, "rng1")
+-- secondary RN seems to be located at 0x03000008 in FE7
+-- advanced by desert digs, blinking (suspend menu), 
+-- and most usefully by merely opening a unit's item
+P.rng2 = rnStreamObj:new(0x03000008, "rng2")
+
+function rnStreamObj:rnsLastConsumed()
+	return self.pos - self.prevPos
+end
+
+-- generates more if needed
+function rnStreamObj:getRN(pos_i)
+	while pos_i >= self.rnsGenerated do
+		-- generate more rns
+		self[self.rnsGenerated] = nextrng(
+			self[self.rnsGenerated-3], 
+			self[self.rnsGenerated-2], 
+			self[self.rnsGenerated-1])
+		self.rnsGenerated = self.rnsGenerated + 1
+	end
+	return self[pos_i]
+end
+
+function rnStreamObj:getRNasCent(index)
+	return byteToPercent(self:getRN(index))
+end
+
+function rnStreamObj:getRNasString(index)
+	return string.format("%02d", self:getRNasCent(index))
+end
+
+-- returns false if current generators don't match previous 3 rns
+function rnStreamObj:atPos_bool()
+	return self:getRN(self.pos-3) == self:generator(3) and
+		   self:getRN(self.pos-2) == self:generator(2) and
+		   self:getRN(self.pos-1) == self:generator(1)
+end
+
+-- returns true if updated
+function rnStreamObj:update()
+	if not self:atPos_bool() then
+		self.prevPos = self.pos
+		self.pos = 0
+		while not self:atPos_bool() do
+			self.pos = self.pos + 1
+
+			-- sometimes the place in memory that holds the rns
+			-- temporarily holds other values
+			-- failsafe against this
+			if self.pos > 10000 then
+				print(string.format(
+					"%s pos %d too high. Skipping frame %d. Generators %4X %4X %4X", 
+					self.name, self.pos, vba.framecount(), 
+					self:generator(3), self:generator(2), self:generator(1)))
+				self.pos = 0
+				
+				emu.frameadvance()
+			end
+		end
+		
+		local rnPosDelta = self:rnsLastConsumed()
+		print(string.format("rngPos %d -> %d, %d", self.prevPos, self.pos, rnPosDelta))
+		
+		-- print what was consumed if not a large jump
+		if (rnPosDelta > 0 and rnPosDelta <= 24)then
+			print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
+		end
+		
+		return true
+	end
+	return false -- no update performed or needed
+end
+
+function rnStreamObj:relToAbsPos(relPos_i) -- relative position
+	return relPos_i + self.pos
 end
 
  -- string, append space after each rn
-function P.rnSeqString(index, length)
+function rnStreamObj:rnSeqString(index, length)
 	local seq = ""
 	for i = 0, length - 1 do
-		seq = seq .. P.rnToString(index+i) .. " "
+		seq = seq .. self.getRNasString(index+i) .. " "
 	end
 	return seq
 end
 
 -- index from 0
 -- colorized for gui leaves the numbers blank so they can be drawn colored later
-function P.RNstream_strings(colorized, numLines, rnsPerLine)
+function rnStreamObj:RNstream_strings(colorized, numLines, rnsPerLine)
 	local ret = {}
 		
 	-- put the first line before the current position for context
-	local firstLineRnPos = math.floor(P.pos/rnsPerLine-1)*rnsPerLine
+	local firstLineRnPos = math.floor(self.pos/rnsPerLine-1)*rnsPerLine
 	if firstLineRnPos < 0 then firstLineRnPos = 0 end
 	
 	for line_i = 0, numLines-1 do
@@ -108,7 +143,7 @@ function P.RNstream_strings(colorized, numLines, rnsPerLine)
 		for rn_i = 0, rnsPerLine-1 do
 			local rnPos = firstLineRnPos + rnsPerLine*line_i + rn_i
 		
-			if rnPos == P.pos then
+			if rnPos == self.pos then
 				lineString = lineString .. ">"
 			else
 				lineString = lineString .. " "
@@ -117,34 +152,12 @@ function P.RNstream_strings(colorized, numLines, rnsPerLine)
 			if colorized then
 				lineString = lineString .. "  "
 			else
-				lineString = lineString .. P.rnToString(rnPos)
+				lineString = lineString .. self.getRNasString(rnPos)
 			end
 		end
 		ret[line_i] = lineString
 	end
 	return ret
 end
-
--- secondary RN seems to be located at 0x03000008 in FE7
--- advanced by desert digs, blinking (suspend menu), 
--- and most usefully by merely opening a unit's item
-
-local rng2base=0x03000008
-P.rn2 = {}
-
-function P.updateRN2()
-	local currentRN2 = memory.readword(0x03000008)
-	if P.rn2 ~= currentRN2 then
-		P.rn2 = currentRN2
-		print("RN2: " .. tostring(P.rn2))
-	end
-end
-
-P.rn2[-3] = 0x1496 --  5270
-P.rn2[-2] = 0x90EA -- 37098
-P.rn2[-1] = 0x3671 -- 13937	
-P.rn2.pos = 0 
-P.rn2.prevPos = 0
-P.rn2.rnsGenerated = 0
 
 return rns

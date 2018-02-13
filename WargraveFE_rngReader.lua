@@ -85,25 +85,11 @@ while true do
 	local reprintStats = false
 	local reprintLvlUps = false
 	
-	rns.updateRN2()
-	
-	if rns.update() then
-		local rnPosDelta = rns.rnsLastConsumed()
-		print(string.format("rnPos %d -> %d, %d", rns.prevPos, rns.pos, rnPosDelta))
-		if (rnPosDelta > 0 and rnPosDelta <= 24)then
-			print(rns.rnSeqString(rns.pos-rnPosDelta, rnPosDelta))
-		end
+	if rns.rng1:update() then
 		rnbe.updateRNBEs(1)
-		
-		--burnNotifyFramesLeft = 150
-		--burnNotifyStr = burnNotifyStr .. string.format("%d ", rnPosDelta)		
-	--else
-		--burnNotifyFramesLeft = burnNotifyFramesLeft - 1
-		--if burnNotifyFramesLeft <=0 then
-		--	burnNotifyStr = ""
-		--end
 	end
-	--feGUI.setRN_BurnNoteString(burnNotifyStr, burnNotifyFramesLeft/150)
+	
+	--rns.rng2:update()
 	
 	local inputThisLoop = input.get()	
 	local joypadThisLoop = joypad.get(0)
@@ -264,7 +250,7 @@ while true do
 	end
 		
 	if reprintRNs then
-		printStringArray(rns.RNstream_strings(false, 5, 10), 5)
+		printStringArray(rns.rng1:RNstream_strings(false, 5, 10), 5)
 	end
 
 	if reprintStats then

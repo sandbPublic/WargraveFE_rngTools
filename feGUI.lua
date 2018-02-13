@@ -180,7 +180,7 @@ end
 
 function rectObj:drawColorizedRNString(line_i, char_i, RN_start, length)
 	for rn_i = 0, length-1 do
-		local rn = rns.getRN(RN_start+rn_i)/0x100
+		local rn = rns.rng1:getRN(RN_start+rn_i)/0x100
 		
 		local rnColor = {}
 		if rn < 0x80 then 
@@ -194,7 +194,7 @@ function rectObj:drawColorizedRNString(line_i, char_i, RN_start, length)
 		rnColor.a = 0xFF
 		
 		self:drawString(line_i, char_i+3*rn_i, 
-			rns.rnToString(RN_start+rn_i), rnColor)
+			rns.rng1:getRNasString(RN_start+rn_i), rnColor)
 	end
 end
 
@@ -226,7 +226,7 @@ function rectObj:draw()
 		end
 		
 	elseif self.ID == P.i_RN_STREAM then
-		local firstLineRnPos = math.floor(rns.pos/rnsPerLine-1)*rnsPerLine
+		local firstLineRnPos = math.floor(rns.rng1.pos/rnsPerLine-1)*rnsPerLine
 		if firstLineRnPos < 0 then firstLineRnPos = 0 end
 	
 		for line_i = 0, rnsLines-1 do
@@ -258,7 +258,7 @@ function P.selRect()
 end
 
 function P.drawRects()
-	P.rects[P.i_RN_STREAM].strings = rns.RNstream_strings(true, rnsLines, rnsPerLine)
+	P.rects[P.i_RN_STREAM].strings = rns.rng1:RNstream_strings(true, rnsLines, rnsPerLine)
 	P.rects[P.i_STAT_DATA].strings = unitData.statData_strings()
 	P.rects[P.i_LEVEL_UPS].strings = unitData.levelUp_strings
 	P.rects[P.i_BATTLE_PARAMS].strings = combat.currBattleParams:toStrings()

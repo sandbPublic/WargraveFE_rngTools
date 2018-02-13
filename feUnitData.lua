@@ -664,7 +664,7 @@ function P.willLevelStat(stat_i, HP_RN_i, unit_i, charStats)
 		return -1 -- stat capped
 	end
 	
-	if (rns.getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i]) then
+	if (rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i]) then
 		return 1 -- stat grows
 	end
 	
@@ -976,7 +976,7 @@ function P.setLevelUpStrings()
 	local recordScore = 0 -- average
 	
 	for relLevelUp_pos = 0, 90 do
-		local levelUp_pos = rns.pos + relLevelUp_pos
+		local levelUp_pos = rns.rng1.pos + relLevelUp_pos
 		
 		levelUpScore = unitData.statProcScore(levelUp_pos)
 		

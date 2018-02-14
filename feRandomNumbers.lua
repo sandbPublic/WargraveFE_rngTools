@@ -5,6 +5,20 @@ local function nextrng(r1, r2, r3)
 	return AND(XOR(SHIFT(r3, 5), SHIFT(r2, -11), SHIFT(r1, -1), SHIFT(r2, 15)),0xFFFF)
 end
 
+-- 2ndary rn use 1 4-byte number and generator 
+-- rather than 1 2-byte number and 3 2-byte generators
+-- http://bbs.fireemblem.net/read.php?tid=184603&fpage=2
+-- digging/anna blinking consumes 1, looking at items/attack consumes 2, trade 4,
+local function nextrng2(generator)
+	local lowerWord = AND(generator, 0x0000FFFF)
+	local upperWord = AND(generator, 0xFFFF0000)/0x10000
+
+	local lowerPart = 4*lowerWord*lowerWord+5*lowerWord+1
+	local upperPart = upperWord*(5+8*lowerWord)*0x10000
+	
+	return AND(lowerPart+upperPart,0x3FFFFFFF)
+end
+
 local function byteToPercent(rn)
 	return math.floor(100*rn/0xFFFF) 
 	-- game itself floors, as I found, 
@@ -19,23 +33,32 @@ end
 -- will require much refactoring
 local rnStreamObj = {}
 
-function rnStreamObj:new(rngMemoryOffset, name)
+function rnStreamObj:new(rngMemoryOffset, primary)
 	local o = {} -- use numerical indexes as numbers in the stream
 	setmetatable(o, self)
 	self.__index = self
 	
 	o.rngAddr = rngMemoryOffset
-	o.name = name
+	o.isPrimary = primary
 	
-	o[-3] = o:generator(3) --0x1496  5270
-	o[-2] = o:generator(2) --0x90EA 37098
-	o[-1] = o:generator(1) --0x3671 13937
+	if o.isPrimary then
+		o[-3] = 0x1496
+		o[-2] = 0x90EA
+		o[-1] = 0x3671
+	else
+		o[-1] = 0x3C7CA4D2
+	end
 	
 	o.pos = 0 -- position in the rn stream relative to power on
 	o.prevPos = 0
 	o.rnsGenerated = 0
-	
+		
 	return o
+end
+
+function rnStreamObj:name()
+	if self.isPrimary then return "primary" end
+	return "2ndary"
 end
 
 -- gets rns that construct the next rn, initially the seed
@@ -43,11 +66,11 @@ function rnStreamObj:generator(num)
 	return memory.readword(self.rngAddr+2*(num-1))
 end
 
-P.rng1 = rnStreamObj:new(0x03000000, "rng1")
+P.rng1 = rnStreamObj:new(0x03000000, true)
 -- secondary RN seems to be located at 0x03000008 in FE7
 -- advanced by desert digs, blinking (suspend menu), 
 -- and most usefully by merely opening a unit's item
-P.rng2 = rnStreamObj:new(0x03000008, "rng2")
+P.rng2 = rnStreamObj:new(0x03000008, false)
 
 function rnStreamObj:rnsLastConsumed()
 	return self.pos - self.prevPos
@@ -57,10 +80,14 @@ end
 function rnStreamObj:getRN(pos_i)
 	while pos_i >= self.rnsGenerated do
 		-- generate more rns
-		self[self.rnsGenerated] = nextrng(
-			self[self.rnsGenerated-3], 
-			self[self.rnsGenerated-2], 
-			self[self.rnsGenerated-1])
+		if self.isPrimary then
+			self[self.rnsGenerated] = nextrng(
+				self[self.rnsGenerated-3], 
+				self[self.rnsGenerated-2], 
+				self[self.rnsGenerated-1])
+			else
+			self[self.rnsGenerated] = nextrng2(self[self.rnsGenerated-1])
+		end
 		self.rnsGenerated = self.rnsGenerated + 1
 	end
 	return self[pos_i]
@@ -76,9 +103,13 @@ end
 
 -- returns false if current generators don't match previous 3 rns
 function rnStreamObj:atPos_bool()
-	return self:getRN(self.pos-3) == self:generator(3) and
-		   self:getRN(self.pos-2) == self:generator(2) and
-		   self:getRN(self.pos-1) == self:generator(1)
+	return (self.isPrimary and 
+			(self:getRN(self.pos-3) == self:generator(3) and
+		     self:getRN(self.pos-2) == self:generator(2) and
+		     self:getRN(self.pos-1) == self:generator(1)))
+			or
+			((not self.isPrimary) and
+			 self:getRN(self.pos-1) == self:generator(1)+self:generator(2)*0x10000)
 end
 
 -- returns true if updated
@@ -94,21 +125,28 @@ function rnStreamObj:update()
 			-- failsafe against this
 			if self.pos > 10000 then
 				print(string.format(
-					"%s pos %d too high. Skipping frame %d. Generators %4X %4X %4X", 
-					self.name, self.pos, vba.framecount(), 
+					"%s generators not found in rnStream within %d rns." 
+					.. " Skipping frame %d. Generators %4X %4X %4X", 
+					self:name(), self.pos, vba.framecount(), 
 					self:generator(3), self:generator(2), self:generator(1)))
-				self.pos = 0
 				
+				self.pos = 0
 				emu.frameadvance()
 			end
 		end
 		
 		local rnPosDelta = self:rnsLastConsumed()
-		print(string.format("rngPos %d -> %d, %d", self.prevPos, self.pos, rnPosDelta))
+		print(string.format("%s rng pos %d -> %d, %d", self:name(), self.prevPos, self.pos, rnPosDelta))
 		
 		-- print what was consumed if not a large jump
-		if (rnPosDelta > 0 and rnPosDelta <= 24)then
-			print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
+		if (rnPosDelta > 0 and rnPosDelta <= 24) then
+			if self.isPrimary then
+				print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
+			else
+				for rn2_i = self.pos, self.pos+1 do -- show next two
+					print(string.format("%8X %%11 %2d", self:getRN(rn2_i), self:getRN(rn2_i)%11))
+				end
+			end
 		end
 		
 		return true
@@ -124,7 +162,7 @@ end
 function rnStreamObj:rnSeqString(index, length)
 	local seq = ""
 	for i = 0, length - 1 do
-		seq = seq .. self.getRNasString(index+i) .. " "
+		seq = seq .. self:getRNasString(index+i) .. " "
 	end
 	return seq
 end
@@ -152,7 +190,7 @@ function rnStreamObj:RNstream_strings(colorized, numLines, rnsPerLine)
 			if colorized then
 				lineString = lineString .. "  "
 			else
-				lineString = lineString .. self.getRNasString(rnPos)
+				lineString = lineString .. self:getRNasString(rnPos)
 			end
 		end
 		ret[line_i] = lineString

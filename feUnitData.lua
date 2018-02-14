@@ -417,14 +417,14 @@ classes.M.TRANSPORTER, -- Merlinus
 classes.M.MAGE, -- Erk
 classes.F.TROUBADOUR, -- Priscilla	
 classes.F.LORD, -- Lyn	
-classes.M.ARCHER, -- Wil	
+classes.M.SNIPER, -- Wil ARCHER
 classes.M.CAVALIER, -- Kent
 classes.M.PALADIN, -- Sain CAVALIER
 classes.F.PEGASUS_KNIGHT, -- Florina
 classes.M.MERCENARY, -- Raven
 classes.M.MONK, -- Lucius
 classes.M.SHAMAN, -- Canas	
-classes.M.PIRATE, -- Dart	
+classes.M.BERSERKER, -- Dart PIRATE
 classes.F.PEGASUS_KNIGHT, -- Fiora	
 classes.M.THIEF, -- Legault
 classes.F.DANCER, -- Ninian/Nils

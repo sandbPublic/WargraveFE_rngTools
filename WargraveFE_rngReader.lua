@@ -88,7 +88,7 @@ while true do
 	if rns.rng1:update() then
 		rnbe.updateRNBEs(1)
 	end
-	
+
 	--rns.rng2:update()
 	
 	local inputThisLoop = input.get()	

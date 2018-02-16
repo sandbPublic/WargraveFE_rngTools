@@ -244,7 +244,7 @@ true, true, false, false, true, -- Bartre, Hector, Matthew
 false, false, false, false, false, 
 true, false, true, false, false, -- Wil, Sain
 false, false, true, false, false, -- Dart
-false, false, false, false, false,
+true, false, false, false, false, -- Ninian/Nils
 false, false, false, false, false, 
 false, false, false, false, false,
 false, false, false
@@ -301,33 +301,30 @@ P.BASE_STATS[7] = {
 {31, 15, 15, 11, 10, 08, 08, 01}, -- Marcus
 {17, 04, 05, 06, 03, 01, 04, 01}, -- Rebecca
 {30, 07, 07, 06, 03, 00, 03, 03}, -- Dorcas
-{29, 09, 05, 03, 04, 00, 04, 02}, -- Bartre
+--{29, 09, 05, 03, 04, 00, 04, 02}, -- Bartre
+{29, 09, 05, 03, 04, 00, 04, -10}, -- Bartre PROMO @ 13
 {19, 07, 04, 05, 08, 00, 03, 01}, -- Hector
---{19, 07, 04, 05, 08, 02, 05, -19}, -- Hector GREAT_LORD7 PROMO @ 20 ICON TALIS
 {28, 13, 09, 05, 13, 03, 03, 09}, -- Oswin
 {17, 02, 05, 08, 02, 05, 06, 01}, -- Serra
 {18, 04, 04, 11, 03, 00, 02, 02}, -- Matthew
---{21, 06, 11, 11, 05, 00, 05, 03}, -- Guy
-  {33, 08, 11, 11, 07, 03, 05, -11}, -- Guy SWORDMASTER PROMO @ 15 ROBE, TALIS
+{21, 06, 11, 11, 05, 00, 05, 03}, -- Guy
 {18, 00, 04, 05, 05, 02, 12, 05}, -- Merlinus
 {17, 05, 06, 07, 02, 04, 03, 01}, -- Erk
 {16, 06, 06, 08, 03, 06, 07, 03}, -- Priscilla
 {18, 05, 10, 11, 02, 00, 05, 04}, -- Lyn
-{21, 06, 05, 06, 05, 01, 07, 04}, -- Wil
---{23, 08, 07, 08, 06, 01, 04, 05}, -- Kent
-  {25, 09, 08, 09, 08, 02, 04, -6}, -- Kent GAINED 7 LEVELS, PALADIN PROMO
+--{21, 06, 05, 06, 05, 01, 07, 04}, -- Wil
+{21, 06, 05, 06, 05, 01, 07, -7}, -- Wil PROMO @ 12
+{23, 08, 07, 08, 06, 01, 04, 05}, -- Kent
 --{22, 09, 05, 07, 07, 00, 05, 04}, -- Sain 
-  {24, 10, 06, 10, 09, 01, 05, -10}, -- Sain PALADIN PROMO @ 15 SPEEDWINGS
---{18, 06, 08, 09, 04, 05, 08, 03}, -- Florina
-  {30, 08, 08, 09, 08, 07, 08, -11}, -- Florina FALCO_KNIGHT PROMO @ 15 ROBE, SHIELD
---{25, 08, 11, 13, 05, 01, 02, 05}, -- Raven
-  {29, 08, 13, 15, 07, 03, 04, -4}, -- Raven GAINED 5 LVLS, HERO PROMO, ICON
+{22, 09, 05, 07, 07, 00, 05, -5}, -- Sain PROMO @ 10
+{18, 06, 08, 09, 04, 05, 08, 03}, -- Florina
+{25, 08, 11, 13, 05, 01, 02, 05}, -- Raven
 {18, 07, 06, 10, 01, 06, 02, 03}, -- Lucius
 {21, 10, 09, 08, 05, 08, 07, 08}, -- Canas
-{34, 12, 08, 08, 06, 01, 03, 08}, -- Dart
+--{34, 12, 08, 08, 06, 01, 03, 08}, -- Dart
+{34, 12, 08, 08, 06, 01, 03, -4}, -- Dart PROMO @13
 {21, 08, 11, 13, 06, 07, 06, 07}, -- Fiora
---{26, 08, 11, 15, 08, 03, 10, 12}, -- Legault
-  {29, 09, 15, 15, 10, 05, 10, -7}, -- Legault GAINED 8 LVLS, ASSASSIN PROMO, 2BOOKS
+{26, 08, 11, 15, 08, 03, 10, 12}, -- Legault
 {14, 00, 00, 12, 05, 04, 10, 01}, -- Ninian/Nils
 {28, 13, 12, 16, 08, 06, 10, 01}, -- Isadora
 {28, 11, 08, 07, 10, 01, 07, 07}, -- Heath
@@ -617,31 +614,61 @@ P.sel_Unit_i = 1
 function P.numOf() 
 	return P.NUM_OF_UNITS[version]
 end
+
 function P.names(unit_i) -- default value P.sel_Unit_i
 	unit_i = unit_i or P.sel_Unit_i
 	return P.NAMES[version][unit_i]
 end
+
 function P.deployed(unit_i) 
 	unit_i = unit_i or P.sel_Unit_i
 	return P.DEPLOYED[version][unit_i]
 end
+
+local Afas = -1
 function P.growths(unit_i) 
 	unit_i = unit_i or P.sel_Unit_i
-	return P.GROWTHS[version][unit_i]
+	
+	if unit_i ~= Afas then
+		return P.GROWTHS[version][unit_i]
+	end
+	
+	local afasGrowths = {}
+	for stat_i = 1, 7 do
+		afasGrowths[stat_i] = 
+			P.GROWTHS[version][unit_i][stat_i] + 5
+	end
+	return afasGrowths
 end
+
 function P.growthWeights(unit_i)
 	unit_i = unit_i or P.sel_Unit_i	
 	return P.GROWTH_WEIGHTS[version][unit_i]
 end
-function P.bases(unit_i)
-	unit_i = unit_i or P.sel_Unit_i
-	return P.BASE_STATS[version][unit_i]
-end
+
 function P.class(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
 	return P.CLASSES[version][unit_i]
 end
+
+function P.bases(unit_i)
+	unit_i = unit_i or P.sel_Unit_i
+	
+	if P.BASE_STATS[version][unit_i][P.i_LEVEL] > 0 then
+		return P.BASE_STATS[version][unit_i]
+	end
+	
+	local promotedBaseStats = {}
+	for stat_i = 1, 7 do
+		promotedBaseStats[stat_i] = 
+			P.BASE_STATS[version][unit_i][stat_i] + 
+				classes.PROMO_GAINS[P.class(unit_i)][stat_i]
+	end
+	promotedBaseStats[P.i_LEVEL] = P.BASE_STATS[version][unit_i][P.i_LEVEL]
+	return promotedBaseStats
+end
+
 function P.nextDeployed()
 	local canditate_i = P.sel_Unit_i
 	canditate_i = rotInc(canditate_i, P.numOf())
@@ -958,6 +985,10 @@ function P.statData_strings() -- index from 0
 	ret[STATS] = ret[STATS] .. 
 				string.format(" %02d", savedStats[P.i_LEVEL]).. 
 				string.format(" %02d", savedStats[9])
+	
+	if P.sel_Unit_i == Afas then
+		ret[GROWTHS] = ret[GROWTHS] .. " Afa's"
+	end
 	
 	return ret
 end

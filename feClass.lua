@@ -119,16 +119,18 @@ P.M.ROGUE 			= nextInd()
 P.M.ARCHSAGE 		= nextInd()
 P.M.NECROMANCER 	= nextInd()
 
-
 P.EXP_POWER = {}
 P.PROMOTED = {}
 P.EXP_KILL_MODIFIER = {}
 P.CAPS = {}
+P.PROMO_GAINS = {} -- do these vary from game to game?
+
 for class_i = 1, P.M.NECROMANCER do
 	P.EXP_POWER[class_i] = 3
 	P.PROMOTED[class_i] = (class_i >= P.M.MASTER_LORD)
 	P.EXP_KILL_MODIFIER[class_i] = 0
 	if not P.PROMOTED[class_i] then
+		P.PROMO_GAINS[class_i] = {0, 0, 0, 0, 0, 0, 0,}
 		P.CAPS[class_i] = {60, 20, 20, 20, 20, 20, 30}
 	end
 end
@@ -215,9 +217,9 @@ P.CAPS[P.M.BERSERKER]		= {60, 30, 29, 28, 23, 21, 30}
 P.CAPS[P.F.HERO]			= {60, 24, 30, 26, 24, 24, 30} -- 678
 P.CAPS[P.M.HERO]			= {60, 25, 30, 26, 25, 22, 30} -- 678
 P.CAPS[P.F.RANGER]			= {60, 23, 28, 30, 22, 25, 30} -- 678
-P.CAPS[P.M.RANGER]			= {60, 25, 28, 30, 24, 23, 30} -- -78
-P.CAPS[P.F.SNIPER]			= {60, 24, 30, 29, 24, 24, 30} -- -78
-P.CAPS[P.M.SNIPER]			= {60, 25, 30, 28, 25, 23, 30} -- -78
+P.CAPS[P.M.RANGER]			= {60, 25, 28, 30, 24, 23, 30} -- _78
+P.CAPS[P.F.SNIPER]			= {60, 24, 30, 29, 24, 24, 30} -- _78
+P.CAPS[P.M.SNIPER]			= {60, 25, 30, 28, 25, 23, 30} -- _78
 if version == 6 then 
 	P.CAPS[P.M.RANGER][5] = 23 
 	P.CAPS[P.F.SNIPER][2] = 23
@@ -234,6 +236,60 @@ P.CAPS[P.M.ROGUE]			= {60, 20, 30, 30, 20, 20, 30}
 P.CAPS[P.M.ARCHSAGE]		= {60, 30, 30, 25, 20, 30, 30}
 P.CAPS[P.M.NECROMANCER]		= {60, 30, 25, 25, 30, 30, 30}
 -- check other versions
+
+P.PROMO_GAINS[P.M.MASTER_LORD] 		= {0, 0, 0, 0, 0, 0, 0}
+
+P.PROMO_GAINS[P.F.BLADE_LORD] 		= {3, 2, 2, 0, 3, 5, 0}
+P.PROMO_GAINS[P.M.KNIGHT_LORD] 		= {4, 2, 0, 1, 1, 3, 0}
+P.PROMO_GAINS[P.M.GREAT_LORD7] 		= {3, 0, 2, 3, 1, 5, 0}
+
+P.PROMO_GAINS[P.F.GREAT_LORD] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.GREAT_LORD8] 		= {0, 0, 0, 0, 0, 0, 0}
+
+P.PROMO_GAINS[P.F.WYVERN_LORD] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.WYVERN_LORD] 		= {4, 0, 2, 2, 0, 2, 0} -- 7
+P.PROMO_GAINS[P.F.FALCO_KNIGHT] 	= {5, 2, 0, 0, 2, 2, 0} -- 7
+P.PROMO_GAINS[P.F.WYVERN_KNIGHT]	= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.WYVERN_KNIGHT]	= {0, 0, 0, 0, 0, 0, 0}
+
+P.PROMO_GAINS[P.F.BISHOP] 			= {3, 1, 2, 1, 2, 2, 0} -- 7
+P.PROMO_GAINS[P.M.BISHOP] 			= {3, 2, 1, 0, 3, 2, 0} -- 7
+P.PROMO_GAINS[P.F.SAGE] 			= {3, 1, 1, 0, 3, 3, 0} -- 7
+P.PROMO_GAINS[P.M.SAGE] 			= {4, 1, 0, 0, 3, 3, 0} -- 7
+P.PROMO_GAINS[P.F.DRUID] 			= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.DRUID] 			= {4, 0, 0, 3, 2, 2, 0} -- 7
+P.PROMO_GAINS[P.F.VALKYRIE] 		= {3, 2, 1, 0, 2, 3, 0} -- 7
+P.PROMO_GAINS[P.F.MAGE_KNIGHT] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.MAGE_KNIGHT] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.SUMMONER] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.S_PUPIL] 			= {0, 0, 0, 0, 0, 0, 0}
+
+P.PROMO_GAINS[P.F.GENERAL] 			= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.GENERAL] 			= {4, 2, 2, 3, 2, 2, 0} -- 7
+P.PROMO_GAINS[P.F.PALADIN] 			= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.PALADIN] 			= {2, 1, 1, 1, 2, 1, 0} -- 7 
+P.PROMO_GAINS[P.F.GREAT_KNIGHT] 	= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.GREAT_KNIGHT] 	= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.S_RECRUIT] 		= {0, 0, 0, 0, 0, 0, 0}
+
+P.PROMO_GAINS[P.M.WARRIOR] 			= {3, 1, 2, 0, 3, 3, 0} -- 7
+P.PROMO_GAINS[P.M.BERSERKER] 		= {4, 1, 1, 1, 2, 2, 0} -- 7
+P.PROMO_GAINS[P.F.HERO] 			= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.HERO] 			= {4, 0, 2, 2, 2, 2, 0} -- 7
+P.PROMO_GAINS[P.F.RANGER] 			= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.RANGER] 			= {3, 2, 1, 1, 3, 3, 0} -- 7
+P.PROMO_GAINS[P.F.SNIPER] 			= {4, 3, 1, 1, 2, 2, 0} -- 7
+P.PROMO_GAINS[P.M.SNIPER] 			= {3, 1, 2, 2, 2, 3, 0} -- 7
+P.PROMO_GAINS[P.M.S_JOURNEYMAN] 	= {0, 0, 0, 0, 0, 0, 0}
+
+P.PROMO_GAINS[P.F.SWORDMASTER] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.SWORDMASTER] 		= {5, 2, 0, 0, 2, 1, 0} -- 7
+P.PROMO_GAINS[P.F.ASSASSIN] 		= {0, 0, 0, 0, 0, 0, 0} --__
+P.PROMO_GAINS[P.M.ASSASSIN] 		= {3, 1, 0, 0, 2, 2, 0} --_7
+P.PROMO_GAINS[P.M.ROGUE] 			= {0, 0, 0, 0, 0, 0, 0} --__
+
+P.PROMO_GAINS[P.M.ARCHSAGE] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.NECROMANCER] 		= {0, 0, 0, 0, 0, 0, 0}
 
 function P.hasSilencer(class)
 	return class == P.F.ASSASSIN or class == P.M.ASSASSIN

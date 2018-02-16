@@ -123,7 +123,7 @@ function rnStreamObj:update()
 			-- sometimes the place in memory that holds the rns
 			-- temporarily holds other values
 			-- failsafe against this
-			if self.pos > 10000 then
+			if self.pos >= 10000 then
 				print(string.format(
 					"%s generators not found in rnStream within %d rns." 
 					.. " Skipping frame %d. Generators %4X %4X %4X", 

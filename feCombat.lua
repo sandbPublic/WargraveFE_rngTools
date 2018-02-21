@@ -9,15 +9,15 @@ local battleSimBase = {}
 battleSimBase[6] = 0x02039200
 battleSimBase[7] = 0x0203A400
 battleSimBase[8] = 0x0203A500
-P.i_MIGHT 	= 1 -- includes weapon triangle, 255 when healing (staff?) or not attacking?
-P.i_DEF 	= 2 -- includes terrain bonus
-P.i_AS 		= 3 -- Attack speed
-P.i_HIT 	= 4 -- if can't attack, 255
-P.i_CRIT 	= 5 
-P.i_HP 		= 6 -- current HP
-P.i_LEVEL	= 7 -- for Great Shield, Pierce, and Sure Strike
-P.i_EXP		= 8 -- for level up detection
-P.i_LUCK	= 9 -- for devil axe, not read from memory here
+P.MIGHT_I 	= 1 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
+P.DEF_I 	= 2 -- includes terrain bonus
+P.AS_I 		= 3 -- Attack speed
+P.HIT_I 	= 4 -- if can't attack, 0xFF
+P.CRIT_I 	= 5 
+P.HP_I 		= 6 -- current HP
+P.LEVEL_I	= 7 -- for Great Shield, Pierce, and Sure Strike
+P.EXP_I		= 8 -- for level up detection
+P.LUCK_I	= 9 -- for devil axe, not read from memory here
 local relativeBattleAddrs = {}
 --						  atk   def   AS    hit   crit  hp    lvl   xp
 relativeBattleAddrs[6] = {0x6C, 0x6E, 0x70, 0x76, 0x7C, 0x82, 0x80, 0x81}
@@ -77,7 +77,7 @@ function P.combatObj:copy()
 	
 	o.attacker = {}
 	o.defender = {}
-	for i = 1, P.i_LUCK do
+	for i = 1, P.LUCK_I do
 		o.attacker[i] = self.attacker[i]
 		o.defender[i] = self.defender[i]
 	end
@@ -108,8 +108,8 @@ end
 -- if defender can't gain exp too, assume player phase
 -- fails only in case of enemy phase attacking level 20 player unit
 function P.combatObj:playerPhase()
-	return self.attacker[P.i_EXP] ~= 255 -- attacker can gain exp, player
-		or self.defender[P.i_EXP] == 255 -- neither attacker nor defender can gain
+	return self.attacker[P.EXP_I] ~= 255 -- attacker can gain exp, player
+		or self.defender[P.EXP_I] == 255 -- neither attacker nor defender can gain
 end
 
 function P.combatObj:isAttacker(who)
@@ -128,7 +128,7 @@ end
 -- level does not update, might given as 0xFF as any non-attacker
 function P.combatObj:defenderIsWall()
 	return false 
-	-- self.defender[P.i_LEVEL] < 20 and self.defender[P.i_EXP] > 99
+	-- self.defender[P.LEVEL_I] < 20 and self.defender[P.EXP_I] > 99
 end
 
 function P.combatObj:data(who)
@@ -137,18 +137,18 @@ function P.combatObj:data(who)
 end
 
 function P.combatObj:staff()
-	return self.attacker[P.i_MIGHT] == 255 -- healing only?
+	return self.attacker[P.MIGHT_I] == 255 -- healing only?
 end
 
 function P.combatObj:dmg(who)
 	if classes.hasPierce(self:data(who).class) then
-		return self:data(who)[P.i_MIGHT]
+		return self:data(who)[P.MIGHT_I]
 	end
-	return math.max(0, self:data(who)[P.i_MIGHT] - self:data(P.opponent(who))[P.i_DEF])
+	return math.max(0, self:data(who)[P.MIGHT_I] - self:data(P.opponent(who))[P.DEF_I])
 end
 
 function P.combatObj:relAS() -- from attacker perspective
-	return self.attacker[P.i_AS] - self.defender[P.i_AS]
+	return self.attacker[P.AS_I] - self.defender[P.AS_I]
 end
 
 function P.combatObj:doubles(who)
@@ -160,7 +160,7 @@ function P.combatObj:togglePromo(who)
 	who = who or P.enum_ENEMY
 
 	-- don't loop 40 to zero
-	self:data(who)[P.i_LEVEL] = (self:data(who)[P.i_LEVEL] + 19) % 40 + 1	
+	self:data(who)[P.LEVEL_I] = (self:data(who)[P.LEVEL_I] + 19) % 40 + 1	
 end
 
 function P.combatObj:set()
@@ -168,11 +168,14 @@ function P.combatObj:set()
 		self.attacker[i] = memory.readbyte(battleAddrs(true, i))
 		self.defender[i] = memory.readbyte(battleAddrs(false, i))
 	end
+	
 	self.unit_ID = unitData.sel_Unit_i
 	self:data(P.enum_PLAYER).class = unitData.class(self.unit_ID)
+	
 	if classes.PROMOTED[self:data(P.enum_PLAYER).class] then
 		self:togglePromo(P.enum_PLAYER)
 	end
+	
 	self.bonusExp = 0
 end
 
@@ -180,7 +183,7 @@ function P.combatObj:cycleWeapon(who)
 	who = who or P.enum_PLAYER
 	self:data(who).weapon = rotInc(self:data(who).weapon, 4)
 	-- for devil axe
-	self:data(who)[P.i_LUCK] = unitData.getSavedStats()[unitData.i_LUCK]
+	self:data(who)[P.LUCK_I] = unitData.getSavedStats()[unitData.i_LUCK]
 	print(P.WEAPON_TYPE_STRINGS[self:data(who).weapon])
 end
 
@@ -208,19 +211,19 @@ function P.combatObj:toStrings()
 
 	local function line(who)
 		local name = unitData.names(unit_ID)		
-		local experStr = string.format("%02d", self:data(who)[P.i_EXP])
+		local experStr = string.format("%02d", self:data(who)[P.EXP_I])
 		if not self:isPlayer(who) then
 			name = "Enemy"
 		end
-		if self:data(who)[P.i_EXP] == 255 then
+		if self:data(who)[P.EXP_I] == 255 then
 			experStr = "--"
 		end
 		
 		local ret = string.format("%-10.10s%2d.%s %3s %3s %2d %2d",
-			name, self:data(who)[P.i_LEVEL], experStr, 
-			hitToString(self:data(who)[P.i_HIT]), 
-			hitToString(self:data(who)[P.i_CRIT]), 
-			self:data(who)[P.i_HP], self:dmg(who))
+			name, self:data(who)[P.LEVEL_I], experStr, 
+			hitToString(self:data(who)[P.HIT_I]), 
+			hitToString(self:data(who)[P.CRIT_I]), 
+			self:data(who)[P.HP_I], self:dmg(who))
 		
 		if self:doubles(who) then ret = ret .. "x2" 
 		else ret = ret .. "  " end	
@@ -262,13 +265,13 @@ function P.combatObj:toCompactStrings()
 			else ret = ret .. "   " end
 		end
 		
-		local hit = self:data(who)[P.i_HIT]		
+		local hit = self:data(who)[P.HIT_I]		
 		if hit > 100 then ret = ret .. " --- "
 		elseif hit == 100 then ret = ret .. "100.0"
 		else ret = ret .. string.format("%05.2f", P.trueHit(hit))
 		end
 		
-		local crit = self:data(who)[P.i_CRIT]
+		local crit = self:data(who)[P.CRIT_I]
 		if crit > 100 then ret = ret .. " --"
 		else ret = ret .. string.format(" %2d", crit)
 		end
@@ -282,11 +285,11 @@ function P.combatObj:toCompactStrings()
 end
 
 function P.combatObj:canLevel()
-	return self:data(P.enum_PLAYER)[P.i_LEVEL] % 20 ~= 0
+	return self:data(P.enum_PLAYER)[P.LEVEL_I] % 20 ~= 0
 end
 
 function P.combatObj:willLevel(XPgained)
-	return self:canLevel() and (self:data(P.enum_PLAYER)[P.i_EXP]+XPgained >= 100)
+	return self:canLevel() and (self:data(P.enum_PLAYER)[P.EXP_I]+XPgained >= 100)
 end
 
 function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
@@ -295,17 +298,17 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 	local playerClass = self:data(P.enum_PLAYER).class
 	local playerClassPower = classes.EXP_POWER[playerClass]	
 	local expFromDmg = math.max(1,
-		(31+self:data(P.enum_ENEMY)[P.i_LEVEL]
-		   -self:data(P.enum_PLAYER)[P.i_LEVEL])/playerClassPower)
+		(31+self:data(P.enum_ENEMY)[P.LEVEL_I]
+		   -self:data(P.enum_PLAYER)[P.LEVEL_I])/playerClassPower)
 	
 	if kill then
 		-- todo: load enemy class from RAM?
 		local enemyClass = self:data(P.enum_ENEMY).class
 		local enemyClassPower = classes.EXP_POWER[enemyClass]
 		
-		local enemyValue = self:data(P.enum_ENEMY)[P.i_LEVEL]*enemyClassPower
+		local enemyValue = self:data(P.enum_ENEMY)[P.LEVEL_I]*enemyClassPower
 			+classes.EXP_KILL_MODIFIER[enemyClass]
-		local playerValue = self:data(P.enum_PLAYER)[P.i_LEVEL]*playerClassPower
+		local playerValue = self:data(P.enum_PLAYER)[P.LEVEL_I]*playerClassPower
 			+classes.EXP_KILL_MODIFIER[playerClass]
 		
 		local silencerMult = 1
@@ -344,10 +347,10 @@ function P.combatObj:hitEvent(index, who)
 	end
 	retHitEv.silenced = false
 	
-	local hit = self:data(who)[P.i_HIT]
-	local crt = self:data(who)[P.i_CRIT]
+	local hit = self:data(who)[P.HIT_I]
+	local crt = self:data(who)[P.CRIT_I]
 	local dmg = self:dmg(who)
-	local lvl = self:data(who)[P.i_LEVEL]
+	local lvl = self:data(who)[P.LEVEL_I]
 	
 	-- gShield or Pierce consumed first if applicable (gShield before Pierce?)
 	-- then crit
@@ -422,8 +425,8 @@ function P.combatObj:hitEvent(index, who)
 			if self:data(who).weapon == P.enum_DEVIL then
 				local devilRN = nextRn()
 			
-				if ((31 - self:data(who)[P.i_LUCK] > devilRN) and (version >= 7)) or 
-					((21 - self:data(who)[P.i_LEVEL] > devilRN) and (version == 6)) then
+				if ((31 - self:data(who)[P.LUCK_I] > devilRN) and (version >= 7)) or 
+					((21 - self:data(who)[P.LEVEL_I] > devilRN) and (version == 6)) then
 					retHitEv.action = "DEV"
 					retHitEv.dmg = dmg 
 					retHitEv.expGained = false -- untested
@@ -450,7 +453,7 @@ function P.combatObj:staffHitEvent(index)
 	retStvHitEv.dmg = 0
 	retStvHitEv.expGained = true
 	
-	if self.attacker[P.i_HIT] <= rns.rng1:getRNasCent(index) then
+	if self.attacker[P.HIT_I] <= rns.rng1:getRNasCent(index) then
 		retStvHitEv.action = "STF-O"
 		retStvHitEv.expGained = false
 	end
@@ -472,10 +475,10 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	ret.expGained = 1
 	ret.lvlUp = false
 	ret.totalRNsConsumed = 0
-	ret.pHP = self:data(P.enum_PLAYER)[P.i_HP]
+	ret.pHP = self:data(P.enum_PLAYER)[P.HP_I]
 	
 	-- pass enemy HP from previous combats this phase if applicable
-	ret.eHP = carriedEnemyHP or self:data(P.enum_ENEMY)[P.i_HP]
+	ret.eHP = carriedEnemyHP or self:data(P.enum_ENEMY)[P.HP_I]
 	if ret.eHP == 0 then
 		ret.expGained = 0
 		return ret
@@ -501,7 +504,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	end
 	
 	setNext(P.enum_ATTACKER)
-	if self:data(who)[P.i_HIT] ~= 255 then
+	if self:data(who)[P.HIT_I] ~= 255 then
 		setNext(P.enum_DEFENDER) -- defender might not counter
 	end
 	if self:doubles(P.enum_ATTACKER) then

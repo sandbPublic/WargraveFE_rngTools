@@ -20,12 +20,15 @@ local function nextrng2(generator)
 end
 
 local function byteToPercent(rn)
-	return math.floor(100*rn/0xFFFF) 
-	-- game itself floors, as I found, 
+	return math.floor(100*rn/0x10000)
+	-- game itself floors, as I found, before calculating 2rn hit
 	-- fractional part made a difference on Tirado's 25% hit at 1647
 	-- may round differently in FE6? simply divides by 655?
 	-- https://www.gamefaqs.com/boards/468480-fire-emblem/58065405?page=1
-	-- can return 100?
+	
+	-- return math.floor(100*rn/0xFFFF) flawed model, can return 100
+	-- Disagreement found @  693, rn: B333, traditional: 70, neo: 69
+	-- Ninian levels speed, contradicting earlier model
 end
 
 -- since there is a secondary rn for desert digs in FE6/7, 
@@ -49,9 +52,9 @@ function rnStreamObj:new(rngMemoryOffset, primary)
 		o[-1] = 0x3C7CA4D2
 	end
 	
-	o.pos = 0 -- position in the rn stream relative to power on
+	o.pos = 0 -- position in the rn stream relative to gba power on
 	o.prevPos = 0
-	o.rnsGenerated = 0
+	o.rnsGenerated = 0 -- more descriptive than count
 		
 	return o
 end
@@ -126,7 +129,7 @@ function rnStreamObj:update()
 			if self.pos >= 10000 then
 				print(string.format(
 					"%s generators not found in rnStream within %d rns." 
-					.. " Skipping frame %d. Generators %4X %4X %4X", 
+					.. " Skipping frame %d. Generators %04X %04X %04X", 
 					self:name(), self.pos, vba.framecount(), 
 					self:generator(3), self:generator(2), self:generator(1)))
 				
@@ -136,7 +139,7 @@ function rnStreamObj:update()
 		end
 		
 		local rnPosDelta = self:rnsLastConsumed()
-		print(string.format("%s rng pos %d -> %d, %d", self:name(), self.prevPos, self.pos, rnPosDelta))
+		print(string.format("%s rng pos %04d -> %04d, %d", self:name(), self.prevPos, self.pos, rnPosDelta))
 		
 		-- print what was consumed if not a large jump
 		if (rnPosDelta > 0 and rnPosDelta <= 24) then
@@ -144,7 +147,7 @@ function rnStreamObj:update()
 				print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
 			else
 				for rn2_i = self.pos, self.pos+1 do -- show next two
-					print(string.format("%8X %%11 %2d", self:getRN(rn2_i), self:getRN(rn2_i)%11))
+					print(string.format("%08X %%11 %2d", self:getRN(rn2_i), self:getRN(rn2_i)%11))
 				end
 			end
 		end

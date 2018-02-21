@@ -1,14 +1,15 @@
 local P = {}
 feGUI = P
 
-P.i_RNBE 			= 1
-P.i_BATTLE_PARAMS 	= 2
-P.i_RN_STREAM		= 3 
-P.i_STAT_DATA		= 4
-P.i_LEVEL_UPS		= 5
-P.i_COMPACT_BPS		= 6
+P.rects = {}
+P.RNBE_I 			= 1
+P.BATTLE_PARAMS_I 	= 2
+P.RN_STREAM_I		= 3 
+P.STAT_DATA_I		= 4
+P.LEVEL_UPS_I		= 5
+P.COMPACT_BPS_I		= 6
 -- burn notifier, don't want to cycle to this though
-P.numOf_rects 		= 6
+P.rects.count 		= 6
 local RECT_COLORS = {
 	"blue", 
 	"green", 
@@ -28,9 +29,9 @@ local RECT_STRINGS = {
 	"burn notifier"
 }
 
-P.selRect_i = P.i_RNBE
+P.selRect_i = P.RNBE_I
 function P.advanceDisplay()
-	P.selRect_i = rotInc(P.selRect_i, P.numOf_rects)
+	P.selRect_i = rotInc(P.selRect_i, P.rects.count)
 	print("selecting display: " .. RECT_STRINGS[P.selRect_i])
 end
 
@@ -38,8 +39,8 @@ P.rectShiftMode = false
 
 function P.canAlterRNBE()
 	return (not P.rectShiftMode) 
-		and (P.selRect_i == P.i_RNBE) 
-		and (P.rects[P.i_RNBE].opacity > 0)
+		and (P.selRect_i == P.RNBE_I) 
+		and (P.rects[P.RNBE_I].opacity > 0)
 end
 
 local CHAR_PIXELS = 4
@@ -78,7 +79,7 @@ function rectObj:width()
 		
 		-- add colorized string length
 		-- don't need to do this for rnStream because it's padded with spaces
-		if (self.ID == P.i_RNBE) and (line_i % 2 == 1) then
+		if (self.ID == P.RNBE_I) and (line_i % 2 == 1) then
 			stringLen = stringLen + rnbe.SPrnbes()[(line_i+1)/2].length * 3
 		end
 		
@@ -218,14 +219,14 @@ function rectObj:draw()
 	end
 	
 	-- color highlighted RN strings, draw boxes
-	if self.ID == P.i_RNBE then
+	if self.ID == P.RNBE_I then
 		for RNBE_i = 1, rnbe.SPrnbes().count do
 			self:drawColorizedRNString(2*RNBE_i-1, 9, -- 4 digits, +, 2 digits, :, space
 				rnbe.SPrnbes()[RNBE_i].startRN_i, rnbe.SPrnbes()[RNBE_i].length)
 			rnbe.SPrnbes()[RNBE_i]:drawMyBoxes(self, RNBE_i)
 		end
 		
-	elseif self.ID == P.i_RN_STREAM then
+	elseif self.ID == P.RN_STREAM_I then
 		local firstLineRnPos = math.floor(rns.rng1.pos/rnsPerLine-1)*rnsPerLine
 		if firstLineRnPos < 0 then firstLineRnPos = 0 end
 	
@@ -249,8 +250,7 @@ function rectObj:new(ID_p, color_p)
 	return o
 end
 
-P.rects = {}
-for rect_i = 1, P.numOf_rects do
+for rect_i = 1, P.rects.count do
 	P.rects[rect_i] = rectObj:new(rect_i)
 end
 function P.selRect()
@@ -258,18 +258,18 @@ function P.selRect()
 end
 
 function P.drawRects()
-	P.rects[P.i_RN_STREAM].strings = rns.rng1:RNstream_strings(true, rnsLines, rnsPerLine)
-	P.rects[P.i_STAT_DATA].strings = unitData.statData_strings()
-	P.rects[P.i_LEVEL_UPS].strings = unitData.levelUp_strings
-	P.rects[P.i_BATTLE_PARAMS].strings = combat.currBattleParams:toStrings()
+	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, rnsLines, rnsPerLine)
+	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings()
+	P.rects[P.LEVEL_UPS_I].strings = unitData.levelUp_strings
+	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
 	-- don't want to overwrite currBattleParams generally	
-	if (P.selRect_i == P.i_COMPACT_BPS) and (P.rects[P.i_COMPACT_BPS].opacity > 0) then
+	if (P.selRect_i == P.COMPACT_BPS_I) and (P.rects[P.COMPACT_BPS_I].opacity > 0) then
 		combat.currBattleParams:set()
-		P.rects[P.i_COMPACT_BPS].strings = combat.currBattleParams:toCompactStrings()
+		P.rects[P.COMPACT_BPS_I].strings = combat.currBattleParams:toCompactStrings()
 	end	
-	P.rects[P.i_RNBE].strings = rnbe.toStrings()
+	P.rects[P.RNBE_I].strings = rnbe.toStrings()
 
-	for rect_i = 1, P.numOf_rects do
+	for rect_i = 1, P.rects.count do
 		P.rects[rect_i]:draw()
 	end
 	P.burnNoteRect:draw()

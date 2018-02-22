@@ -183,7 +183,7 @@ function P.combatObj:cycleWeapon(who)
 	who = who or P.enum_PLAYER
 	self:data(who).weapon = rotInc(self:data(who).weapon, 4)
 	-- for devil axe
-	self:data(who)[P.LUCK_I] = unitData.getSavedStats()[unitData.i_LUCK]
+	self:data(who)[P.LUCK_I] = unitData.getSavedStats()[unitData.LUCK_I]
 	print(P.WEAPON_TYPE_STRINGS[self:data(who).weapon])
 end
 

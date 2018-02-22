@@ -9,9 +9,9 @@ unitData = P
 -- luck is in the wrong place relative to what is shown on screen:
 P.STAT_NAMES = {"HP", "Str", "Skl", "Spd", "Def", "Res", "Lck", "Lvl", "Exp"}
 
-P.i_LUCK = 7
-P.i_LEVEL = 8
-P.i_EXP = 9
+P.LUCK_I = 7
+P.LEVEL_I = 8
+P.EXP_I = 9
 
 P.NUM_OF_UNITS = {}
 P.NAMES = {}
@@ -246,7 +246,7 @@ true, false, true, false, false, -- Wil, Sain
 false, false, true, false, false, -- Dart
 true, false, false, false, false, -- Ninian/Nils
 false, false, false, false, false, 
-false, false, false, false, false,
+false, false, true, false, false, -- Nino
 false, false, false
 }
 P.GROWTHS[7] = {
@@ -624,7 +624,7 @@ function P.deployed(unit_i)
 	return P.DEPLOYED[version][unit_i]
 end
 
-local Afas = -1
+local Afas = 38 -- Nino
 function P.growths(unit_i) 
 	unit_i = unit_i or P.sel_Unit_i
 	
@@ -654,7 +654,7 @@ end
 function P.bases(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
-	if P.BASE_STATS[version][unit_i][P.i_LEVEL] > 0 then
+	if P.BASE_STATS[version][unit_i][P.LEVEL_I] > 0 then
 		return P.BASE_STATS[version][unit_i]
 	end
 	
@@ -664,7 +664,7 @@ function P.bases(unit_i)
 			P.BASE_STATS[version][unit_i][stat_i] + 
 				classes.PROMO_GAINS[P.class(unit_i)][stat_i]
 	end
-	promotedBaseStats[P.i_LEVEL] = P.BASE_STATS[version][unit_i][P.i_LEVEL]
+	promotedBaseStats[P.LEVEL_I] = P.BASE_STATS[version][unit_i][P.LEVEL_I]
 	return promotedBaseStats
 end
 
@@ -738,7 +738,7 @@ local function procRatioNeededForCap(stat_i, unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	charStats = charStats or savedStats
 
-	local levelsTil20 = 20 - charStats[P.i_LEVEL]
+	local levelsTil20 = 20 - charStats[P.LEVEL_I]
 	if levelsTil20 < 0 then return levelsTil20 + 20 end
 	if levelsTil20 == 0 then return 0 end
 	
@@ -797,17 +797,17 @@ end
 
 local function statAverageAt(stat_i, unit_i, level)
 	unit_i = unit_i or P.sel_Unit_i
-	level = level or savedStats[P.i_LEVEL]
+	level = level or savedStats[P.LEVEL_I]
 	
 	return P.bases(unit_i)[stat_i] 
-			+ (statsGained(P.i_LEVEL, unit_i, level)
+			+ (statsGained(P.LEVEL_I, unit_i, level)
 			* P.growths(unit_i)[stat_i] / 100)
 end
 
 function P.statDeviation(stat_i, unit_i, charStat, charLevel)
 	unit_i = unit_i or P.sel_Unit_i
 	charStat = charStat or savedStats[stat_i]
-	charLevel = charLevel or savedStats[P.i_LEVEL]
+	charLevel = charLevel or savedStats[P.LEVEL_I]
 	
 	return charStat - statAverageAt(stat_i, unit_i, charLevel)
 end
@@ -817,7 +817,7 @@ function P.statStdDev(stat_i, unit_i, charStat)
 	unit_i = unit_i or P.sel_Unit_i
 	charStat = charStat or savedStats[stat_i]
 	
-	local levelsGained = statsGained(P.i_LEVEL, unit_i)
+	local levelsGained = statsGained(P.LEVEL_I, unit_i)
 	if levelsGained == 0 then return 0 end
 	
 	local stdDev = (levelsGained*P.growths(unit_i)[stat_i]*
@@ -844,7 +844,7 @@ function P.percentile(unit_i, charStats)
 	charStats = charStats or savedStats
 	local numOfTrials = 1000
 
-	local levelsGained = statsGained(P.i_LEVEL, unit_i)
+	local levelsGained = statsGained(P.LEVEL_I, unit_i)
 	local charStatsScore = 0
 	for stat_i = 1, 7 do
 		charStatsScore = charStatsScore + 
@@ -874,7 +874,7 @@ function P.effectiveGrowthRate(stat_i, unit_i, charStat)
 	unit_i = unit_i or P.sel_Unit_i
 	charStat = charStat or savedStats[stat_i]
 	
-	local levelsGained = statsGained(P.i_LEVEL, unit_i)
+	local levelsGained = statsGained(P.LEVEL_I, unit_i)
 	if levelsGained == 0 then return 0 end
 	return 100*statsGained(stat_i, unit_i, charStat)/levelsGained
 end
@@ -982,7 +982,7 @@ function P.statData_strings() -- index from 0
 	end
 	
 	ret[STATS] = ret[STATS] .. 
-				string.format(" %02d", savedStats[P.i_LEVEL]).. 
+				string.format(" %02d", savedStats[P.LEVEL_I]).. 
 				string.format(" %02d", savedStats[9])
 	
 	if P.sel_Unit_i == Afas then

@@ -139,7 +139,11 @@ function rnStreamObj:update()
 		end
 		
 		local rnPosDelta = self:rnsLastConsumed()
-		print(string.format("%s rng pos %04d -> %04d, %d", self:name(), self.prevPos, self.pos, rnPosDelta))
+		if self.isPrimary then
+			print(string.format("rng pos %4d -> %4d, %d", self.prevPos, self.pos, rnPosDelta))
+		else
+			print(string.format("2ndary rng pos %4d -> %4d, %d", self.prevPos, self.pos, rnPosDelta))
+		end
 		
 		-- print what was consumed if not a large jump
 		if (rnPosDelta > 0 and rnPosDelta <= 24) then

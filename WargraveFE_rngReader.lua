@@ -32,7 +32,7 @@ end
 
 local inputLastLoop = {} -- to determine presses, not helds
 local joypadLastLoop = {} -- to determine presses, not helds
-local fogOfWar = true
+local savedFogRange = 0
 local primaryFunctions = true
 
 -- GJLUY
@@ -63,7 +63,7 @@ local function printHelp()
 		print("j: cycle player weapon type")
 		print("l: toggle RNBE lvlUp")
 		print("u: toggle RNBE dig")
-		print("y: ")
+		print("y: hold, LR change fog")
 	
 		print("h: switch to primary functions")		
 		print("n: ")
@@ -145,13 +145,7 @@ while true do
 		primaryFunctions = not primaryFunctions
 		printHelp()
 	end	
-	
-	-- fog of war off? TODO
-	-- memory.writebyte(0x202BCFD, viewRange=3), FE8?
-	if not fogOfWar then
-		memory.writebyte(0x202BC05, 0)
-	end	
-	
+		
 	if primaryFunctions then
 		if inputThisLoop.G and not inputLastLoop.G then 
 			rnbe.removeLastObj()
@@ -220,9 +214,29 @@ while true do
 			combat.currBattleParams:cycleWeapon(combat.enum_PLAYER)
 		end	
 		
+		if inputThisLoop.L and not inputLastLoop.L then
+			rnbe.toggleLevel()
+		end
+		
 		if inputThisLoop.U and not inputLastLoop.U then 
 			rnbe.toggleDig()
 		end	
+				
+		if inputThisLoop.Y then
+			local currFogRange = memory.readbyte(0x202BC05)
+			if joypadThisLoop.L and not joypadLastLoop.L then
+				currFogRange = currFogRange - 1
+				memory.writebyte(0x202BC05, currFogRange)
+				print("fog set to " .. tostring(currFogRange))
+			end		
+			if joypadThisLoop.R and not joypadLastLoop.R then
+				currFogRange = currFogRange + 1
+				memory.writebyte(0x202BC05, currFogRange)
+				print("fog set to " .. tostring(currFogRange))
+			end
+			
+			-- memory.writebyte(0x202BCFD, viewRange=3), FE8?	
+		end
 		
 		if inputThisLoop.E and not inputLastLoop.E then 
 			feGUI.rectShiftMode = not feGUI.rectShiftMode
@@ -243,11 +257,7 @@ while true do
 		if inputThisLoop.O and not inputLastLoop.O then			
 			rnbe.searchFutureOutcomes()
 		end	
-		
-		if inputThisLoop.L and not inputLastLoop.L then
-			rnbe.toggleLevel()
-		end
-		
+				
 		if inputThisLoop.M and not inputLastLoop.M  then
 			cycleVersion()
 		end

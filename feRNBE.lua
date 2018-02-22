@@ -38,9 +38,9 @@ function P.togglePhase()
 	limitSel_RNBE_i()
 	
 	if P.playerPhase then
-		feGUI.rects[feGUI.i_RNBE].color = "blue"
+		feGUI.rects[feGUI.RNBE_I].color = "blue"
 	else
-		feGUI.rects[feGUI.i_RNBE].color = "red"
+		feGUI.rects[feGUI.RNBE_I].color = "red"
 	end
 	
 	print("playerPhase = " .. tostring(P.playerPhase))
@@ -77,7 +77,7 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	
 	o.unit_i = sel_Unit_i	
 	o.stats = {}
-	for stat_i = 1, unitData.i_EXP do
+	for stat_i = 1, unitData.EXP_I do
 		o.stats[stat_i] = stats[stat_i]
 	end
 	o.batParams = combatO:copy()
@@ -120,7 +120,7 @@ function rnbeObj:update(RNBE_i)
 	self.postBurnsRN_i = self.startRN_i + self.burns
 	
 	if self.combat then	
-		self.enemyHP = self.batParams:data(combat.enum_ENEMY)[combat.i_HP]
+		self.enemyHP = self.batParams:data(combat.enum_ENEMY)[combat.HP_I]
 		
 		-- check eHP from previous combat(s) if applicable
 		if self.enemyID ~= 0 then
@@ -185,7 +185,7 @@ function rnbeObj:levelScore()
 	return unitData.statProcScore(self.postCombatRN_i, self.unit_i, self.stats)
 end
 function rnbeObj:digSucceed()
-	return rns.rng1:getRNasCent(self.nextRN_i - 1) <= self.stats[unitData.i_LUCK]
+	return rns.rng1:getRNasCent(self.nextRN_i - 1) <= self.stats[unitData.LUCK_I]
 	-- luck+1% chance, therefore even 0 luck has 1% chance, confirmed luck 8 succeeds with rn = 8
 end
 
@@ -225,14 +225,14 @@ function rnbeObj:headerString(RNBE_i)
 		specialStringEvents = specialStringEvents .. " " .. combat.WEAPON_TYPE_STRINGS[weapon]
 	end
 	if self.batParams:data(combat.enum_ENEMY).class ~= classes.F.LORD then
-		specialStringEvents = specialStringEvents .. " spec class"
+		specialStringEvents = specialStringEvents .. " class " .. tostring(self.batParams:data(combat.enum_ENEMY).class)
 	end
 	
 	return ret .. string.format("%2d %s%s%s",
 		self.ID, unitData.names(self.unit_i), self:resultString(), specialStringEvents)
 end
 function rnbeObj:RNPrefixString()
-	return string.format("%04d+%02d:", self.startRN_i, self.burns)
+	return string.format("%4d+%02d:", self.startRN_i, self.burns)
 end
 
 -- measure in units of exp
@@ -254,9 +254,9 @@ function rnbeObj:evaluation_fn(printV)
 			-- A - B + (B - C) == A - C
 			
 			local dmgToEnemy = (self.enemyHP-self.hitSq.eHP)/
-				self.batParams:data(combat.enum_ENEMY)[combat.i_HP]
+				self.batParams:data(combat.enum_ENEMY)[combat.HP_I]
 			local dmgToPlayer = 1-self.hitSq.pHP/
-				self.batParams:data(combat.enum_PLAYER)[combat.i_HP]
+				self.batParams:data(combat.enum_PLAYER)[combat.HP_I]
 			
 			score = score + 100*dmgToEnemy - 200*dmgToPlayer 
 				+ self.hitSq.expGained*self.expValueFactor

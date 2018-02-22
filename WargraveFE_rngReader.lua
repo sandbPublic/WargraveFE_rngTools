@@ -30,8 +30,6 @@ function rotInc(num, maxVal, inc, minVal)
 	return num + inc
 end
 
-local inputLastLoop = {} -- to determine presses, not helds
-local joypadLastLoop = {} -- to determine presses, not helds
 local savedFogRange = 0
 local primaryFunctions = true
 
@@ -63,7 +61,7 @@ local function printHelp()
 		print("j: cycle player weapon type")
 		print("l: toggle RNBE lvlUp")
 		print("u: toggle RNBE dig")
-		print("y: hold, LR change fog")
+		print("y: hold, L/R change fog")
 	
 		print("h: switch to primary functions")		
 		print("n: ")
@@ -82,8 +80,30 @@ end
 -- for level ups/battles on EP?
 printHelp()
 
-local burnNotifyFramesLeft = 0
-local burnNotifyStr = ""
+-- struct style so pressed needs one fewer param in more common keybCtrl case
+local keybCtrl = {}
+keybCtrl.thisFrame = {}
+keybCtrl.lastFrame = {}
+local gameCtrl = {}
+gameCtrl.thisFrame = {}
+gameCtrl.lastFrame = {}
+
+local function updateCtrl(ctrl, currFrame)
+	ctrl.lastFrame = ctrl.thisFrame
+	ctrl.thisFrame = currFrame
+end
+
+local function pressed(key, ctrl)
+	ctrl = ctrl or keybCtrl
+
+	if type(key) ~= "string" then
+		print("Non-string key passed to pressed(): " .. tostring(key))
+		print(debug.traceback())
+	end
+	
+	return ctrl.thisFrame[key] and not ctrl.lastFrame[key]
+end
+
 while true do
 	local reprintRNs = false
 	local reprintStats = false
@@ -95,89 +115,73 @@ while true do
 
 	--rns.rng2:update()
 	
-	local inputThisLoop = input.get()	
-	local joypadThisLoop = joypad.get(0)
+	updateCtrl(keybCtrl, input.get())
+	updateCtrl(gameCtrl, joypad.get(0))
 	
 	if feGUI.rectShiftMode then -- move rects or change opacity
-		if joypadThisLoop.left 	then feGUI.selRect():shift(-0.02, 0, 0) end
-		if joypadThisLoop.right then feGUI.selRect():shift( 0.02, 0, 0) end
-		if joypadThisLoop.up 	then feGUI.selRect():shift(0, -0.02, 0) end
-		if joypadThisLoop.down 	then feGUI.selRect():shift(0,  0.02, 0) end
-		if joypadThisLoop.L 	then feGUI.selRect():shift(0, 0, -0.04) end
-		if joypadThisLoop.R 	then feGUI.selRect():shift(0, 0,  0.04) end
+		if gameCtrl.thisFrame.left 	then feGUI.selRect():shift(-0.02, 0, 0) end
+		if gameCtrl.thisFrame.right then feGUI.selRect():shift( 0.02, 0, 0) end
+		if gameCtrl.thisFrame.up 	then feGUI.selRect():shift(0, -0.02, 0) end
+		if gameCtrl.thisFrame.down 	then feGUI.selRect():shift(0,  0.02, 0) end
+		if gameCtrl.thisFrame.L 	then feGUI.selRect():shift(0, 0, -0.04) end
+		if gameCtrl.thisFrame.R 	then feGUI.selRect():shift(0, 0,  0.04) end
 	end
 	
 	if feGUI.canAlterRNBE() then -- alter burns, selected, swap, toggle swapping
 		-- change burns
-		if joypadThisLoop.left and not joypadLastLoop.left then
+		if pressed("left", gameCtrl) then
 			rnbe.decBurns()
 		end		
-		if joypadThisLoop.right and not joypadLastLoop.right then
+		if pressed("right", gameCtrl) then
 			rnbe.incBurns()
 		end
 		
-		if joypadThisLoop.L and not joypadLastLoop.L then
+		if pressed("L", gameCtrl) then
 			rnbe.changeEnemyID(-1)
 		end		
-		if joypadThisLoop.R and not joypadLastLoop.R then
+		if pressed("R", gameCtrl) then
 			rnbe.changeEnemyID(1)
 		end
 		
 		-- change selection
-		if joypadThisLoop.up and not joypadLastLoop.up then
+		if pressed("up", gameCtrl) then
 			rnbe.decSel()
 		end
-		if joypadThisLoop.down and not joypadLastLoop.down then
+		if pressed("down", gameCtrl) then
 			rnbe.incSel()
 		end
 		
 		-- swap with next
-		if joypadThisLoop.select and not joypadLastLoop.select then			
+		if pressed("select", gameCtrl) then			
 			rnbe.swap() -- updates self
 		end
 		
-		if joypadThisLoop.start and not joypadLastLoop.start then			
+		if pressed("start", gameCtrl) then			
 			rnbe.toggleDependency()
 		end	
 	end
 	
-	if inputThisLoop.H and not inputLastLoop.H then -- print help
+	if pressed("H") then -- print help
 		primaryFunctions = not primaryFunctions
 		printHelp()
 	end	
 		
 	if primaryFunctions then
-		if inputThisLoop.G and not inputLastLoop.G then 
-			rnbe.removeLastObj()
-		end	
-		
-		if inputThisLoop.J and not inputLastLoop.J then 
-			rnbe.addObj()
-		end
-		
-		if inputThisLoop.L and not inputLastLoop.L then 
-			rnbe.toggleCombat()
-		end
-		
-		if inputThisLoop.U and not inputLastLoop.U then 
-			combat.currBattleParams:cycleEnemyClass()
-		end	
-		
-		if inputThisLoop.Y and not inputLastLoop.Y then
-			combat.currBattleParams:toggleBonusExp()
-		end
+		if pressed("G") then rnbe.removeLastObj() end	
+		if pressed("J") then rnbe.addObj() end
+		if pressed("L") then rnbe.toggleCombat() end
+		if pressed("U") then combat.currBattleParams:cycleEnemyClass() end	
+		if pressed("Y") then combat.currBattleParams:toggleBonusExp() end
 	
-		if inputThisLoop.N and not inputLastLoop.N then -- advance to next deployed
+		if pressed("N") then -- advance to next deployed
 			unitData.sel_Unit_i = unitData.nextDeployed()		
-			print(string.format("Selected: %-10.10s   (next: %s)", unitData.names(), 
+			print(string.format("Selected: %-10.10s (next: %s)", unitData.names(), 
 				unitData.names(unitData.nextDeployed())))
 		end	
 		
-		if inputThisLoop.I and not inputLastLoop.I then -- advance displayMode
-			feGUI.advanceDisplay()
-		end	
+		if pressed("I") then feGUI.advanceDisplay() end	
 		
-		if inputThisLoop.E and not inputLastLoop.E then -- quick toggle visibility
+		if pressed("E") then -- quick toggle visibility
 			if feGUI.selRect().opacity == 0 then
 				feGUI.selRect().opacity = 0.75
 			else
@@ -185,20 +189,16 @@ while true do
 			end
 		end	
 
-		if inputThisLoop.O and not inputLastLoop.O then			
-			rnbe.suggestedPermutation()
-		end	
+		if pressed("O") then rnbe.suggestedPermutation() end	
 		
-		if inputThisLoop.B and not inputLastLoop.B then -- toggle enemy promoted
+		if pressed("B") then -- toggle enemy promoted
 			combat.currBattleParams:togglePromo()
 			printStringArray(combat.currBattleParams:toStrings(), 3)
 		end	
 		
-		if inputThisLoop.M and not inputLastLoop.M  then
-			rnbe.togglePhase()
-		end
+		if pressed("M") then rnbe.togglePhase() end
 		
-		if inputThisLoop.K and not inputLastLoop.K then -- save battle params & stats
+		if pressed("K") then -- save battle params & stats
 			combat.currBattleParams:set()
 			printStringArray(combat.currBattleParams:toStrings(), 3)
 			
@@ -206,30 +206,24 @@ while true do
 			unitData.saveStats()
 		end	
 	else
-		if inputThisLoop.G and not inputLastLoop.G then 
-			rnbe.undoDelete()
-		end	
+		if pressed("G") then rnbe.undoDelete() end	
 		
-		if inputThisLoop.J and not inputLastLoop.J then 
+		if pressed("J") then 
 			combat.currBattleParams:cycleWeapon(combat.enum_PLAYER)
 		end	
 		
-		if inputThisLoop.L and not inputLastLoop.L then
-			rnbe.toggleLevel()
-		end
+		if pressed("L") then rnbe.toggleLevel() end
 		
-		if inputThisLoop.U and not inputLastLoop.U then 
-			rnbe.toggleDig()
-		end	
+		if pressed("U") then rnbe.toggleDig() end	
 				
-		if inputThisLoop.Y then
+		if keybCtrl.thisFrame.Y then -- hold down, then press L/R
 			local currFogRange = memory.readbyte(0x202BC05)
-			if joypadThisLoop.L and not joypadLastLoop.L then
+			if pressed("L", gameCtrl) then
 				currFogRange = currFogRange - 1
 				memory.writebyte(0x202BC05, currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end		
-			if joypadThisLoop.R and not joypadLastLoop.R then
+			if pressed("R", gameCtrl) then
 				currFogRange = currFogRange + 1
 				memory.writebyte(0x202BC05, currFogRange)
 				print("fog set to " .. tostring(currFogRange))
@@ -238,7 +232,7 @@ while true do
 			-- memory.writebyte(0x202BCFD, viewRange=3), FE8?	
 		end
 		
-		if inputThisLoop.E and not inputLastLoop.E then 
+		if pressed("E") then 
 			feGUI.rectShiftMode = not feGUI.rectShiftMode
 			
 			if feGUI.rectShiftMode then
@@ -254,13 +248,9 @@ while true do
 			end
 		end	
 		
-		if inputThisLoop.O and not inputLastLoop.O then			
-			rnbe.searchFutureOutcomes()
-		end	
+		if pressed("O") then rnbe.searchFutureOutcomes() end	
 				
-		if inputThisLoop.M and not inputLastLoop.M  then
-			cycleVersion()
-		end
+		if pressed("M")  then cycleVersion() end
 	end
 		
 	if reprintRNs then
@@ -280,7 +270,4 @@ while true do
 	feGUI.drawRects()
 
 	emu.frameadvance()
-	
-	joypadLastLoop = joypadThisLoop
-	inputLastLoop = inputThisLoop	
 end

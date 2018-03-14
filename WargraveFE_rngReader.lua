@@ -34,7 +34,7 @@ local savedFogRange = 0
 local primaryFunctions = true
 
 -- GJLUY
--- HNEIO
+--  HNEIO
 -- BKM
 
 local function printHelp()
@@ -55,7 +55,7 @@ local function printHelp()
 		
 		print("B: toggle enemy promo")
 		print("K: save battle params and stats")
-		print("M: toggle phase")		
+		print("M: toggle phase")	
 	else 
 		print("g: undo RNBE deletion")
 		print("j: cycle player weapon type")
@@ -69,7 +69,7 @@ local function printHelp()
 		print("i: ")
 		print("o: search future outcomes of RNBE[1]")
 		
-		print("b: ")
+		print("b: print cache")
 		print("k: ")
 		print("m: cycle version")
 	end
@@ -189,7 +189,10 @@ while true do
 			end
 		end	
 
-		if pressed("O") then rnbe.suggestedPermutation() end	
+		if pressed("O") then 
+			rnbe.suggestedPermutation("fast")
+			--rnbe.suggestedPermutation() 
+		end	
 		
 		if pressed("B") then -- toggle enemy promoted
 			combat.currBattleParams:togglePromo()
@@ -251,6 +254,14 @@ while true do
 		if pressed("O") then rnbe.searchFutureOutcomes() end	
 				
 		if pressed("M")  then cycleVersion() end
+		
+		if pressed("B") then
+			if rnbe.SPrnbes().count > 0 then
+				rnbe.get():printCache()
+			else
+				print("no rnbes")
+			end
+		end
 	end
 		
 	if reprintRNs then

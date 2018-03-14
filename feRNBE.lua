@@ -11,6 +11,10 @@ local EPrnbes = {} -- Enemy Phase rnbes
 EPrnbes.count = 0
 P.playerPhase = true
 
+local perms = {}
+perms.count = 0
+local permsNeedUpdate = false
+
 local function getLast(list)
 	return list[list.count]
 end
@@ -89,6 +93,7 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	
 	o.enemyID = 0 -- for units attacking the same enemyID
 	o.enemyHP = 0 -- if a previous unit has damaged this enemy. HP at start of this rnbe
+	o.enemyHPend = 0 -- HP at end of this rnbe
 	-- TODO player HP (from multi combat due to dance, or EP)
 	
 	o.burns = 0 -- TODO AI burns?
@@ -99,50 +104,111 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	o.nextRN_i = 0
 	o.length = 0
 	o.eval = 0
-		
+	
+	-- cache length and eval
+	-- use this for optimized fast updates when searching outcomes
+	-- cache indexed by *postBurnsRN_i* rn_i, not startRN_i
+	-- 2nd index is enemyHP at start so eHP passing will work
+	o:clearCache()
+	
 	return o
 end
 
--- assumes previous rnbes have updates for optimization
-function rnbeObj:update(RNBE_i)	
-	if RNBE_i then -- if no order given, do not update burns, used for searchFutureOutcomes
-		if RNBE_i == 1 then 
-			if self.isPP or (PPrnbes.count == 0) then
-				self.startRN_i = rns.rng1.pos
-			else
-				self.startRN_i = getLast(PPrnbes).nextRN_i
-			end
-		else
-			self.startRN_i = P.TPrnbes(self.isPP)[RNBE_i-1].nextRN_i
+function rnbeObj:clearCache()
+	self.cache = {}
+	self.cache.count = 0
+	self.cache.min_i = 9999
+	self.cache.max_i = 0
+end
+
+-- assumes first index returns a table
+function rnbeObj:writeToCache()
+	self.cache.count = self.cache.count + 1
+	if self.cache.min_i > self.postBurnsRN_i then
+		self.cache.min_i = self.postBurnsRN_i
+	end
+	if self.cache.max_i < self.postBurnsRN_i then
+		self.cache.max_i = self.postBurnsRN_i
+	end
+	
+	self.cache[self.postBurnsRN_i][self.enemyHP] = {}
+	self.cache[self.postBurnsRN_i][self.enemyHP].postBurnLength = self.length - self.burns
+	self.cache[self.postBurnsRN_i][self.enemyHP].eval = self.eval
+	self.cache[self.postBurnsRN_i][self.enemyHP].enemyHPend = self.enemyHPend
+end
+
+function rnbeObj:printCache()
+	print()
+	print(string.format("%2d cache, size: %d, %4d - %4d", 
+		self.ID, self.cache.count, self.cache.min_i, self.cache.max_i))
+	
+	if self.cache.count == 0 then return end
+	
+	for c_i = self.cache.min_i, self.cache.max_i do
+		if self.cache[c_i] then
+			print(string.format("%4d - %4d  eval: %3d eHPend: %2d",
+				c_i, c_i+self.cache[c_i][self.enemyHP].postBurnLength,
+				self.cache[c_i][self.enemyHP].eval, self.cache[c_i][self.enemyHP].enemyHPend))
 		end
 	end
+end
 
-	self.postBurnsRN_i = self.startRN_i + self.burns
-	
-	if self.combat then	
-		self.enemyHP = self.batParams:data(combat.enum_ENEMY)[combat.HP_I]
+function rnbeObj:readFromCache()
+	self.length = self.burns + self.cache[self.postBurnsRN_i][self.enemyHP].postBurnLength
+	self.nextRN_i = self.startRN_i + self.length
+	self.eval = self.cache[self.postBurnsRN_i][self.enemyHP].eval
+	self.enemyHPend = self.cache[self.postBurnsRN_i][self.enemyHP].enemyHPend
+end
+
+function rnbeObj:setStart(RNBE_i)
+	if RNBE_i == 1 then 
+		if self.isPP or (PPrnbes.count == 0) then
+			self.startRN_i = rns.rng1.pos
+		else
+			self.startRN_i = getLast(PPrnbes).nextRN_i
+		end
+	else
+		self.startRN_i = P.TPrnbes(self.isPP)[RNBE_i-1].nextRN_i
+	end
+end
+
+function rnbeObj:setEnemyHP(RNBE_i)
+	if not self.combat then 
+		self.enemyHP = 0 
+		return 
+	end
+
+	self.enemyHP = self.batParams:data(combat.enum_ENEMY)[combat.HP_I]
 		
-		-- check eHP from previous combat(s) if applicable
-		if self.enemyID ~= 0 then
-			if not self.isPP then
-				for prevCombat_i = 1, PPrnbes.count do
-					if PPrnbes[prevCombat_i].enemyID == self.enemyID then
-						self.enemyHP = PPrnbes[prevCombat_i].hitSq.eHP
-					end
-				end
-			end
-			
-			for prevCombat_i = 1, RNBE_i-1 do
-				if P.TPrnbes(self.isPP)[prevCombat_i].enemyID == self.enemyID and
-					P.TPrnbes(self.isPP)[prevCombat_i].combat then
-					self.enemyHP = P.TPrnbes(self.isPP)[prevCombat_i].hitSq.eHP
-				end
+	-- check eHP from previous combat(s) if applicable
+	if self.enemyID ~= 0 then
+		for prevCombat_i = RNBE_i-1, 1, -1 do
+			if P.TPrnbes(self.isPP)[prevCombat_i].enemyID == self.enemyID and
+				P.TPrnbes(self.isPP)[prevCombat_i].combat then
+				self.enemyHP = P.TPrnbes(self.isPP)[prevCombat_i].hitSq.eHP
+				return
 			end
 		end
 		
+		if not self.isPP then
+			for prevCombat_i = PPrnbes.count, 1, -1 do
+				if PPrnbes[prevCombat_i].enemyID == self.enemyID then
+					self.enemyHP = PPrnbes[prevCombat_i].hitSq.eHP
+					return
+				end
+			end
+		end
+	end
+end
+
+-- assumes previous rnbes have updates for optimization
+function rnbeObj:updateFull(RNBE_i)	
+	if self.combat then
 		self.hitSq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHP)
 		
 		self.postCombatRN_i = self.postBurnsRN_i + self.hitSq.totalRNsConsumed
+		
+		self.enemyHPend = self.hitSq.eHP
 	else
 		self.postCombatRN_i = self.postBurnsRN_i
 	end
@@ -160,19 +226,46 @@ function rnbeObj:update(RNBE_i)
 	self.eval = self:evaluation_fn()
 end
 
-function P.updateRNBEs(start_i, playerPhase)
+-- uses cache if valid
+-- skip reconstructing combat, eval, etc
+function rnbeObj:update(RNBE_i, fast)
+	if RNBE_i then -- if no ordering given, do not update startRN_i, used for searchFutureOutcomes
+		self:setStart(RNBE_i)
+	end
+	self.postBurnsRN_i = self.startRN_i + self.burns
+	self:setEnemyHP(RNBE_i)
+
+	if fast then
+		if self.cache[self.postBurnsRN_i] then
+			if self.cache[self.postBurnsRN_i][self.enemyHP] then
+				self:readFromCache()
+			else
+				self:updateFull(RNBE_i)
+				self:writeToCache()
+			end
+		else
+			self:updateFull(RNBE_i)
+			self.cache[self.postBurnsRN_i] = {}
+			self:writeToCache()
+		end
+	else
+		self:updateFull(RNBE_i)
+	end
+end
+
+function P.updateRNBEs(start_i, fast, playerPhase)
 	start_i = start_i or sel_RNBE_i
 	playerPhase = playerPhase or P.playerPhase
 	
 	if playerPhase then
 		for RNBE_i = start_i, PPrnbes.count do
-			PPrnbes[RNBE_i]:update(RNBE_i)
+			PPrnbes[RNBE_i]:update(RNBE_i, fast)
 		end
 		start_i = 1 -- start from beginning of EPrnbes afterwards
 	end
 	
 	for RNBE_i = start_i, EPrnbes.count do
-		EPrnbes[RNBE_i]:update(RNBE_i)
+		EPrnbes[RNBE_i]:update(RNBE_i, fast)
 	end
 end
 
@@ -354,6 +447,7 @@ function P.addObj()
 
 	P.SPrnbes()[P.SPrnbes().count] = rnbeObj:new()
 	sel_RNBE_i = P.SPrnbes().count
+	permsNeedUpdate = true
 	P.updateRNBEs()
 end
 
@@ -372,6 +466,7 @@ function P.removeLastObj()
 		end
 		
 		P.SPrnbes().count = P.SPrnbes().count - 1
+		permsNeedUpdate = true
 		limitSel_RNBE_i()
 	end
 end
@@ -383,6 +478,7 @@ function P.undoDelete()
 	if P.SPrnbes()[P.SPrnbes().count + 1] then
 		P.SPrnbes().count = P.SPrnbes().count + 1	
 		getLast(P.SPrnbes()).ID = P.SPrnbes().count
+		permsNeedUpdate = true
 	else
 		print("No deletion to undo.")
 	end
@@ -465,31 +561,38 @@ function P.toggleDependency()
 			print(string.format("%d NOW DOES NOT DEPEND ON %d", 
 				P.SPrnbes()[sel_RNBE_i+1].ID, P.get().ID))
 		end
+		permsNeedUpdate = true
 	end
 end
+
+-- functions that invalidate cache
 function P.changeEnemyID(amount)
 	if P.SPrnbes().count <= 0 then return end
 
 	P.get().enemyID = P.get().enemyID + amount
+	P.get():clearCache()
 	P.updateRNBEs()
 end
-
 function P.toggleCombat()
 	if P.SPrnbes().count <= 0 then return end
 	
 	P.SPrnbes()[sel_RNBE_i].combat = not P.SPrnbes()[sel_RNBE_i].combat
+	P.SPrnbes()[sel_RNBE_i]:clearCache()
+	P.SPrnbes()[sel_RNBE_i].enemyID = 0 -- don't want to cause enemyHP to carry
 	P.updateRNBEs()
 end
 function P.toggleLevel()
 	if P.SPrnbes().count <= 0 then return end
 	
-	P.SPrnbes()[sel_RNBE_i].lvlUp = not P.SPrnbes()[sel_RNBE_i].lvlUp 
+	P.SPrnbes()[sel_RNBE_i].lvlUp = not P.SPrnbes()[sel_RNBE_i].lvlUp
+	P.SPrnbes()[sel_RNBE_i]:clearCache()
 	P.updateRNBEs()
 end
 function P.toggleDig()
 	if P.SPrnbes().count <= 0 then return end
 	
-	P.SPrnbes()[sel_RNBE_i].dig = not P.SPrnbes()[sel_RNBE_i].dig 
+	P.SPrnbes()[sel_RNBE_i].dig = not P.SPrnbes()[sel_RNBE_i].dig
+	P.SPrnbes()[sel_RNBE_i]:clearCache()
 	P.updateRNBEs()
 end
 
@@ -504,15 +607,12 @@ function P.totalEvaluation()
 	return score
 end
 
-local perms = {}
-local permsSize = 0
-
 -- include logic to enforce dependencies
 local function recursivePerm(usedNums, currPerm, currSize)
 	-- base case
 	if currSize == P.SPrnbes().count then
-		permsSize = permsSize + 1
-		perms[permsSize] = currPerm
+		perms.count = perms.count + 1
+		perms[perms.count] = currPerm
 		return
 	end
 	
@@ -548,8 +648,10 @@ local function recursivePerm(usedNums, currPerm, currSize)
 end
 
 function P.permutations()
+	--if not permsNeedUpdate then return end
+
 	perms = {}
-	permsSize = 0
+	perms.count = 0
 	
 	-- using nil as false doesn't fill table properly, explicitly fill
 	local usedNums = {}
@@ -560,16 +662,17 @@ function P.permutations()
 	end
 	
 	recursivePerm(usedNums, currPerm, 0)
+	permsNeedUpdate = false
 end
 
-function P.setToPerm(p_index)
+function P.setToPerm(p_index, fast)
 	local currPerm = perms[p_index]
 	local lowestSwap = P.SPrnbes().count+1 -- don't need to update from 1 to lSwap-1
 	-- saves a lot of time because usually only the higher RNBE are swapped
 	
 	for swapInto_i = 1, P.SPrnbes().count do
 		local perm_ID = currPerm[swapInto_i]
-		
+				
 		-- find RNBE with ID, previous should be in position
 		-- if current (swapInto_i) is in position, doing nothing is OK
 		for swapOutOf_j = swapInto_i+1, P.SPrnbes().count do
@@ -584,17 +687,17 @@ function P.setToPerm(p_index)
 		end
 	end
 	
-	P.updateRNBEs(lowestSwap)
+	P.updateRNBEs(lowestSwap, fast)
 end
 
 -- attempt every valid arrangement and score it
 -- return top three options, first is auto-set
-function P.suggestedPermutation()
+function P.suggestedPermutation(fast)
 	if not P.playerPhase then
 		print("enemy phase cannot be permuted")
 		return
 	end
-
+	
 	local timeStarted = os.clock()
 
 	-- generate array of valid permutations
@@ -607,20 +710,28 @@ function P.suggestedPermutation()
 	--		dig, + some constant
 	--		add score/permutation pair to array
 	-- sort array by score, print top results?
-	P.permutations()
+	
+	if permsNeedUpdate then
+		P.permutations()
+		print(string.format("Time taken: %.2f seconds", os.clock() - timeStarted))
+		timeStarted = os.clock()
+	end
+	
+	print(fast)	
+	
 	local scores = {}
 	local topN = 3
 	local topIndicies = {0, 0, 0}
 	local topScores = {-999, -999, -999}
 	
-	for perm_i = 1, permsSize do
-		if perm_i % 1000 == 0 then
-			print(string.format("%d/%d", perm_i, permsSize))
+	for perm_i = 1, perms.count do
+		if ((perm_i % 1000 == 0 and (not fast)) or (perm_i % 5000 == 0)) then
+			print(string.format("%7d/%d", perm_i, perms.count))
 			emu.frameadvance() -- prevent unresponsiveness
 		end
 	
 		-- swap each RNBE into position based on ID and perm, and update
-		P.setToPerm(perm_i)
+		P.setToPerm(perm_i, fast)
 		scores[perm_i] = P.totalEvaluation()
 		
 		-- update top results

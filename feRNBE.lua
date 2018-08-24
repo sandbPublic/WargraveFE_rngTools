@@ -96,7 +96,7 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	o.enemyHPend = 0 -- HP at end of this rnbe
 	-- TODO player HP (from multi combat due to dance, or EP)
 	
-	o.burns = 0 -- TODO AI burns?
+	o.burns = 0 -- TODO AI burns? post burns for rein?
 	o.startRN_i = 0
 	o.postBurnsRN_i = 0
 	o.hitSq = {} -- not hitSeq, avoid confusion with function
@@ -112,6 +112,46 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	o:clearCache()
 	
 	return o
+end
+
+function P.diagnostic()
+	if P.SPrnbes().count <= 0 then return end
+	
+	P.get():diagnostic()
+end
+
+function rnbeObj:diagnostic()
+	print()
+	print(string.format("Diagnosis of rnbe %d", self.ID))
+
+	if self.combat then	
+		batParamStrings = self.batParams:toStrings()
+		print(batParamStrings[0])
+		print(batParamStrings[1])
+		print(batParamStrings[2])
+		
+		local str = ""
+		for hitSq_i = 1, self.hitSq.numEvents do
+			local event = self.hitSq[hitSq_i]
+			str = str .. event.action .. string.format(" %2d dmg, ", event.dmg)
+		end
+		
+		print(str)
+		print(string.format("expGained=%2d eHP=%2d pHP=%2d", 
+			self.hitSq.expGained, self.hitSq.eHP, self.hitSq.pHP))
+		
+	end
+	
+	print(string.format("Eval %5.2f", self.eval))
+	
+	for c_i = self.cache.min_i, self.cache.max_i do
+		if self.cache[c_i][self.enemyHP] then
+			print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHP]))
+		
+		end
+	end
+	
+	print(self.dependency)
 end
 
 function rnbeObj:clearCache()
@@ -146,9 +186,20 @@ function rnbeObj:printCache()
 	
 	for c_i = self.cache.min_i, self.cache.max_i do
 		if self.cache[c_i] then
-			print(string.format("%4d - %4d  eval: %3d eHPend: %2d",
-				c_i, c_i+self.cache[c_i][self.enemyHP].postBurnLength,
-				self.cache[c_i][self.enemyHP].eval, self.cache[c_i][self.enemyHP].enemyHPend))
+			for eHP = 0, 60 do
+				if self.cache[c_i][eHP] then
+					
+					if eHP == 0 then
+						print(string.format("%4d-%4d  eHP 0",
+							c_i, c_i+self.cache[c_i][eHP].postBurnLength))
+					else
+						print(string.format("%4d-%4d  eval %3d  eHP %2d  eHPend %2d",
+							c_i, c_i+self.cache[c_i][eHP].postBurnLength,
+							self.cache[c_i][eHP].eval, eHP,
+							self.cache[c_i][eHP].enemyHPend))
+					end
+				end
+			end
 		end
 	end
 end
@@ -183,9 +234,10 @@ function rnbeObj:setEnemyHP(RNBE_i)
 	-- check eHP from previous combat(s) if applicable
 	if self.enemyID ~= 0 then
 		for prevCombat_i = RNBE_i-1, 1, -1 do
-			if P.TPrnbes(self.isPP)[prevCombat_i].enemyID == self.enemyID and
-				P.TPrnbes(self.isPP)[prevCombat_i].combat then
-				self.enemyHP = P.TPrnbes(self.isPP)[prevCombat_i].hitSq.eHP
+			local priorRNBE = P.TPrnbes(self.isPP)[prevCombat_i]
+		
+			if priorRNBE.enemyID == self.enemyID and priorRNBE.combat then
+				self.enemyHP = priorRNBE.enemyHPend
 				return
 			end
 		end
@@ -193,7 +245,7 @@ function rnbeObj:setEnemyHP(RNBE_i)
 		if not self.isPP then
 			for prevCombat_i = PPrnbes.count, 1, -1 do
 				if PPrnbes[prevCombat_i].enemyID == self.enemyID then
-					self.enemyHP = PPrnbes[prevCombat_i].hitSq.eHP
+					self.enemyHP = PPrnbes[prevCombat_i].enemyHPend
 					return
 				end
 			end
@@ -231,7 +283,10 @@ end
 function rnbeObj:update(RNBE_i, fast)
 	if RNBE_i then -- if no ordering given, do not update startRN_i, used for searchFutureOutcomes
 		self:setStart(RNBE_i)
+	else 
+		RNBE_i = 1
 	end
+	
 	self.postBurnsRN_i = self.startRN_i + self.burns
 	self:setEnemyHP(RNBE_i)
 
@@ -370,6 +425,21 @@ function rnbeObj:evaluation_fn(printV)
 	end
 	
 	if printV then print(printStr) end
+	return score
+end
+
+function rnbeObj:optimumEval()
+	local score = 0
+	-- account for enemyID
+	if self.combat then
+		
+	end
+	if self:levelDetected() then
+		
+	end
+	if self.dig then
+		score = score + 50
+	end
 	return score
 end
 
@@ -513,17 +583,26 @@ function P.getByID(vID)
 	print("ID not found: " .. tostring(vID))
 end
 
+P.burnAmount = 1 -- toggle to 12 for reinforcements, longer burns, etc
+function P.toggleBurnAmount()
+	if P.burnAmount == 1 then
+		P.burnAmount = 12
+	else
+		P.burnAmount = 1
+	end
+	print("Burn amount now " .. P.burnAmount)
+end
 function P.incBurns(amount)
 	if P.SPrnbes().count <= 0 then return end
 
-	amount = amount or 1
+	amount = amount or P.burnAmount
 	P.get().burns = P.get().burns + amount
 	P.updateRNBEs()
 end
 function P.decBurns(amount)
 	if P.SPrnbes().count <= 0 then return end
 	
-	amount = amount or 1
+	amount = amount or P.burnAmount
 	P.get().burns = P.get().burns - amount
 	if P.get().burns < 0 then
 		P.get().burns = 0

@@ -66,11 +66,11 @@ local function printHelp()
 		print("h: switch to primary functions")		
 		print("n: ")
 		print("e: toggle window adjustments")
-		print("i: ")
+		print("i: toggle burn amount")
 		print("o: search future outcomes of RNBE[1]")
 		
 		print("b: print cache")
-		print("k: ")
+		print("k: print rnbe diagnostic")
 		print("m: cycle version")
 	end
 end
@@ -95,12 +95,6 @@ end
 
 local function pressed(key, ctrl)
 	ctrl = ctrl or keybCtrl
-
-	if type(key) ~= "string" then
-		print("Non-string key passed to pressed(): " .. tostring(key))
-		print(debug.traceback())
-	end
-	
 	return ctrl.thisFrame[key] and not ctrl.lastFrame[key]
 end
 
@@ -220,20 +214,23 @@ while true do
 		if pressed("U") then rnbe.toggleDig() end	
 				
 		if keybCtrl.thisFrame.Y then -- hold down, then press L/R
-			local currFogRange = memory.readbyte(0x202BC05)
+			local currFogRange = memory.readbyte(0x202BCFD)
 			if pressed("L", gameCtrl) then
 				currFogRange = currFogRange - 1
-				memory.writebyte(0x202BC05, currFogRange)
+				memory.writebyte(0x202BCFD, currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end		
 			if pressed("R", gameCtrl) then
 				currFogRange = currFogRange + 1
-				memory.writebyte(0x202BC05, currFogRange)
+				memory.writebyte(0x202BCFD, currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
 			
+			--0x202BC05
 			-- memory.writebyte(0x202BCFD, viewRange=3), FE8?	
 		end
+		
+		if pressed("I") then rnbe.toggleBurnAmount() end	
 		
 		if pressed("E") then 
 			feGUI.rectShiftMode = not feGUI.rectShiftMode
@@ -254,6 +251,10 @@ while true do
 		if pressed("O") then rnbe.searchFutureOutcomes() end	
 				
 		if pressed("M")  then cycleVersion() end
+		
+		if pressed("K") then
+			rnbe.diagnostic()
+		end
 		
 		if pressed("B") then
 			if rnbe.SPrnbes().count > 0 then

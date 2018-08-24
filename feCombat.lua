@@ -210,7 +210,7 @@ function P.combatObj:toStrings()
 	end
 
 	local function line(who)
-		local name = unitData.names(unit_ID)		
+		local name = unitData.names(self.unit_ID)		
 		local experStr = string.format("%02d", self:data(who)[P.EXP_I])
 		if not self:isPlayer(who) then
 			name = "Enemy"
@@ -317,14 +317,14 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 			-- https://serenesforest.net/forums/index.php?/topic/78394-simplifying-and-correcting-the-experience-calculations/
 		end
 		
-		-- if FE7 normal mode. note this gains a lot of exp 
+		-- if FE7 normal mode, or FE8. note this gains a lot of exp 
 		-- from killing an equal or slightly "weaker" enemy,
 		-- especially at high levels, up to level*1.5.
 		-- a level 39 killing a level 39 gets ~68 exp more
 		-- than a level 39 killing a level 40.
 		-- final Ursula gets a "value" reduction of -20 due to being a valkyrie
 		-- so this effect is easily observable at Final
-		if enemyValue - playerValue <= 0 and version == 7 then
+		if enemyValue - playerValue <= 0 and version ~= 6 then
 			playerValue = math.floor(playerValue/2)
 		end
 		
@@ -405,15 +405,14 @@ function P.combatObj:hitEvent(index, who)
 				if version >= 7 then 
 					silencerRn = nextRn()
 				end
-				if classes.hasSilencer(self:data(who).class) then
-					if 25 > silencerRn or -- bosses are resistant to silencer
-					(50 > silencerRn and self.bonusExp ~= 40) then
+				if classes.hasSilencer(self:data(who).class) and
+					(25 > silencerRn or -- bosses are resistant to silencer
+					(50 > silencerRn and self.bonusExp ~= 40)) then
 					
-						retHitEv.action = "S"
-						retHitEv.dmg = 999
-						retHitEv.silenced = true
-						return retHitEv
-					end
+					retHitEv.action = "S"
+					retHitEv.dmg = 999
+					retHitEv.silenced = true
+					return retHitEv
 				else
 					retHitEv.action = "C"
 					retHitEv.dmg = 3*dmg

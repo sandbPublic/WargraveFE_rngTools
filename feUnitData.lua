@@ -247,7 +247,7 @@ false, false, true, false, false, -- Dart
 true, false, false, false, false, -- Ninian/Nils
 false, false, false, false, false, 
 false, false, true, false, false, -- Nino
-false, false, false
+false, false, true -- Athos
 }
 P.GROWTHS[7] = {
 {80, 45, 50, 40, 30, 35, 45}, -- Eliwood
@@ -300,28 +300,24 @@ P.BASE_STATS[7] = {
 {31, 15, 15, 11, 10, 08, 08, 01}, -- Marcus
 {17, 04, 05, 06, 03, 01, 04, 01}, -- Rebecca
 {30, 07, 07, 06, 03, 00, 03, 03}, -- Dorcas
---{29, 09, 05, 03, 04, 00, 04, 02}, -- Bartre
-{29, 09, 05, 03, 04, 00, 04, -10}, -- Bartre PROMO @ 13
-{19, 07, 04, 05, 08, 00, 03, 01}, -- Hector
+{29, 09, 05, 03, 04, 00, 04, -10}, -- Bartre PROMO @ 13 gained 11
+{19, 07, 04, 05, 08, 00, 03, -18}, -- Hector PROMO @ 20 gained 19
 {28, 13, 09, 05, 13, 03, 03, 09}, -- Oswin
 {17, 02, 05, 08, 02, 05, 06, 01}, -- Serra
-{18, 04, 04, 11, 03, 00, 02, 02}, -- Matthew
+{18, 04, 04, 11, 03, 00, 02, -17}, -- Matthew PROMO @ 20 gained 18
 {21, 06, 11, 11, 05, 00, 05, 03}, -- Guy
 {18, 00, 04, 05, 05, 02, 12, 05}, -- Merlinus
 {17, 05, 06, 07, 02, 04, 03, 01}, -- Erk
 {16, 06, 06, 08, 03, 06, 07, 03}, -- Priscilla
 {18, 05, 10, 11, 02, 00, 05, 04}, -- Lyn
---{21, 06, 05, 06, 05, 01, 07, 04}, -- Wil
-{21, 06, 05, 06, 05, 01, 07, -7}, -- Wil PROMO @ 12
+{21, 06, 05, 06, 05, 01, 07, -7}, -- Wil PROMO @ 12 gained 8
 {23, 08, 07, 08, 06, 01, 04, 05}, -- Kent
---{22, 09, 05, 07, 07, 00, 05, 04}, -- Sain 
-{22, 09, 05, 07, 07, 00, 05, -5}, -- Sain PROMO @ 10
+{22, 09, 05, 07, 07, 00, 05, -5}, -- Sain PROMO @ 10 gained 6
 {18, 06, 08, 09, 04, 05, 08, 03}, -- Florina
 {25, 08, 11, 13, 05, 01, 02, 05}, -- Raven
 {18, 07, 06, 10, 01, 06, 02, 03}, -- Lucius
 {21, 10, 09, 08, 05, 08, 07, 08}, -- Canas
---{34, 12, 08, 08, 06, 01, 03, 08}, -- Dart
-{34, 12, 08, 08, 06, 01, 03, -4}, -- Dart PROMO @13
+{34, 12, 10, 08, 06, 01, 03, -4}, -- Dart PROMO @ 13 gained 5 BOOK
 {21, 08, 11, 13, 06, 07, 06, 07}, -- Fiora
 {26, 08, 11, 15, 08, 03, 10, 12}, -- Legault
 {14, 00, 00, 12, 05, 04, 10, 01}, -- Ninian/Nils
@@ -336,7 +332,7 @@ P.BASE_STATS[7] = {
 {28, 12, 14, 17, 09, 12, 16, 04}, -- Louise
 {31, 16, 23, 20, 13, 12, 15, 08}, -- Karel
 {38, 21, 20, 17, 15, 10, 12, 08}, -- Harken
-{19, 07, 08, 11, 04, 07, 10, 05}, -- Nino
+{19, 07, 08, 11, 04, 07, 10, -8}, -- Nino PROMO @ 14 gained 9
 {34, 19, 25, 24, 15, 11, 10, 13}, -- Jaffar
 {43, 20, 19, 13, 21, 06, 11, 09}, -- Vaida
 {29, 14, 21, 18, 11, 12, 16, 05}, -- Karla
@@ -404,10 +400,10 @@ classes.M.PALADIN, -- Marcus
 classes.F.ARCHER, -- Rebecca	
 classes.M.FIGHTER, -- Dorcas	
 classes.M.WARRIOR, -- Bartre FIGHTER
-classes.M.LORD, -- Hector
+classes.M.GREAT_LORD7, -- Hector LORD
 classes.M.ARMOR_KNIGHT, -- Oswin	
 classes.F.CLERIC, -- Serra	
-classes.M.THIEF, -- Matthew	
+classes.M.ASSASSIN, -- Matthew	THIEF
 classes.M.MYRMIDON, -- Guy
 classes.M.TRANSPORTER, -- Merlinus	
 classes.M.MAGE, -- Erk
@@ -435,7 +431,7 @@ classes.M.SAGE, -- Pent
 classes.F.SNIPER, -- Louise	
 classes.M.SWORDMASTER, -- Karel	
 classes.M.HERO, -- Harken
-classes.F.MAGE, -- Nino	
+classes.F.SAGE, -- Nino	MAGE
 classes.M.ASSASSIN, -- Jaffar	
 classes.F.WYVERN_LORD, -- Vaida
 classes.F.SWORDMASTER, -- Karla	
@@ -455,13 +451,13 @@ P.NAMES[8] = {
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
 P.DEPLOYED[8] = {
-true, false, false, false, true, 
-false, true, true, false, true,
-false, false, true, true, true, 
-true, true, false, false, false,
-false, true, false, false, false, 
+true, false, true, true, false, 
+true, false, false, false, true,
+false, false, false, false, false, 
 false, false, false, false, false,
-false, true, false, false, false, 
+false, false, false, false, false, 
+false, false, false, false, false,
+false, false, false, false, false, 
 false, false, false, false, false,
 false, false, false}
 P.GROWTHS[8] = {
@@ -518,23 +514,23 @@ end
 P.GROWTH_WEIGHTS[8][24] = {1.0, 3.0, 0.2, 1.0, 2.0, 1.0, 0.5} -- L'Arachel
 P.GROWTH_WEIGHTS[8][22] = {2, 0, 0, 2, 4, 1, 1} -- Tethys
 P.BASE_STATS[8] = {
-{27, 06, 10, 10, 06, 06, 05, -17}, --Eirika +18 GREAT LORD, ROBE
+{16, 04, 08, 09, 03, 01, 05, 01}, --Eirika
 {30, 14, 13, 12, 11, 08, 13, 01}, --Seth
 {20, 07, 05, 07, 06, 01, 02, 01}, --Franz
 {25, 09, 06, 03, 09, 03, 03, 04}, --Gilliam
-{23, 10, 07, 09, 07, 07, 03, -6}, --Moulder +7 -> BISHOP ICON 2RING DSHIELD
+{20, 04, 06, 09, 02, 05, 01, 03}, --Moulder
 {17, 05, 07, 11, 06, 05, 04, 01}, --Vanessa
-{21, 08, 05, 05, 06, 02, 08, -20}, --Ross	+9 -> PIRATE +12 -> BERSERKER, BOOK
-{31, 09, 09, 07, 08, 04, 03, -13}, --Garcia  +14 _> WARRIOR
+{15, 05, 02, 03, 03, 00, 08, 01}, --Ross
+{28, 08, 07, 07, 05, 01, 03, 04}, --Garcia
 {17, 04, 05, 06, 03, 02, 04, 01}, --Neimi
-{21, 05, 06, 10, 05, 03, 08, -15}, --Colm 	+16 -> ASSASSIN, BOOK
+{18, 04, 04, 10, 03, 01, 08, 02}, --Colm
 {19, 06, 06, 08, 02, 06, 02, 02}, --Artur
 {17, 06, 06, 07, 03, 05, 08, 01}, --Lute
-{21, 04, 05, 08, 04, 09, 06, -8}, --Natasha +9 -> VALKYRIE
-{29, 12, 13, 14, 07, 03, 07, -10}, --Joshua +11->SWORDMASTER ERING
-{27, 10, 12, 13, 09, 07, 08, -10}, --Ephraim +11 GREAT LORD
-{33, 08, 09, 11, 12, 03, 07, -6}, --Forde	ROBE WINGS SHIELD +7->PALADIN
-{27, 10, 07, 08, 11, 02, 06, -9}, --Kyle +10->PALADIN
+{18, 02, 04, 08, 02, 06, 08, 01}, --Natasha
+{24, 08, 13, 14, 05, 02, 07, 05}, --Joshua
+{23, 08, 09, 11, 07, 02, 08, 04}, --Ephraim
+{24, 07, 08, 08, 08, 02, 07, 06}, --Forde
+{25, 09, 06, 07, 09, 01, 06, 05}, --Kyle
 {20, 07, 09, 13, 06, 07, 08, 04}, --Tana
 {16, 04, 03, 04, 02, 03, 06, 01}, --Amelia
 {31, 14, 13, 15, 10, 09, 14, 01}, --Innes
@@ -549,7 +545,7 @@ P.BASE_STATS[8] = {
 {28, 10, 16, 17, 09, 11, 05, 01}, --Rennac
 {41, 17, 12, 12, 17, 09, 08, 08}, --Duessel
 {22, 13, 09, 08, 02, 10, 00, 10}, --Knoll, auto level 1???
-{25, 03, 01, 05, 12, 07, 03, 01}, --Myrrh +10 LEVELS, HP,DEF+10
+{15, 03, 01, 05, 02, 07, 03, 01}, --Myrrh
 {27, 12, 13, 15, 10, 12, 12, 01}, --Syrene
 {47, 19, 14, 13, 15, 13, 14, 12}, --Caellach
 {48, 18, 15, 14, 14, 11, 06, 13}, --Orson
@@ -563,7 +559,7 @@ P.BASE_STATS[8] = {
 {44, 22, 13, 11, 17, 19, 04, 14}, --Lyon
 }
 P.CLASSES[8] = {
-classes.F.GREAT_LORD, --Eirika LORD
+classes.F.LORD, --Eirika LORD GREAT_LORD
 classes.M.PALADIN, --Seth
 classes.M.CAVALIER, --Franz
 classes.M.ARMOR_KNIGHT, --Gilliam 	
@@ -572,7 +568,7 @@ classes.F.PEGASUS_KNIGHT, --Vanessa
 classes.M.BERSERKER, --Ross 	
 classes.M.WARRIOR, --Garcia FIGHTER
 classes.F.ARCHER, --Neimi 	
-classes.M.ASSASSIN, --Colm 	THIEF
+classes.M.THIEF, --Colm 	THIEF ASSASSIN
 classes.M.MONK, --Artur 	
 classes.F.MAGE, --Lute 	
 classes.F.VALKYRIE, --Natasha CLERIC

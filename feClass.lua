@@ -167,6 +167,9 @@ function P.nextRelevantEnemyClass(class)
 	elseif class == P.F.LORD then
 		print("now journeyman, xp power 1")
 		return P.M.JOURNEYMAN
+	elseif class == P.M.JOURNEYMAN then
+		print("now general, great shield active")
+		return P.M.GENERAL		
 	else
 		print("now thief, xp power 2")
 		return P.M.THIEF

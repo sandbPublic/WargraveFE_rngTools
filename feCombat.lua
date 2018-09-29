@@ -140,8 +140,8 @@ function P.combatObj:staff()
 	return self.attacker[P.MIGHT_I] == 255 -- healing only?
 end
 
-function P.combatObj:dmg(who)
-	if classes.hasPierce(self:data(who).class) then
+function P.combatObj:dmg(who, pierce)
+	if pierce then
 		return self:data(who)[P.MIGHT_I]
 	end
 	return math.max(0, self:data(who)[P.MIGHT_I] - self:data(P.opponent(who))[P.DEF_I])
@@ -324,7 +324,15 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 		-- than a level 39 killing a level 40.
 		-- final Ursula gets a "value" reduction of -20 due to being a valkyrie
 		-- so this effect is easily observable at Final
-		if enemyValue - playerValue <= 0 and version ~= 6 then
+		
+		-- inconsistent in FE8? on Ephraim mode, 
+		-- Gilliam lvl 10 killing fighter lvl 9
+		-- gains 27, not 42 xp??
+		-- yet Franz lvl 26 killing Entombed lvl 24 gains 55, not 15 exp?
+		-- in same level, Gilliam doesn't get this "mode bonus" when he otherwise would
+		
+		-- hypothesis: only affects promoted (enemy or player?) or boss units?
+		if enemyValue - playerValue <= 0 and version ~= 6 and self.bonusExp == 40 then
 			playerValue = math.floor(playerValue/2)
 		end
 		
@@ -337,9 +345,9 @@ end
 -- string action type, int dmg, int rnsConsumed, bool expGained, bool silenced
 function P.combatObj:hitEvent(index, who)
 	local retHitEv = {}
-	retHitEv.action = "-"
+	retHitEv.action = ""
 	retHitEv.RNsConsumed = 0
-	retHitEv.dmg = 0
+	retHitEv.dmg = self:dmg(who)
 	retHitEv.expGained = true -- assume true and falsify
 	
 	if (not self:isPlayer(who)) or self:defenderIsWall() then
@@ -349,8 +357,11 @@ function P.combatObj:hitEvent(index, who)
 	
 	local hit = self:data(who)[P.HIT_I]
 	local crt = self:data(who)[P.CRIT_I]
-	local dmg = self:dmg(who)
 	local lvl = self:data(who)[P.LEVEL_I]
+	
+	if lvl > 20 then
+		lvl = lvl - 20
+	end
 	
 	-- gShield or Pierce consumed first if applicable (gShield before Pierce?)
 	-- then crit
@@ -362,41 +373,22 @@ function P.combatObj:hitEvent(index, who)
 		retHitEv.RNsConsumed = retHitEv.RNsConsumed + 1
 		return rns.rng1:getRNasCent(index+retHitEv.RNsConsumed-1)--use consumed rn
 	end
-	
+		
 	if hit ~= 255 then -- no action		
-		if hit > (nextRn()+nextRn())/2 then		
+		if hit > (nextRn()+nextRn())/2 then
+			retHitEv.action = "X"
+			
 			if classes.hasGreatShield(self:data(P.opponent(who)).class) then
 				if lvl > nextRn() then
-					retHitEv.action = "G"
-					return retHitEv
-				else
-					retHitEv.action = "GNP" -- what about crit?
-					retHitEv.dmg = dmg
-					return retHitEv
+					retHitEv.action = "G" -- does crit even roll?
+					retHitEv.dmg = 0
 				end
 			end
 			
 			if classes.hasPierce(self:data(who).class) then
 				if lvl > nextRn() then
-					if crt > nextRn() then
-						retHitEv.action = "PC"
-						retHitEv.dmg = 3*self:dmg(who)
-						return retHitEv
-					else
-						retHitEv.action = "P"
-						retHitEv.dmg = self:dmg(who)
-						return retHitEv
-					end
-				else
-					if crt > nextRn() then
-						retHitEv.action = "PNPC"
-						retHitEv.dmg = 3*dmg
-						return retHitEv
-					else
-						retHitEv.action = "PNP"
-						retHitEv.dmg = dmg
-						return retHitEv
-					end
+					retHitEv.action = "P"
+					retHitEv.dmg = self:dmg(who, true)
 				end
 			end
 			
@@ -405,6 +397,7 @@ function P.combatObj:hitEvent(index, who)
 				if version >= 7 then 
 					silencerRn = nextRn()
 				end
+				
 				if classes.hasSilencer(self:data(who).class) and
 					(25 > silencerRn or -- bosses are resistant to silencer
 					(50 > silencerRn and self.bonusExp ~= 40)) then
@@ -412,11 +405,14 @@ function P.combatObj:hitEvent(index, who)
 					retHitEv.action = "S"
 					retHitEv.dmg = 999
 					retHitEv.silenced = true
-					return retHitEv
 				else
-					retHitEv.action = "C"
-					retHitEv.dmg = 3*dmg
-					return retHitEv
+					if retHitEv.action == "P" then
+						retHitEv.action = "PC"
+					else
+						retHitEv.action = "C"
+					end
+					
+					retHitEv.dmg = 3*retHitEv.dmg
 				end
 			end
 			
@@ -427,21 +423,16 @@ function P.combatObj:hitEvent(index, who)
 				if ((31 - self:data(who)[P.LUCK_I] > devilRN) and (version >= 7)) or 
 					((21 - self:data(who)[P.LEVEL_I] > devilRN) and (version == 6)) then
 					retHitEv.action = "DEV"
-					retHitEv.dmg = dmg 
-					retHitEv.expGained = false -- untested
-					return retHitEv		
+					retHitEv.expGained = false -- untested	
 				end
 			end
-			
-			retHitEv.action = "X"
-			retHitEv.dmg = dmg
-			return retHitEv
 		else
 			retHitEv.action = "O"
+			retHitEv.dmg = 0
+			retHitEv.expGained = false
 		end
 	end
 	
-	retHitEv.expGained = false
 	return retHitEv
 end
 
@@ -558,10 +549,10 @@ function P.hitSeq_string(hitSq)
 	local hitString = ""
 	
 	for ev_i = 1, hitSq.numEvents do
-		hitString = hitString .. hitSq[ev_i].action
+		hitString = hitString .. hitSq[ev_i].action .. " "
 	end
 	
-	hitString = hitString .. " " .. hitSq.expGained	.. "xp"
+	hitString = hitString .. hitSq.expGained .. "xp"
 	if hitSq.lvlUp then hitString = hitString .. " Lvl" end	
 	return hitString
 end

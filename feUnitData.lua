@@ -451,11 +451,11 @@ P.NAMES[8] = {
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
 P.DEPLOYED[8] = {
-true, false, true, true, false, 
+false, false, true, true, false, 
 true, false, false, false, true,
-false, false, false, false, false, 
-false, false, false, false, false,
-false, false, false, false, false, 
+false, false, false, false, true, 
+true, false, false, false, false,
+false, false, true, false, true, 
 false, false, false, false, false,
 false, false, false, false, false, 
 false, false, false, false, false,
@@ -516,10 +516,10 @@ P.GROWTH_WEIGHTS[8][22] = {2, 0, 0, 2, 4, 1, 1} -- Tethys
 P.BASE_STATS[8] = {
 {16, 04, 08, 09, 03, 01, 05, 01}, --Eirika
 {30, 14, 13, 12, 11, 08, 13, 01}, --Seth
-{20, 07, 05, 07, 06, 01, 02, 01}, --Franz
-{25, 09, 06, 03, 09, 03, 03, 04}, --Gilliam
+{20, 09, 05, 09, 06, 01, 02, -9}, --Franz 01 RING WING
+{25, 09, 06, 03, 09, 03, 03, -11}, --Gilliam 04
 {20, 04, 06, 09, 02, 05, 01, 03}, --Moulder
-{17, 05, 07, 11, 06, 05, 04, 01}, --Vanessa
+{24, 05, 07, 11, 06, 05, 04, -9}, --Vanessa 01 ROBE
 {15, 05, 02, 03, 03, 00, 08, 01}, --Ross
 {28, 08, 07, 07, 05, 01, 03, 04}, --Garcia
 {17, 04, 05, 06, 03, 02, 04, 01}, --Neimi
@@ -561,21 +561,21 @@ P.BASE_STATS[8] = {
 P.CLASSES[8] = {
 classes.F.LORD, --Eirika LORD GREAT_LORD
 classes.M.PALADIN, --Seth
-classes.M.CAVALIER, --Franz
-classes.M.ARMOR_KNIGHT, --Gilliam 	
-classes.M.BISHOP, --Moulder
-classes.F.PEGASUS_KNIGHT, --Vanessa 	
-classes.M.BERSERKER, --Ross 	
-classes.M.WARRIOR, --Garcia FIGHTER
+classes.M.PALADIN, --Franz CAVALIER PALADIN
+classes.M.GREAT_KNIGHT, --Gilliam ARMOR_KNIGHT
+classes.M.CLERIC, --Moulder BISHOP
+classes.F.WYVERN_KNIGHT, --Vanessa PEGASUS_KNIGHT WYVERN_KNIGHT
+classes.M.JOURNEYMAN, --Ross BERSERKER	
+classes.M.FIGHTER, --Garcia FIGHTER WARRIOR
 classes.F.ARCHER, --Neimi 	
-classes.M.THIEF, --Colm 	THIEF ASSASSIN
+classes.M.THIEF, --Colm THIEF ASSASSIN
 classes.M.MONK, --Artur 	
 classes.F.MAGE, --Lute 	
-classes.F.VALKYRIE, --Natasha CLERIC
-classes.M.SWORDMASTER, --Joshua MYRMIDON	
-classes.M.GREAT_LORD8, --Ephraim LORD
-classes.M.PALADIN, --Forde 	CAVALIER
-classes.M.PALADIN, --Kyle 	
+classes.F.CLERIC, --Natasha CLERIC VALKYRIE
+classes.M.MYRMIDON, --Joshua MYRMIDON SWORDMASTER
+classes.M.LORD, --Ephraim LORD GREAT_LORD8
+classes.M.CAVALIER, --Forde CAVALIER PALADIN
+classes.M.CAVALIER, --Kyle CAVALIER PALADIN
 classes.F.PEGASUS_KNIGHT, --Tana 	
 classes.F.RECRUIT, --Amelia 	
 classes.M.SNIPER, --Innes 	

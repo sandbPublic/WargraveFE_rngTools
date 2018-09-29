@@ -37,41 +37,35 @@ local primaryFunctions = true
 --  HNEIO
 -- BKM
 
+local hotkeys = {}
+local function loadHotkeys(filename)
+	local f = assert(io.open(filename, "r"))
+	
+	hotkeys.count = 0
+	local c = f:read("*line")
+	
+	while c do
+		hotkeys.count = hotkeys.count + 1
+		hotkeys[hotkeys.count] = {}
+		hotkeys[hotkeys.count].key = c
+		hotkeys[hotkeys.count].message1 = c .. ": " .. f:read("*line")
+		hotkeys[hotkeys.count].message2 = string.lower(c) .. ": " ..f:read("*line")
+		c = f:read("*line")
+	end
+	
+	print("loaded hotkeys " .. filename)
+end
+loadHotkeys("QwertyHotkeys.txt")
+
 local function printHelp()
 	print("")
 
-	if primaryFunctions then
-		print("G: clear last RNBE")
-		print("J: register new RNBE")
-		print("L: toggle RNBE.combat")
-		print("U: cycle enemy class")
-		print("Y: toggle bonus exp")
-	
-		print("H: switch to 2ndary functions")		
-		print("N: unit_i to next deployed")
-		print("E: quick toggle visibility")
-		print("I: next display mode")
-		print("O: suggest RNBE permutation")
-		
-		print("B: toggle enemy promo")
-		print("K: save battle params and stats")
-		print("M: toggle phase")	
-	else 
-		print("g: undo RNBE deletion")
-		print("j: cycle player weapon type")
-		print("l: toggle RNBE lvlUp")
-		print("u: toggle RNBE dig")
-		print("y: hold, L/R change fog")
-	
-		print("h: switch to primary functions")		
-		print("n: ")
-		print("e: toggle window adjustments")
-		print("i: toggle burn amount")
-		print("o: search future outcomes of RNBE[1]")
-		
-		print("b: print cache")
-		print("k: print rnbe diagnostic")
-		print("m: cycle version")
+	for hotkey_i = 1, hotkeys.count do
+		if primaryFunctions then
+			print(hotkeys[hotkey_i].message1)
+		else
+			print(hotkeys[hotkey_i].message2)
+		end
 	end
 end
 
@@ -95,6 +89,11 @@ end
 
 local function pressed(key, ctrl)
 	ctrl = ctrl or keybCtrl
+	
+	if type(key) == "number" then
+		key = hotkeys[key].key
+	end
+	
 	return ctrl.thisFrame[key] and not ctrl.lastFrame[key]
 end
 
@@ -155,65 +154,72 @@ while true do
 		end	
 	end
 	
-	if pressed("H") then -- print help
+	if pressed(6) then -- print help
 		primaryFunctions = not primaryFunctions
 		printHelp()
 	end	
 		
 	if primaryFunctions then
-		if pressed("G") then rnbe.removeLastObj() end	
-		if pressed("J") then rnbe.addObj() end
-		if pressed("L") then rnbe.toggleCombat() end
-		if pressed("U") then combat.currBattleParams:cycleEnemyClass() end	
-		if pressed("Y") then combat.currBattleParams:toggleBonusExp() end
-	
-		if pressed("N") then -- advance to next deployed
-			unitData.sel_Unit_i = unitData.nextDeployed()		
-			print(string.format("Selected: %-10.10s (next: %s)", unitData.names(), 
-				unitData.names(unitData.nextDeployed())))
+		if pressed(1) then rnbe.removeLastObj() end	
+		
+		if pressed(2) then 
+			rnbe.addObj()
+			rnbe.get().batParams:set()
+			rnbe.updateRNBEs()
+		end
+		
+		if pressed(3) then rnbe.toggleCombat() end
+		
+		if pressed(4) then
+			rnbe.toggleBatParam(combat.combatObj.togglePromo)
 		end	
 		
-		if pressed("I") then feGUI.advanceDisplay() end	
+		if pressed(5) then
+			rnbe.toggleBatParam(combat.combatObj.toggleBonusExp)
+		end
+	
+		if pressed(7) then -- advance to next deployed
+			unitData.sel_Unit_i = unitData.nextDeployed()
+			print(string.format("Selected %-10.10s (next %s)", unitData.names(), 
+				unitData.names(unitData.nextDeployed())))
+		end
 		
-		if pressed("E") then -- quick toggle visibility
+		if pressed(8) then -- quick toggle visibility
 			if feGUI.selRect().opacity == 0 then
 				feGUI.selRect().opacity = 0.75
 			else
 				feGUI.selRect().opacity = 0
 			end
-		end	
+		end
+		
+		if pressed(9) then feGUI.advanceDisplay() end
 
-		if pressed("O") then 
+		if pressed(10) then 
 			rnbe.suggestedPermutation("fast")
-			--rnbe.suggestedPermutation() 
-		end	
+		end
 		
-		if pressed("B") then -- toggle enemy promoted
-			combat.currBattleParams:togglePromo()
-			printStringArray(combat.currBattleParams:toStrings(), 3)
-		end	
+		if pressed(11) then
+			rnbe.toggleBatParam(combat.combatObj.cycleEnemyClass)
+		end
 		
-		if pressed("M") then rnbe.togglePhase() end
-		
-		if pressed("K") then -- save battle params & stats
+		if pressed(12) then -- save battle params & stats
 			combat.currBattleParams:set()
 			printStringArray(combat.currBattleParams:toStrings(), 3)
 			
 			reprintStats = true
 			unitData.saveStats()
-		end	
+		end
+		
+		if pressed(13) then rnbe.togglePhase() end
 	else
-		if pressed("G") then rnbe.undoDelete() end	
-		
-		if pressed("J") then 
-			combat.currBattleParams:cycleWeapon(combat.enum_PLAYER)
-		end	
-		
-		if pressed("L") then rnbe.toggleLevel() end
-		
-		if pressed("U") then rnbe.toggleDig() end	
+		if pressed(1) then rnbe.undoDelete() end		
+		if pressed(2) then
+			rnbe.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_PLAYER)
+		end
+		if pressed(3) then rnbe.toggleLevel() end		
+		if pressed(4) then rnbe.toggleDig() end
 				
-		if keybCtrl.thisFrame.Y then -- hold down, then press L/R
+		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
 			local currFogRange = memory.readbyte(0x202BCFD)
 			if pressed("L", gameCtrl) then
 				currFogRange = currFogRange - 1
@@ -226,13 +232,11 @@ while true do
 				print("fog set to " .. tostring(currFogRange))
 			end
 			
-			--0x202BC05
-			-- memory.writebyte(0x202BCFD, viewRange=3), FE8?	
-		end
+			--0x202BC05 FE7
+			--0x202BCFD FE8
+		end	
 		
-		if pressed("I") then rnbe.toggleBurnAmount() end	
-		
-		if pressed("E") then 
+		if pressed(8) then 
 			feGUI.rectShiftMode = not feGUI.rectShiftMode
 			
 			if feGUI.rectShiftMode then
@@ -248,21 +252,22 @@ while true do
 			end
 		end	
 		
-		if pressed("O") then rnbe.searchFutureOutcomes() end	
-				
-		if pressed("M")  then cycleVersion() end
+		if pressed(9) then rnbe.toggleBurnAmount() end		
+		if pressed(10) then rnbe.searchFutureOutcomes() end	
 		
-		if pressed("K") then
-			rnbe.diagnostic()
-		end
-		
-		if pressed("B") then
+		if pressed(11) then
 			if rnbe.SPrnbes().count > 0 then
 				rnbe.get():printCache()
 			else
 				print("no rnbes")
 			end
 		end
+		
+		if pressed(12) then
+			rnbe.diagnostic()
+		end
+		
+		if pressed(13) then cycleVersion() end
 	end
 		
 	if reprintRNs then

@@ -1,0 +1,39 @@
+T
+delete last RNBE
+undo RNBE deletion
+Y
+register new RNBE
+cycle weapon type (hold B for enemy)
+U
+toggle RNBE.combat
+toggle RNBE.lvlUp
+I
+toggle enemy promo
+toggle RNBE dig
+O
+toggle bonus exp
+hold, L/R change fog
+H
+switch to 2ndary functions
+switch to primary functions
+J
+unit_i to next deployed
+-
+K
+toggle window visibility
+toggle window adjustments
+L
+next display mode
+toggle burn amount
+P
+suggest RNBE permutation
+search future outcomes of RNBE[1]
+B
+cycle enemy class
+print cache
+N
+save stats
+print rnbe diagnostic
+M
+toggle phase
+cycle version

@@ -145,9 +145,8 @@ function rnbeObj:diagnostic()
 	print(string.format("Eval %5.2f", self.eval))
 	
 	for c_i = self.cache.min_i, self.cache.max_i do
-		if self.cache[c_i][self.enemyHP] then
-			print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHP]))
-		
+		if self.cache[c_i] and self.cache[c_i][self.enemyHP] then
+			--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHP].eval))		
 		end
 	end
 	
@@ -623,6 +622,7 @@ function P.swap()
 			print(string.format("CAN'T SWAP, %d DEPENDS ON %d, TOGGLE WITH START", 
 				P.SPrnbes()[sel_RNBE_i+1].ID, P.get().ID))
 		else
+			-- don't use get()?
 			P.SPrnbes()[sel_RNBE_i], P.SPrnbes()[sel_RNBE_i+1] = P.SPrnbes()[sel_RNBE_i+1], P.SPrnbes()[sel_RNBE_i]
 			P.updateRNBEs()
 		end
@@ -645,6 +645,14 @@ function P.toggleDependency()
 end
 
 -- functions that invalidate cache
+function P.toggleBatParam(func, var)
+	if rnbe.SPrnbes().count > 0 then
+		func(P.get().batParams, var) -- :func() syntatic for func(self)
+		P.get():clearCache()
+		P.updateRNBEs()
+	end
+end
+
 function P.changeEnemyID(amount)
 	if P.SPrnbes().count <= 0 then return end
 
@@ -655,23 +663,23 @@ end
 function P.toggleCombat()
 	if P.SPrnbes().count <= 0 then return end
 	
-	P.SPrnbes()[sel_RNBE_i].combat = not P.SPrnbes()[sel_RNBE_i].combat
-	P.SPrnbes()[sel_RNBE_i]:clearCache()
-	P.SPrnbes()[sel_RNBE_i].enemyID = 0 -- don't want to cause enemyHP to carry
+	P.get().combat = not P.get().combat
+	P.get():clearCache()
+	P.get().enemyID = 0 -- don't want to cause enemyHP to carry
 	P.updateRNBEs()
 end
 function P.toggleLevel()
 	if P.SPrnbes().count <= 0 then return end
 	
-	P.SPrnbes()[sel_RNBE_i].lvlUp = not P.SPrnbes()[sel_RNBE_i].lvlUp
-	P.SPrnbes()[sel_RNBE_i]:clearCache()
+	P.get().lvlUp = not P.get().lvlUp
+	P.get():clearCache()
 	P.updateRNBEs()
 end
 function P.toggleDig()
 	if P.SPrnbes().count <= 0 then return end
 	
-	P.SPrnbes()[sel_RNBE_i].dig = not P.SPrnbes()[sel_RNBE_i].dig
-	P.SPrnbes()[sel_RNBE_i]:clearCache()
+	P.get().dig = not P.get().dig
+	P.get():clearCache()
 	P.updateRNBEs()
 end
 

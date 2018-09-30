@@ -156,26 +156,6 @@ P.EXP_KILL_MODIFIER[P.F.ASSASSIN] = -20
 P.EXP_KILL_MODIFIER[P.M.ASSASSIN] = -20
 P.EXP_KILL_MODIFIER[P.M.ROGUE] 	  = -20
 
--- exact class doesn't matter, just that they share the desired property
-function P.nextRelevantEnemyClass(class)
-	if class == P.M.THIEF then		
-		print("now bishop, xp kill mod -20")
-		return P.F.BISHOP
-	elseif class == P.F.BISHOP then
-		print("now lord")
-		return P.F.LORD
-	elseif class == P.F.LORD then
-		print("now journeyman, xp power 1")
-		return P.M.JOURNEYMAN
-	elseif class == P.M.JOURNEYMAN then
-		print("now general, great shield active")
-		return P.M.GENERAL		
-	else
-		print("now thief, xp power 2")
-		return P.M.THIEF
-	end
-end
-
 -- assume same caps from game to game for now...
 P.CAPS[P.F.DANCER]			= {60, 10, 10, 30, 24, 26, 30} -- 78
 P.CAPS[P.M.BARD]			= {60, 10, 10, 30, 24, 26, 30}
@@ -293,6 +273,33 @@ P.PROMO_GAINS[P.M.ROGUE] 			= {0, 0, 0, 0, 0, 0, 0} --__
 
 P.PROMO_GAINS[P.M.ARCHSAGE] 		= {0, 0, 0, 0, 0, 0, 0}
 P.PROMO_GAINS[P.M.NECROMANCER] 		= {0, 0, 0, 0, 0, 0, 0}
+
+-- exact class doesn't matter, just that they share the desired property
+function P.nextRelevantEnemyClass(class)
+	if class == P.M.THIEF then		
+		print("now bishop, xp kill mod -20")
+		return P.F.BISHOP
+	elseif class == P.F.BISHOP then
+		print("now lord")
+		return P.F.LORD
+	elseif class == P.F.LORD then
+		print("now journeyman, xp power 1")
+		return P.M.JOURNEYMAN
+	elseif class == P.M.JOURNEYMAN then
+		print("now general, great shield active")
+		return P.M.GENERAL
+	elseif class == P.M.GENERAL then
+		print("now wyvern knight, pierce active")
+		return P.M.WYVERN_KNIGHT
+	elseif class == P.M.WYVERN_KNIGHT then
+		print("now sniper, sure strike active")
+		return P.M.SNIPER
+	else
+		print("now thief, xp power 2")
+		return P.M.THIEF
+	end
+end
+
 
 function P.hasSilencer(class)
 	return class == P.F.ASSASSIN or class == P.M.ASSASSIN

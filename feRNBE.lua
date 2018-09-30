@@ -86,6 +86,8 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	end
 	o.batParams = combatO:copy()
 	o.combat = true -- most RNBEs will be combats without levels or digs
+	o.combatWeight = 1
+	
 	o.lvlUp = false
 	o.dig = false
 	-- as units ram their caps (or have the potential to), the value of their levels drops
@@ -369,8 +371,16 @@ function rnbeObj:headerString(RNBE_i)
 	end
 	local weapon = self.batParams:data(combat.enum_PLAYER).weapon
 	if weapon ~= combat.enum_NORMAL then
-		specialStringEvents = specialStringEvents .. " " .. combat.WEAPON_TYPE_STRINGS[weapon]
+		specialStringEvents = specialStringEvents .. " " 
+			.. string.upper(combat.WEAPON_TYPE_STRINGS[weapon])
 	end
+	
+	weapon = self.batParams:data(combat.enum_ENEMY).weapon
+	if weapon ~= combat.enum_NORMAL then
+		specialStringEvents = specialStringEvents .. " " 
+			.. combat.WEAPON_TYPE_STRINGS[weapon]
+	end
+	
 	if self.batParams:data(combat.enum_ENEMY).class ~= classes.F.LORD then
 		specialStringEvents = specialStringEvents .. " class " .. tostring(self.batParams:data(combat.enum_ENEMY).class)
 	end
@@ -384,6 +394,7 @@ end
 
 -- measure in units of exp
 -- perfect combat value == 100 exp
+-- can adjust combat weight
 -- dig = 50 exp
 function rnbeObj:evaluation_fn(printV)
 	local score = 0	
@@ -407,11 +418,14 @@ function rnbeObj:evaluation_fn(printV)
 			
 			score = score + 100*dmgToEnemy - 200*dmgToPlayer 
 				+ self.hitSq.expGained*self.expValueFactor
-		
+			
 			printStr = printStr .. string.format(" d2e %.2f  d2p %.2f  exp %dx%.2f", 
 					dmgToEnemy, dmgToPlayer, self.hitSq.expGained, self.expValueFactor)
 		end
 	end
+	
+	score = score * self.combatWeight
+	
 	if self:levelDetected() then
 		score = score + self:levelScore()*self.expValueFactor
 		
@@ -642,6 +656,12 @@ function P.toggleDependency()
 		end
 		permsNeedUpdate = true
 	end
+end
+function P.adjustCombatWeight(amount)
+	if P.SPrnbes().count <= 0 then return end
+
+	P.get().combatWeight = P.get().combatWeight + amount
+	print("combatWeight: x" .. P.get().combatWeight)
 end
 
 -- functions that invalidate cache

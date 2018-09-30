@@ -160,7 +160,7 @@ function P.combatObj:togglePromo(who)
 	who = who or P.enum_ENEMY
 
 	-- don't loop 40 to zero
-	self:data(who)[P.LEVEL_I] = (self:data(who)[P.LEVEL_I] + 19) % 40 + 1	
+	self:data(who)[P.LEVEL_I] = (self:data(who)[P.LEVEL_I] + 19) % 40 + 1
 end
 
 function P.combatObj:set()
@@ -374,8 +374,16 @@ function P.combatObj:hitEvent(index, who)
 		return rns.rng1:getRNasCent(index+retHitEv.RNsConsumed-1)--use consumed rn
 	end
 		
-	if hit ~= 255 then -- no action		
-		if hit > (nextRn()+nextRn())/2 then
+	if hit ~= 255 then -- no action	
+		local willHit = (hit > (nextRn()+nextRn())/2)
+		
+		if classes.hasSureStrike(self:data(who).class) then
+			if nextRn() < lvl then
+				willHit = true
+			end
+		end
+	
+		if willHit then
 			retHitEv.action = "X"
 			
 			if classes.hasGreatShield(self:data(P.opponent(who)).class) then

@@ -166,12 +166,16 @@ while true do
 			rnbe.addObj()
 			rnbe.get().batParams:set()
 			rnbe.updateRNBEs()
+			
+			printStringArray(rnbe.get().batParams:toStrings(), 3)
 		end
 		
 		if pressed(3) then rnbe.toggleCombat() end
 		
 		if pressed(4) then
 			rnbe.toggleBatParam(combat.combatObj.togglePromo)
+			
+			printStringArray(rnbe.get().batParams:toStrings(), 3)
 		end	
 		
 		if pressed(5) then
@@ -214,7 +218,11 @@ while true do
 	else
 		if pressed(1) then rnbe.undoDelete() end		
 		if pressed(2) then
-			rnbe.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_PLAYER)
+			if gameCtrl.thisFrame.B then
+				rnbe.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_ENEMY)
+			else
+				rnbe.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_PLAYER)
+			end
 		end
 		if pressed(3) then rnbe.toggleLevel() end		
 		if pressed(4) then rnbe.toggleDig() end
@@ -235,6 +243,15 @@ while true do
 			--0x202BC05 FE7
 			--0x202BCFD FE8
 		end	
+		
+		if keybCtrl.thisFrame[hotkeys[7].key] then
+			if pressed("L", gameCtrl) then
+				rnbe.adjustCombatWeight(-0.2)
+			end		
+			if pressed("R", gameCtrl) then
+				rnbe.adjustCombatWeight(0.2)
+			end
+		end
 		
 		if pressed(8) then 
 			feGUI.rectShiftMode = not feGUI.rectShiftMode

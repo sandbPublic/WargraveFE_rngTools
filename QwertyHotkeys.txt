@@ -18,7 +18,7 @@ switch to 2ndary functions
 switch to primary functions
 J
 unit_i to next deployed
--
+hold, L/R to change combat weight
 K
 toggle window visibility
 toggle window adjustments

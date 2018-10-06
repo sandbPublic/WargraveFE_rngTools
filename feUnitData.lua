@@ -451,11 +451,11 @@ P.NAMES[8] = {
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
 P.DEPLOYED[8] = {
-false, false, true, true, false, 
+true, false, true, true, false, 
 true, false, false, false, true,
 false, false, false, false, true, 
 true, false, false, false, false,
-false, false, true, false, true, 
+false, true, true, false, true, 
 false, false, false, false, false,
 false, false, false, false, false, 
 false, false, false, false, false,
@@ -529,7 +529,7 @@ P.BASE_STATS[8] = {
 {18, 02, 04, 08, 02, 06, 08, 01}, --Natasha
 {24, 08, 13, 14, 05, 02, 07, 05}, --Joshua
 {23, 08, 09, 11, 07, 02, 08, 04}, --Ephraim
-{24, 07, 08, 08, 08, 02, 07, 06}, --Forde
+{24, 07, 08, 08, 08, 02, 07, -8}, --Forde 06
 {25, 09, 06, 07, 09, 01, 06, 05}, --Kyle
 {20, 07, 09, 13, 06, 07, 08, 04}, --Tana
 {16, 04, 03, 04, 02, 03, 06, 01}, --Amelia
@@ -574,7 +574,7 @@ classes.F.MAGE, --Lute
 classes.F.CLERIC, --Natasha CLERIC VALKYRIE
 classes.M.MYRMIDON, --Joshua MYRMIDON SWORDMASTER
 classes.M.LORD, --Ephraim LORD GREAT_LORD8
-classes.M.CAVALIER, --Forde CAVALIER PALADIN
+classes.M.PALADIN, --Forde CAVALIER PALADIN
 classes.M.CAVALIER, --Kyle CAVALIER PALADIN
 classes.F.PEGASUS_KNIGHT, --Tana 	
 classes.F.RECRUIT, --Amelia 	

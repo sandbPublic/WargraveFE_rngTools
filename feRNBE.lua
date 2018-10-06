@@ -714,12 +714,22 @@ function P.totalEvaluation()
 	return score
 end
 
+local MEM_LIMIT = 500000
+
 -- include logic to enforce dependencies
 local function recursivePerm(usedNums, currPerm, currSize)
+	if perms.count >= MEM_LIMIT then return end
+
 	-- base case
 	if currSize == P.SPrnbes().count then
 		perms.count = perms.count + 1
 		perms[perms.count] = currPerm
+		
+		if perms.count >= MEM_LIMIT then
+			print()
+			print(string.format("MEMORY LIMIT %d REACHED, ABORTING", MEM_LIMIT))
+			print()
+		end
 		return
 	end
 	
@@ -748,7 +758,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 			end
 		end
 		if currSize == 0 then
-			print(string.format("%d/%d permutation main branches", next_i, P.SPrnbes().count))
+			print(string.format("%d/%d %7d permutations", next_i, P.SPrnbes().count, perms.count))
 			emu.frameadvance() -- prevent unresponsiveness
 		end
 	end
@@ -770,6 +780,12 @@ function P.permutations()
 	
 	recursivePerm(usedNums, currPerm, 0)
 	permsNeedUpdate = false
+	
+	if perms.count >= MEM_LIMIT then
+		perms = {}
+		perms.count = 0
+		permsNeedUpdate = true
+	end
 end
 
 function P.setToPerm(p_index, fast)
@@ -807,29 +823,23 @@ function P.suggestedPermutation(fast)
 	
 	local timeStarted = os.clock()
 
-	-- generate array of valid permutations
-	-- for each perm
-	--		swap RNBE into position
-	--		score each RNBE:
-	--      if swap order violated, return -999
-	--		combat, can be marked as critical
-	--		lvl ups, just use that score
-	--		dig, + some constant
-	--		add score/permutation pair to array
-	-- sort array by score, print top results?
-	
 	if permsNeedUpdate then
 		P.permutations()
 		print(string.format("Time taken: %.2f seconds", os.clock() - timeStarted))
 		timeStarted = os.clock()
+		
+		if permsNeedUpdate then -- memory abort
+			return
+		end
 	end
 	
-	print(fast)	
-	
-	local scores = {}
 	local topN = 3
-	local topIndicies = {0, 0, 0}
-	local topScores = {-999, -999, -999}
+	local topIndicies = {}
+	local topScores = {}
+	for top_i = 1, topN do
+		topIndicies[top_i] = 0
+		topScores[top_i] = -999
+	end
 	
 	for perm_i = 1, perms.count do
 		if ((perm_i % 1000 == 0 and (not fast)) or (perm_i % 5000 == 0)) then
@@ -839,18 +849,19 @@ function P.suggestedPermutation(fast)
 	
 		-- swap each RNBE into position based on ID and perm, and update
 		P.setToPerm(perm_i, fast)
-		scores[perm_i] = P.totalEvaluation()
+		
+		local score = P.totalEvaluation()
 		
 		-- update top results
 		local replaced = false
-		for top_j = 1, topN do
-			if scores[perm_i] > topScores[top_j] and not replaced then
-				for shift_k = topN, top_j + 1, -1 do
+		for top_i = 1, topN do
+			if score > topScores[top_i] and not replaced then
+				for shift_k = topN, top_i + 1, -1 do
 					topScores[shift_k] = topScores[shift_k-1]
 					topIndicies[shift_k] = topIndicies[shift_k-1]
 				end
-				topScores[top_j] = scores[perm_i]
-				topIndicies[top_j] = perm_i
+				topScores[top_i] = score
+				topIndicies[top_i] = perm_i
 				replaced = true
 			end
 		end
@@ -869,12 +880,12 @@ function P.suggestedPermutation(fast)
 	end
 	
 	print()
-	for top_j = 1, topN do
-		if not scores[topIndicies[top_j]] then
-			scores[topIndicies[top_j]] = -999
+	for top_i = 1, topN do
+		if not topScores[top_i] then
+			topScores[top_i] = -999
 		end
-		print(perms[topIndicies[top_j]])
-		print(string.format("%.2f", scores[topIndicies[top_j]]))
+		print(perms[topIndicies[top_i]])
+		print(string.format("%.2f", topScores[top_i]))
 	end
 	
 	print(string.format("Time taken: %.2f seconds", os.clock() - timeStarted))

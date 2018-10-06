@@ -363,12 +363,6 @@ function P.combatObj:hitEvent(index, who)
 		lvl = lvl - 20
 	end
 	
-	-- gShield or Pierce consumed first if applicable (gShield before Pierce?)
-	-- then crit
-	-- then Silencer if crit (regardless of whether unit has Silencer) 
-	-- then Devil?
-	-- todo test sure strike
-	
 	local function nextRn()
 		retHitEv.RNsConsumed = retHitEv.RNsConsumed + 1
 		return rns.rng1:getRNasCent(index+retHitEv.RNsConsumed-1)--use consumed rn
@@ -378,13 +372,16 @@ function P.combatObj:hitEvent(index, who)
 		local willHit = (hit > (nextRn()+nextRn())/2)
 		
 		if classes.hasSureStrike(self:data(who).class) then
-			if nextRn() < lvl then
+			if lvl > nextRn() then
 				willHit = true
 			end
 		end
 	
 		if willHit then
 			retHitEv.action = "X"
+			
+			--confirmed gShield, Pierce, crit, Silencer order
+			-- then Devil?
 			
 			if classes.hasGreatShield(self:data(P.opponent(who)).class) then
 				if lvl > nextRn() then

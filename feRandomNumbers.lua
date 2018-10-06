@@ -139,14 +139,18 @@ function rnStreamObj:update()
 		end
 		
 		local rnPosDelta = self:rnsLastConsumed()
-		if self.isPrimary then
-			print(string.format("rng pos %4d -> %4d, %d", self.prevPos, self.pos, rnPosDelta))
-		else
-			print(string.format("2ndary rng pos %4d -> %4d, %d", self.prevPos, self.pos, rnPosDelta))
+		
+		local str = string.format("rng pos %4d -> %4d, %d", self.prevPos, self.pos, rnPosDelta)
+		if not self.isPrimary then
+			str = "2ndary " .. str
 		end
 		
 		-- print what was consumed if not a large jump
-		if (rnPosDelta > 0 and rnPosDelta <= 24) then
+		if rnPosDelta == 1 and self.isPrimary then -- print single rns on same line
+			print(str .. ": " .. self:getRNasCent(self.pos-1))
+		elseif (rnPosDelta > 0 and rnPosDelta <= 24) then
+			print(str)
+		
 			if self.isPrimary then
 				print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
 			else
@@ -154,6 +158,8 @@ function rnStreamObj:update()
 					print(string.format("%08X %%11 %2d", self:getRN(rn2_i), self:getRN(rn2_i)%11))
 				end
 			end
+		else
+			print(str)
 		end
 		
 		return true

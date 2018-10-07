@@ -153,6 +153,9 @@ function rnbeObj:diagnostic()
 	end
 	
 	print(self.dependency)
+	
+	print("stats")
+	print(self.stats)
 end
 
 function rnbeObj:clearCache()

@@ -200,20 +200,20 @@ classes.F.SWORDMASTER, 		-- Fir MYRMIDON
 classes.M.RANGER, 			-- Shin NOMAD
 classes.M.BERSERKER, 		-- Gonzales BRIGAND
 classes.M.PIRATE, 			-- Geese PIRATE
-classes.M.SNIPER, 			-- Klein							
+classes.M.SNIPER, 			-- Klein
 classes.F.FALCO_KNIGHT, 	-- Tate PEGASUS_KNIGHT
 classes.F.DANCER, 			-- Lalum
 classes.F.HERO, 			-- Echidna
 classes.M.BARD, 			-- Elphin
 classes.M.WARRIOR, 			-- Bartre
 classes.M.DRUID, 			-- Ray SHAMAN
-classes.F.THIEF, 			-- Cath								
+classes.F.THIEF, 			-- Cath
 classes.F.WYVERN_LORD, 		-- Miredy WYVERN_RIDER
-classes.M.PALADIN, 			-- Percival								
+classes.M.PALADIN, 			-- Percival
 classes.F.VALKYRIE, 		-- Cecilia
 classes.F.DRUID, 			-- Sofiya SHAMAN
 classes.F.SNIPER, 			-- Igrene
-classes.M.BERSERKER, 		-- Garret								
+classes.M.BERSERKER, 		-- Garret
 classes.F.MANAKETE, 		-- Fa
 classes.M.MAGE, 			-- Hugh MAGE
 classes.M.WYVERN_LORD, 		-- Zeis WYVERN_RIDER
@@ -451,7 +451,7 @@ P.NAMES[8] = {
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
 P.DEPLOYED[8] = {
-true, false, true, true, false, 
+false, false, true, true, false, 
 true, false, false, false, true,
 false, false, false, false, true, 
 true, false, false, false, false,
@@ -461,49 +461,49 @@ false, false, false, false, false,
 false, false, false, false, false,
 false, false, false}
 P.GROWTHS[8] = {
-{70, 40, 60, 60, 30, 30, 60}, --Eirika 	
+{70, 40, 60, 60, 30, 30, 60}, --Eirika
 {90, 50, 45, 45, 40, 30, 25}, --Seth
 {80, 40, 40, 50, 25, 20, 40}, --Franz
-{90, 45, 35, 30, 55, 20, 30}, --Gilliam 	
+{90, 45, 35, 30, 55, 20, 30}, --Gilliam
 {70, 40, 50, 40, 25, 25, 20}, --Moulder
-{50, 35, 55, 60, 20, 30, 50}, --Vanessa 	
-{70, 50, 35, 30, 25, 20, 40}, --Ross 	
-{80, 65, 40, 20, 25, 15, 40}, --Garcia 	
-{55, 45, 50, 60, 15, 35, 50}, --Neimi 	
-{75, 40, 40, 65, 25, 20, 45}, --Colm 	
-{55, 50, 50, 40, 15, 55, 25}, --Artur 	
-{45, 65, 30, 45, 15, 40, 45}, --Lute 	
-{50, 60, 25, 40, 15, 55, 60}, --Natasha 	
-{80, 35, 55, 55, 20, 20, 30}, --Joshua 	
-{80, 55, 55, 45, 35, 25, 50}, --Ephraim 	
-{85, 40, 50, 45, 20, 25, 35}, --Forde 	
-{90, 50, 40, 40, 25, 20, 20}, --Kyle 	
-{65, 45, 40, 65, 20, 25, 60}, --Tana 	
-{60, 35, 40, 40, 30, 15, 50}, --Amelia 	
-{75, 40, 40, 45, 20, 25, 45}, --Innes 	
-{90, 45, 40, 30, 35, 25, 30}, --Gerik 	
-{85, 05, 10, 70, 30, 75, 80}, --Tethys 	
-{75, 30, 55, 60, 15, 25, 50}, --Marisa 	
-{45, 50, 45, 45, 15, 50, 65}, --L’Arachel 	
-{85, 50, 35, 40, 30, 25, 30}, --Dozla 	
-{50, 30, 25, 40, 30, 35, 40}, --Saleh 	
-{50, 45, 40, 35, 15, 40, 50}, --Ewan 	
-{85, 55, 40, 45, 25, 15, 35}, --Cormag 	
-{65, 25, 45, 60, 25, 30, 25}, --Rennac 	
-{85, 55, 40, 30, 45, 30, 20}, --Duessel 
-{70, 50, 40, 35, 10, 45, 20}, --Knoll 	
+{50, 35, 55, 60, 20, 30, 50}, --Vanessa
+{70, 50, 35, 30, 25, 20, 40}, --Ross
+{80, 65, 40, 20, 25, 15, 40}, --Garcia
+{55, 45, 50, 60, 15, 35, 50}, --Neimi
+{75, 40, 40, 65, 25, 20, 45}, --Colm
+{55, 50, 50, 40, 15, 55, 25}, --Artur
+{45, 65, 30, 45, 15, 40, 45}, --Lute
+{50, 60, 25, 40, 15, 55, 60}, --Natasha
+{80, 35, 55, 55, 20, 20, 30}, --Joshua
+{80, 55, 55, 45, 35, 25, 50}, --Ephraim
+{85, 40, 50, 45, 20, 25, 35}, --Forde
+{90, 50, 40, 40, 25, 20, 20}, --Kyle
+{65, 45, 40, 65, 20, 25, 60}, --Tana
+{60, 35, 40, 40, 30, 15, 50}, --Amelia
+{75, 40, 40, 45, 20, 25, 45}, --Innes
+{90, 45, 40, 30, 35, 25, 30}, --Gerik
+{85, 05, 10, 70, 30, 75, 80}, --Tethys
+{75, 30, 55, 60, 15, 25, 50}, --Marisa
+{45, 50, 45, 45, 15, 50, 65}, --L’Arachel
+{85, 50, 35, 40, 30, 25, 30}, --Dozla
+{50, 30, 25, 40, 30, 35, 40}, --Saleh
+{50, 45, 40, 35, 15, 40, 50}, --Ewan
+{85, 55, 40, 45, 25, 15, 35}, --Cormag
+{65, 25, 45, 60, 25, 30, 25}, --Rennac
+{85, 55, 40, 30, 45, 30, 20}, --Duessel
+{70, 50, 40, 35, 10, 45, 20}, --Knoll
 {30, 90, 85, 65, 50, 30, 30}, --Myrrh, HP and def +100
-{70, 40, 50, 60, 20, 50, 30}, --Syrene 	
-{85, 50, 45, 45, 30, 20, 20}, --Caellach 	
-{80, 55, 45, 40, 45, 30, 25}, --Orson 	
-{75, 45, 50, 40, 20, 45, 15}, --Riev 	
-{75, 30, 60, 55, 20, 25, 30}, --Ismaire 	
-{85, 40, 55, 40, 20, 30, 25}, --Selena 	
-{85, 45, 50, 45, 35, 40, 20}, --Glen 	
-{70, 40, 45, 45, 25, 25, 40}, --Hayden 	
-{80, 40, 55, 50, 20, 20, 15}, --Valter 	
-{85, 55, 40, 30, 45, 25, 25}, --Fado 	
-{85, 50, 55, 55, 45, 55, 30} --Lyon
+{70, 40, 50, 60, 20, 50, 30}, --Syrene
+{85, 50, 45, 45, 30, 20, 20}, --Caellach
+{80, 55, 45, 40, 45, 30, 25}, --Orson
+{75, 45, 50, 40, 20, 45, 15}, --Riev
+{75, 30, 60, 55, 20, 25, 30}, --Ismaire
+{85, 40, 55, 40, 20, 30, 25}, --Selena
+{85, 45, 50, 45, 35, 40, 20}, --Glen
+{70, 40, 45, 45, 25, 25, 40}, --Hayden
+{80, 40, 55, 50, 20, 20, 15}, --Valter
+{85, 55, 40, 30, 45, 25, 25}, --Fado
+{85, 50, 55, 55, 45, 55, 30}  --Lyon
 }
 P.GROWTH_WEIGHTS[8] = {}
 for unit_i = 1, P.NUM_OF_UNITS[8] do
@@ -517,9 +517,9 @@ P.BASE_STATS[8] = {
 {16, 04, 08, 09, 03, 01, 05, 01}, --Eirika
 {30, 14, 13, 12, 11, 08, 13, 01}, --Seth
 {20, 09, 05, 09, 06, 01, 02, -9}, --Franz 01 RING WING
-{25, 09, 06, 03, 09, 03, 03, -11}, --Gilliam 04
+{25, 09, 06, 03, 09, 03, 05, -11}, --Gilliam 04 ICON
 {20, 04, 06, 09, 02, 05, 01, 03}, --Moulder
-{24, 05, 07, 11, 06, 05, 04, -9}, --Vanessa 01 ROBE
+{24, 07, 07, 11, 06, 05, 04, -9}, --Vanessa 01 ROBE RING
 {15, 05, 02, 03, 03, 00, 08, 01}, --Ross
 {28, 08, 07, 07, 05, 01, 03, 04}, --Garcia
 {17, 04, 05, 06, 03, 02, 04, 01}, --Neimi
@@ -565,42 +565,42 @@ classes.M.PALADIN, --Franz CAVALIER PALADIN
 classes.M.GREAT_KNIGHT, --Gilliam ARMOR_KNIGHT
 classes.M.CLERIC, --Moulder BISHOP
 classes.F.WYVERN_KNIGHT, --Vanessa PEGASUS_KNIGHT WYVERN_KNIGHT
-classes.M.JOURNEYMAN, --Ross BERSERKER	
+classes.M.JOURNEYMAN, --Ross BERSERKER
 classes.M.FIGHTER, --Garcia FIGHTER WARRIOR
-classes.F.ARCHER, --Neimi 	
-classes.M.THIEF, --Colm THIEF ASSASSIN
-classes.M.MONK, --Artur 	
-classes.F.MAGE, --Lute 	
+classes.F.ARCHER, --Neimi
+classes.M.ASSASSIN, --Colm THIEF ASSASSIN
+classes.M.MONK, --Artur
+classes.F.MAGE, --Lute
 classes.F.CLERIC, --Natasha CLERIC VALKYRIE
 classes.M.MYRMIDON, --Joshua MYRMIDON SWORDMASTER
 classes.M.LORD, --Ephraim LORD GREAT_LORD8
 classes.M.PALADIN, --Forde CAVALIER PALADIN
 classes.M.CAVALIER, --Kyle CAVALIER PALADIN
-classes.F.PEGASUS_KNIGHT, --Tana 	
-classes.F.RECRUIT, --Amelia 	
-classes.M.SNIPER, --Innes 	
-classes.M.MERCENARY, --Gerik 	
-classes.F.DANCER, --Tethys 	
-classes.F.MYRMIDON, --Marisa 	
-classes.F.TROUBADOUR, --L’Arachel 	
-classes.M.BERSERKER, --Dozla 	
-classes.M.SAGE, --Saleh 	
-classes.M.PUPIL, --Ewan 	
-classes.M.WYVERN_RIDER, --Cormag 	
-classes.M.ROGUE, --Rennac 	
+classes.F.PEGASUS_KNIGHT, --Tana
+classes.F.RECRUIT, --Amelia
+classes.M.SNIPER, --Innes
+classes.M.MERCENARY, --Gerik
+classes.F.DANCER, --Tethys
+classes.F.MYRMIDON, --Marisa
+classes.F.TROUBADOUR, --L’Arachel
+classes.M.BERSERKER, --Dozla
+classes.M.SAGE, --Saleh
+classes.M.PUPIL, --Ewan
+classes.M.WYVERN_RIDER, --Cormag
+classes.M.ROGUE, --Rennac
 classes.M.GREAT_KNIGHT, --Duessel 
-classes.M.SHAMAN, --Knoll 	
+classes.M.SHAMAN, --Knoll
 classes.F.MANAKETE, --Myrrh
-classes.F.FALCO_KNIGHT, --Syrene 	
-classes.M.HERO, --Caellach 	
-classes.M.PALADIN, --Orson 	
-classes.M.BISHOP, --Riev 	
-classes.F.SWORDMASTER, --Ismaire 	
-classes.F.MAGE_KNIGHT, --Selena 	
-classes.M.WYVERN_LORD, --Glen 	
-classes.M.RANGER, --Hayden 	
-classes.M.WYVERN_KNIGHT, --Valter 	
-classes.M.GENERAL, --Fado 	
+classes.F.FALCO_KNIGHT, --Syrene
+classes.M.HERO, --Caellach
+classes.M.PALADIN, --Orson
+classes.M.BISHOP, --Riev
+classes.F.SWORDMASTER, --Ismaire
+classes.F.MAGE_KNIGHT, --Selena
+classes.M.WYVERN_LORD, --Glen
+classes.M.RANGER, --Hayden
+classes.M.WYVERN_KNIGHT, --Valter
+classes.M.GENERAL, --Fado
 classes.M.NECROMANCER --Lyon
 }
 
@@ -620,7 +620,7 @@ function P.deployed(unit_i)
 	return P.DEPLOYED[version][unit_i]
 end
 
-local Afas = 38 -- Nino
+local Afas = 16 -- Forde
 function P.growths(unit_i) 
 	unit_i = unit_i or P.sel_Unit_i
 	
@@ -902,7 +902,7 @@ function P.saveStats()
 end
 
 function P.statData_strings() -- index from 0
-	local ret = {}	
+	local ret = {}
 	
 	local indexer = -1
 	local function nextInd()
@@ -911,7 +911,7 @@ function P.statData_strings() -- index from 0
 	end
 	local STAT_HEAD = nextInd()
 	
-	local STATS = nextInd()	
+	local STATS = nextInd()
 	local STD_DEV_A = nextInd() -- two lines to align
 	local STD_DEV_B = nextInd()
 	local CAPS = nextInd()
@@ -927,10 +927,10 @@ function P.statData_strings() -- index from 0
 	ret[STD_DEV_B]	= "            "
 	ret[CAPS]		= "Caps:    "
 	ret[WEIGHTS]	= "Weights: "
-	ret[GROWTHS]	= "Growths: "	
+	ret[GROWTHS]	= "Growths: "
 	ret[EF_GROW]	= "Ef Grow: "
 	ret[GROW_DEV]	= "Grw Dev: "
-		
+	
 	for stat_i = 1, 7 do
 		ret[GROWTHS] = ret[GROWTHS] .. 
 				string.format(" %02d", P.growths()[stat_i])
@@ -978,8 +978,8 @@ function P.statData_strings() -- index from 0
 	end
 	
 	ret[STATS] = ret[STATS] .. 
-				string.format(" %02d", savedStats[P.LEVEL_I]).. 
-				string.format(" %02d", savedStats[9])
+		string.format(" %02d", savedStats[P.LEVEL_I]).. 
+		string.format(" %02d", savedStats[9])
 	
 	if P.sel_Unit_i == Afas then
 		ret[GROWTHS] = ret[GROWTHS] .. " Afa's"

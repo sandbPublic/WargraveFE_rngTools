@@ -162,7 +162,8 @@ while true do
 	if primaryFunctions then
 		if pressed(1) then rnbe.removeLastObj() end	
 		
-		if pressed(2) then 
+		if pressed(2) then
+			unitData.saveStats()
 			rnbe.addObj()
 			rnbe.get().batParams:set()
 			rnbe.updateRNBEs()

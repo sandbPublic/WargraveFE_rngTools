@@ -620,7 +620,19 @@ function P.deployed(unit_i)
 	return P.DEPLOYED[version][unit_i]
 end
 
-local Afas = 16 -- Forde
+local Afas = 0 -- 
+function P.setAfas(unit_i)
+	unit_i = unit_i or P.sel_Unit_i
+	
+	if Afas == P.sel_Unit_i then
+		Afas = 0
+		print("Afa's removed from " .. P.names(unit_i))
+	else
+		Afas = P.sel_Unit_i
+		print("Afa's applied to " .. P.names(unit_i))
+	end
+end
+
 function P.growths(unit_i) 
 	unit_i = unit_i or P.sel_Unit_i
 	
@@ -637,7 +649,7 @@ function P.growths(unit_i)
 end
 
 function P.growthWeights(unit_i)
-	unit_i = unit_i or P.sel_Unit_i	
+	unit_i = unit_i or P.sel_Unit_i
 	return P.GROWTH_WEIGHTS[version][unit_i]
 end
 
@@ -678,19 +690,37 @@ function P.getSavedStats() -- needed for RNBE construction
 	return savedStats
 end
 
-function P.willLevelStat(stat_i, HP_RN_i, unit_i, charStats)
+function P.willLevelStat(HP_RN_i, unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	charStats = charStats or savedStats
 	
-	if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
-		return -1 -- stat capped
+	ret = {}	
+	
+	if unit_i ~= Afas then
+		for stat_i = 1, 7 do
+			if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
+				ret[stat_i] = -1 -- stat capped
+			elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i] then
+				ret[stat_i] = 1 -- stat grows
+			else
+				ret[stat_i] = 0 -- stat doesn't grow
+			end
+		end
+	else
+		for stat_i = 1, 7 do
+			if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
+				ret[stat_i] = -1 -- stat capped
+			elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i] - 5 then
+				ret[stat_i] = 1 -- stat grows without afa's
+			elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i] then
+				ret[stat_i] = 2 -- stat grows because of afa's
+			else
+				ret[stat_i] = 0 -- stat doesn't grow
+			end
+		end
 	end
 	
-	if (rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i]) then
-		return 1 -- stat grows
-	end
-	
-	return 0 -- stat doesn't grow
+	return ret
 end
 
 function P.levelUpProcs_string(HP_RN_i, unit_i, charStats)
@@ -700,12 +730,18 @@ function P.levelUpProcs_string(HP_RN_i, unit_i, charStats)
 	local seq = ""
 	local statRaised = false
 	local statCapped = false
+	
+	local procs = P.willLevelStat(HP_RN_i, unit_i, charStats)
+	
 	for stat_i = 1, 7 do
-		local proc = P.willLevelStat(stat_i, HP_RN_i, unit_i, charStats)
-		if proc == 1 then
+		
+		if procs[stat_i] == 1 then
 			seq = seq .. "+" -- grows this stat
 			statRaised = true
-		elseif proc == -1 then
+		elseif procs[stat_i] == 2 then
+			seq = seq .. "!" -- grows this stat because of Afa's
+			statRaised = true
+		elseif procs[stat_i] == -1 then
 			seq = seq .. "_" -- can't grow stat
 			statCapped = true
 		else
@@ -774,11 +810,14 @@ function P.statProcScore(HP_RN_i, unit_i, charStats)
 	
 	local score = 0
 	local avg = 0
+	
+	local procs = P.willLevelStat(HP_RN_i, unit_i, charStats)
+	
 	for stat_i = 1, 7 do
 		local weight = P.growthWeights(unit_i)[stat_i]
 			* procRatioNeededForCap(stat_i, unit_i, charStats)
 	
-		if P.willLevelStat(stat_i, HP_RN_i, unit_i, charStats) == 1 then
+		if procs[stat_i] > 0 then
 			score = score + 100 * weight
 		end
 		avg = avg + P.growths(unit_i)[stat_i] * weight -- growths are in cents

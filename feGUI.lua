@@ -136,6 +136,10 @@ function P.flashcolor(color, color2)
 	if P.pulse() then 
 		return color
 	else
+		if color2 then
+			return color2
+		end
+		
 		local r, g, b, a = gui.parsecolor(color)
 		local inverse = {}
 		inverse.r = 0xFF - r
@@ -143,9 +147,7 @@ function P.flashcolor(color, color2)
 		inverse.b = 0xFF - b
 		inverse.a = a
 		
-		color2 = color2 or inverse
-		
-		return color2
+		return inverse
 	end
 
 end

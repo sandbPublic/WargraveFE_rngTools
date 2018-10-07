@@ -36,4 +36,4 @@ save stats
 print rnbe diagnostic
 M
 toggle phase
-cycle version
+change afa/metis

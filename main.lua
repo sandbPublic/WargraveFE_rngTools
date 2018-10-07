@@ -105,7 +105,7 @@ while true do
 	if rns.rng1:update() then
 		rnbe.updateRNBEs(1)
 	end
-
+	
 	--rns.rng2:update()
 	
 	updateCtrl(keybCtrl, input.get())
@@ -145,20 +145,20 @@ while true do
 		end
 		
 		-- swap with next
-		if pressed("select", gameCtrl) then			
+		if pressed("select", gameCtrl) then
 			rnbe.swap() -- updates self
 		end
 		
-		if pressed("start", gameCtrl) then			
+		if pressed("start", gameCtrl) then
 			rnbe.toggleDependency()
-		end	
+		end
 	end
 	
 	if pressed(6) then -- print help
 		primaryFunctions = not primaryFunctions
 		printHelp()
-	end	
-		
+	end
+	
 	if primaryFunctions then
 		if pressed(1) then rnbe.removeLastObj() end	
 		
@@ -182,7 +182,7 @@ while true do
 		if pressed(5) then
 			rnbe.toggleBatParam(combat.combatObj.toggleBonusExp)
 		end
-	
+		
 		if pressed(7) then -- advance to next deployed
 			unitData.sel_Unit_i = unitData.nextDeployed()
 			print(string.format("Selected %-10.10s (next %s)", unitData.names(), 
@@ -198,7 +198,7 @@ while true do
 		end
 		
 		if pressed(9) then feGUI.advanceDisplay() end
-
+		
 		if pressed(10) then 
 			rnbe.suggestedPermutation("fast")
 		end
@@ -217,7 +217,7 @@ while true do
 		
 		if pressed(13) then rnbe.togglePhase() end
 	else
-		if pressed(1) then rnbe.undoDelete() end		
+		if pressed(1) then rnbe.undoDelete() end
 		if pressed(2) then
 			if gameCtrl.thisFrame.B then
 				rnbe.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_ENEMY)
@@ -225,16 +225,16 @@ while true do
 				rnbe.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_PLAYER)
 			end
 		end
-		if pressed(3) then rnbe.toggleLevel() end		
+		if pressed(3) then rnbe.toggleLevel() end
 		if pressed(4) then rnbe.toggleDig() end
-				
+		
 		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
 			local currFogRange = memory.readbyte(0x202BCFD)
 			if pressed("L", gameCtrl) then
 				currFogRange = currFogRange - 1
 				memory.writebyte(0x202BCFD, currFogRange)
 				print("fog set to " .. tostring(currFogRange))
-			end		
+			end
 			if pressed("R", gameCtrl) then
 				currFogRange = currFogRange + 1
 				memory.writebyte(0x202BCFD, currFogRange)
@@ -285,7 +285,9 @@ while true do
 			rnbe.diagnostic()
 		end
 		
-		if pressed(13) then cycleVersion() end
+		if pressed(13) then
+			unitData.setAfas()
+		end
 	end
 		
 	if reprintRNs then

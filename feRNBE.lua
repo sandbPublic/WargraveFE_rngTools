@@ -511,15 +511,19 @@ function rnbeObj:drawMyBoxes(rect, RNBE_i)
 		end
 	end	
 	if self:levelDetected() then
+		local procs = unitData.willLevelStat(
+				self.postCombatRN_i, self.unit_i, self.stats)
+	
 		for stat_i = 1, 7 do
-			local proc = unitData.willLevelStat(
-				stat_i, self.postCombatRN_i, self.unit_i, self.stats)
-		
-			if proc == 1 then
+			if procs[stat_i] == 1 then
 				rect:drawBox(line_i, 
 					9 + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3,
 					3, LEVEL_UP_COLORS[stat_i]) 
-			elseif proc == -1 then -- capped stat
+			elseif procs[stat_i] == 2 then -- Afa's provided stat
+				rect:drawBox(line_i, 
+					9 + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3,
+					3, feGUI.flashcolor(LEVEL_UP_COLORS[stat_i], "white")) 
+			elseif procs[stat_i] == -1 then -- capped stat
 				rect:drawBox(line_i, 
 					9 + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3,
 					3, feGUI.flashcolor(0x662222FF, "black"))

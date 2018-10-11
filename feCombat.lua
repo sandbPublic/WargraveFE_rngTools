@@ -39,9 +39,10 @@ P.enum_NORMAL = 1
 P.enum_DEVIL  = 2
 P.enum_DRAIN  = 3 -- nosferatu
 P.enum_BRAVE  = 4
-P.enum_POISON = 5
+P.enum_STONE  = 5
+P.enum_POISON = 6
 
-P.WEAPON_TYPE_STRINGS = {"normal", "devil", "drain", "brave", "poison"}
+P.WEAPON_TYPE_STRINGS = {"normal", "devil", "drain", "brave", "stone", "poison"}
 
 local function battleAddrs(attacker, index)
 	if attacker then
@@ -181,7 +182,7 @@ end
 
 function P.combatObj:cycleWeapon(who)
 	who = who or P.enum_PLAYER
-	self:data(who).weapon = rotInc(self:data(who).weapon, 4)
+	self:data(who).weapon = rotInc(self:data(who).weapon, 5)
 	-- for devil axe
 	self:data(who)[P.LUCK_I] = unitData.getSavedStats()[unitData.LUCK_I]
 	print(P.WEAPON_TYPE_STRINGS[self:data(who).weapon])
@@ -336,6 +337,8 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 			playerValue = math.floor(playerValue/2)
 		end
 		
+		-- eggs always yield 50xp
+		
 		return math.min(100, math.floor(expFromDmg+silencerMult*math.max(0, 
 			enemyValue-playerValue + 20 + self.bonusExp)))
 	end
@@ -348,6 +351,11 @@ function P.combatObj:hitEvent(index, who)
 	retHitEv.action = ""
 	retHitEv.RNsConsumed = 0
 	retHitEv.dmg = self:dmg(who)
+	
+	if self:data(who).weapon == P.enum_STONE then
+		retHitEv.dmg = 999
+	end
+	
 	retHitEv.expGained = true -- assume true and falsify
 	
 	if (not self:isPlayer(who)) or self:defenderIsWall() then

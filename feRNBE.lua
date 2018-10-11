@@ -361,9 +361,12 @@ function rnbeObj:resultString()
 end
 function rnbeObj:headerString(RNBE_i)
 	local ret = "  "
-	if RNBE_i == sel_RNBE_i and feGUI.pulse() and
-		feGUI.canAlterRNBE() then 
-		ret = "->" 
+	if RNBE_i == sel_RNBE_i and feGUI.canAlterRNBE() then 
+		if feGUI.pulse() then 
+			ret = "<>" 
+		else
+			ret = "--"
+		end
 	end
 	
 	local specialStringEvents = ""	
@@ -390,9 +393,6 @@ function rnbeObj:headerString(RNBE_i)
 	
 	return ret .. string.format("%2d %s%s%s",
 		self.ID, unitData.names(self.unit_i), self:resultString(), specialStringEvents)
-end
-function rnbeObj:RNPrefixString()
-	return string.format("%4d+%02d:", self.startRN_i, self.burns)
 end
 
 -- measure in units of exp
@@ -444,21 +444,6 @@ function rnbeObj:evaluation_fn(printV)
 	return score
 end
 
-function rnbeObj:optimumEval()
-	local score = 0
-	-- account for enemyID
-	if self.combat then
-		
-	end
-	if self:levelDetected() then
-		
-	end
-	if self.dig then
-		score = score + 50
-	end
-	return score
-end
-
 -- quickly find how many burns necessary for improving the result of the first RNBE
 -- for artless rn burning gameplay
 function P.searchFutureOutcomes()
@@ -493,8 +478,9 @@ end
 
 function rnbeObj:drawMyBoxes(rect, RNBE_i)
 	local line_i = 2*RNBE_i-1
+	local INIT_CHARS = 5
 	
-	rect:drawBox(line_i, 9, self.burns * 3, "red")
+	rect:drawBox(line_i, INIT_CHARS, self.burns * 3, "red")
 		
 	if self.combat then
 		local hitStart = {}
@@ -506,7 +492,7 @@ function rnbeObj:drawMyBoxes(rect, RNBE_i)
 				hitStart[ev_i] = hitStart[ev_i-1] + self.hitSq[ev_i-1].RNsConsumed
 			end
 
-			rect:drawBox(line_i, 9 + hitStart[ev_i] * 3, 
+			rect:drawBox(line_i, INIT_CHARS + hitStart[ev_i] * 3, 
 				self.hitSq[ev_i].RNsConsumed * 3, "yellow")
 		end
 	end	
@@ -515,18 +501,14 @@ function rnbeObj:drawMyBoxes(rect, RNBE_i)
 				self.postCombatRN_i, self.unit_i, self.stats)
 	
 		for stat_i = 1, 7 do
+			local char_start = INIT_CHARS + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3
+		
 			if procs[stat_i] == 1 then
-				rect:drawBox(line_i, 
-					9 + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3,
-					3, LEVEL_UP_COLORS[stat_i]) 
+				rect:drawBox(line_i, char_start, 3, LEVEL_UP_COLORS[stat_i]) 
 			elseif procs[stat_i] == 2 then -- Afa's provided stat
-				rect:drawBox(line_i, 
-					9 + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3,
-					3, feGUI.flashcolor(LEVEL_UP_COLORS[stat_i], "white")) 
+				rect:drawBox(line_i, char_start, 3, feGUI.flashcolor(LEVEL_UP_COLORS[stat_i], "white")) 
 			elseif procs[stat_i] == -1 then -- capped stat
-				rect:drawBox(line_i, 
-					9 + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3,
-					3, feGUI.flashcolor(0x662222FF, "black"))
+				rect:drawBox(line_i, char_start, 3, feGUI.flashcolor(0x662222FF, "black"))
 			end
 		end
 	end
@@ -585,7 +567,7 @@ function P.toStrings()
 	
 	for RNBE_i = 1, P.SPrnbes().count do
 		ret[2*RNBE_i-2] = P.SPrnbes()[RNBE_i]:headerString(RNBE_i)
-		ret[2*RNBE_i-1] = P.SPrnbes()[RNBE_i]:RNPrefixString()
+		ret[2*RNBE_i-1] = string.format("%4d ", P.SPrnbes()[RNBE_i].startRN_i)
 	end
 	return ret
 end

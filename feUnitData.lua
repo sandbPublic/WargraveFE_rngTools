@@ -523,20 +523,20 @@ P.BASE_STATS[8] = {
 {15, 05, 02, 03, 03, 00, 08, 01}, --Ross
 {28, 08, 07, 07, 05, 01, 03, 04}, --Garcia
 {17, 04, 05, 06, 03, 02, 04, 01}, --Neimi
-{18, 04, 04, 10, 03, 01, 08, 02}, --Colm
+{18, 04, 04, 10, 03, 01, 08, -13}, --Colm 02
 {19, 06, 06, 08, 02, 06, 02, 02}, --Artur
 {17, 06, 06, 07, 03, 05, 08, 01}, --Lute
 {18, 02, 04, 08, 02, 06, 08, 01}, --Natasha
 {24, 08, 13, 14, 05, 02, 07, 05}, --Joshua
-{23, 08, 09, 11, 07, 02, 08, 04}, --Ephraim
-{24, 07, 08, 08, 08, 02, 07, -8}, --Forde 06
+{23, 08, 09, 11, 07, 02, 08, -15}, --Ephraim 04
+{24, 07, 08, 08, 08, 04, 07, -8}, --Forde 06 TALIS
 {25, 09, 06, 07, 09, 01, 06, 05}, --Kyle
 {20, 07, 09, 13, 06, 07, 08, 04}, --Tana
 {16, 04, 03, 04, 02, 03, 06, 01}, --Amelia
 {31, 14, 13, 15, 10, 09, 14, 01}, --Innes
 {32, 14, 13, 13, 10, 04, 08, 10}, --Gerik
 {18, 01, 02, 12, 05, 04, 10, 01}, --Tethys
-{23, 07, 12, 13, 04, 03, 09, 05}, --Marisa
+{23, 07, 12, 13, 06, 03, 09, -7}, --Marisa 05 DSHIELD
 {18, 06, 06, 10, 05, 08, 12, 03}, --L’Arachel
 {43, 16, 11, 09, 11, 06, 04, 01}, --Dozla
 {30, 16, 18, 14, 08, 13, 11, 01}, --Saleh
@@ -573,7 +573,7 @@ classes.M.MONK, --Artur
 classes.F.MAGE, --Lute
 classes.F.CLERIC, --Natasha CLERIC VALKYRIE
 classes.M.MYRMIDON, --Joshua MYRMIDON SWORDMASTER
-classes.M.LORD, --Ephraim LORD GREAT_LORD8
+classes.M.GREAT_LORD8, --Ephraim LORD GREAT_LORD8
 classes.M.PALADIN, --Forde CAVALIER PALADIN
 classes.M.CAVALIER, --Kyle CAVALIER PALADIN
 classes.F.PEGASUS_KNIGHT, --Tana
@@ -581,7 +581,7 @@ classes.F.RECRUIT, --Amelia
 classes.M.SNIPER, --Innes
 classes.M.MERCENARY, --Gerik
 classes.F.DANCER, --Tethys
-classes.F.MYRMIDON, --Marisa
+classes.F.SWORDMASTER, --Marisa MYRMIDON SWORDMASTER
 classes.F.TROUBADOUR, --L’Arachel
 classes.M.BERSERKER, --Dozla
 classes.M.SAGE, --Saleh
@@ -620,7 +620,7 @@ function P.deployed(unit_i)
 	return P.DEPLOYED[version][unit_i]
 end
 
-local Afas = 0 -- 
+local Afas = 6 -- Vanessa
 function P.setAfas(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
@@ -766,17 +766,23 @@ end
 
 -- scored from 1 (procing every level will not exceed the cap) to 0 (at cap or lvl 20)
 -- 3/4 means level 16, 3 stats away from cap (or level 12, 6 stats away etc)
-local function procRatioNeededForCap(stat_i, unit_i, charStats)
+local function procRatioNeededForCap(unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	charStats = charStats or savedStats
+	
+	local ret = {}
+	
+	local levelsTil20 = 20 - charStats[P.LEVEL_I]	
+	for stat_i = 1, 7 do
+		if levelsTil20 <= 0 then
+			ret[stat_i] = 0
+		else
+			local procsTilStatCap = classes.CAPS[P.class(unit_i)][stat_i] - charStats[stat_i]
+			ret[stat_i] = math.min(1, procsTilStatCap/levelsTil20)
+		end
+	end
 
-	local levelsTil20 = 20 - charStats[P.LEVEL_I]
-	if levelsTil20 < 0 then return levelsTil20 + 20 end
-	if levelsTil20 == 0 then return 0 end
-	
-	procsTilStatCap = classes.CAPS[P.class(unit_i)][stat_i] - charStats[stat_i]
-	
-	return math.min(1, procsTilStatCap/levelsTil20)
+	return ret
 end
 
 -- as procRatioNeededForCap goes to 0, value of leveling
@@ -788,11 +794,11 @@ function P.expValueFactor(unit_i, charStats)
 	
 	local ret = 0
 	local weightTotal = 0
+	local pRNFC = procRatioNeededForCap(unit_i, charStats)
 	
 	for stat_i = 1, 7 do
 		weightTotal = weightTotal + P.growthWeights(unit_i)[stat_i]
-		ret = ret + P.growthWeights(unit_i)[stat_i]*
-			procRatioNeededForCap(stat_i, unit_i, charStats)
+		ret = ret + P.growthWeights(unit_i)[stat_i]*pRNFC[stat_i]
 	end
 	
 	if weightTotal == 0 then return 0 end
@@ -812,10 +818,10 @@ function P.statProcScore(HP_RN_i, unit_i, charStats)
 	local avg = 0
 	
 	local procs = P.willLevelStat(HP_RN_i, unit_i, charStats)
+	local pRNFC = procRatioNeededForCap(unit_i, charStats)
 	
 	for stat_i = 1, 7 do
-		local weight = P.growthWeights(unit_i)[stat_i]
-			* procRatioNeededForCap(stat_i, unit_i, charStats)
+		local weight = P.growthWeights(unit_i)[stat_i]*pRNFC[stat_i]
 	
 		if procs[stat_i] > 0 then
 			score = score + 100 * weight
@@ -951,25 +957,27 @@ function P.statData_strings() -- index from 0
 	local STAT_HEAD = nextInd()
 	
 	local STATS = nextInd()
-	local STD_DEV_A = nextInd() -- two lines to align
-	local STD_DEV_B = nextInd()
+	
 	local CAPS = nextInd()
 	local WEIGHTS = nextInd()
 	
 	local GROWTHS = nextInd()
 	local EF_GROW = nextInd()
-	local GROW_DEV = nextInd()
+	local STND_DEV = nextInd()
 	
-	ret[STAT_HEAD]	= string.format("%-10.10sHp St Sk Sp Df Rs Lk Lv Xp", P.names())
-	ret[STATS]		= "Stats:   "
-	ret[STD_DEV_A]	= "Std Dev: "
-	ret[STD_DEV_B]	= "            "
-	ret[CAPS]		= "Caps:    "
-	ret[WEIGHTS]	= "Weights: "
-	ret[GROWTHS]	= "Growths: "
-	ret[EF_GROW]	= "Ef Grow: "
-	ret[GROW_DEV]	= "Grw Dev: "
-	
+	ret[STAT_HEAD]	= string.format("%-10.10sLv Xp Hp St Sk Sp Df Rs Lk", P.names())
+	ret[STATS]		= "Stats    " .. string.format(" %02d %02d", savedStats[P.LEVEL_I], savedStats[9])
+	ret[CAPS]		= "Caps           " 
+	ret[WEIGHTS]	= "Weights  " .. string.format(" x%4.2f", P.expValueFactor(unit_i, charStats))
+	if P.sel_Unit_i ~= Afas then
+		ret[GROWTHS]= "Growths        "
+	else
+		ret[GROWTHS]= "Growths +Afa's "
+	end
+	ret[EF_GROW]	= "Actual Growths "
+	ret[STND_DEV]	= "Standard Dev   "
+		
+	local pRNFC = procRatioNeededForCap(unit_i, charStats)
 	for stat_i = 1, 7 do
 		ret[GROWTHS] = ret[GROWTHS] .. 
 				string.format(" %02d", P.growths()[stat_i])
@@ -979,26 +987,9 @@ function P.statData_strings() -- index from 0
 		
 		ret[CAPS] = ret[CAPS] .. 
 				string.format(" %02d", classes.CAPS[P.class()][stat_i])
-		
-		
+				
 		ret[WEIGHTS] = ret[WEIGHTS] .. 
-			string.format(" %02d", 10*P.growthWeights(unit_i)[stat_i]
-			* procRatioNeededForCap(stat_i, unit_i, charStats))
-		
-		
-		-- stat deviation, write across two lines to preserve alignment
-		local stdDv = P.statStdDev(stat_i)
-		local stdDvStr
-		if stdDv < 0 then
-			stdDvStr = string.format("%.1f  ", stdDv) -- align minus sign
-		else
-			stdDvStr = string.format(" %.1f  ", stdDv)
-		end
-		if (stat_i % 2 == 1) then
-			ret[STD_DEV_A] = ret[STD_DEV_A] .. stdDvStr
-		else
-			ret[STD_DEV_B] = ret[STD_DEV_B] .. stdDvStr
-		end
+			string.format(" %02d", 10*P.growthWeights(unit_i)[stat_i]* pRNFC[stat_i])
 		
 		if P.effectiveGrowthRate(stat_i) < 100 then
 			ret[EF_GROW] = ret[EF_GROW] .. 
@@ -1007,21 +998,8 @@ function P.statData_strings() -- index from 0
 			ret[EF_GROW] = ret[EF_GROW] .. " --"
 		end
 		
-		local gDev = P.effectiveGrowthRate(stat_i) - P.growths()[stat_i]
-		
-		if gDev < 0 then 
-			ret[GROW_DEV] = ret[GROW_DEV] .. string.format("%+03d", gDev)		
-		else 
-			ret[GROW_DEV] = ret[GROW_DEV] .. string.format("%+03d", gDev)
-		end
-	end
-	
-	ret[STATS] = ret[STATS] .. 
-		string.format(" %02d", savedStats[P.LEVEL_I]).. 
-		string.format(" %02d", savedStats[9])
-	
-	if P.sel_Unit_i == Afas then
-		ret[GROWTHS] = ret[GROWTHS] .. " Afa's"
+		local stdDv = P.statStdDev(stat_i)
+		ret[STND_DEV] = ret[STND_DEV] .. string.format("%+03d", 10*stdDv)
 	end
 	
 	return ret

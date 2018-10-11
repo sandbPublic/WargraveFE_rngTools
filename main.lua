@@ -247,10 +247,10 @@ while true do
 		
 		if keybCtrl.thisFrame[hotkeys[7].key] then
 			if pressed("L", gameCtrl) then
-				rnbe.adjustCombatWeight(-0.2)
+				rnbe.adjustCombatWeight(-0.25)
 			end		
 			if pressed("R", gameCtrl) then
-				rnbe.adjustCombatWeight(0.2)
+				rnbe.adjustCombatWeight(0.25)
 			end
 		end
 		

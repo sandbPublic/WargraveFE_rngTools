@@ -124,7 +124,7 @@ function rectObj:shift(x, y, opac)
 end
 
 -- syncs with fire emblem animation cycle
--- units animate on a 48 == 8 * 6 frame cycle when hilighted
+-- units animate on a 48 == 8 * 6 frame cycle when highlighted
 -- 72 == 8 * 9 frame cycle when not
 -- cursor has 32 == 8 * 4 frame cycle
 function P.pulse()
@@ -181,23 +181,48 @@ function rectObj:drawString(line_i, char_i, str, color, borderColor)
 		str, color, borderColor)
 end
 
+-- color code rns
+-- 00 = blue
+-- 25 = teal
+-- 50 = white
+-- 75 = yellow
+-- 99 = red
+
+local colorMap = 
+{{63,128,255},
+{63,255,128},
+{255,255,255},
+{255,192,0},
+{255,0,0}}
+
+local rnColors = {}
+local colorStep = 25
+
+local function setRNColor(rnCent)
+	rnColors[rnCent] = {}
+	rnColors[rnCent].a = 0xFF
+	
+	local colorWeight = rnCent % colorStep
+	local colorRange = math.floor(rnCent / colorStep) + 1
+	
+	rnColors[rnCent].r = (colorMap[colorRange][1] * (colorStep - colorWeight)
+		+ colorMap[colorRange+1][1] * colorWeight) / colorStep
+	rnColors[rnCent].g = (colorMap[colorRange][2] * (colorStep - colorWeight)
+		+ colorMap[colorRange+1][2] * colorWeight) / colorStep
+	rnColors[rnCent].b = (colorMap[colorRange][3] * (colorStep - colorWeight)
+		+ colorMap[colorRange+1][3] * colorWeight) / colorStep
+
+end
+for rnCent = 0, 99 do
+	setRNColor(rnCent)
+end
+
 function rectObj:drawColorizedRNString(line_i, char_i, RN_start, length)
 	for rn_i = 0, length-1 do
-		local rn = rns.rng1:getRN(RN_start+rn_i)/0x100
-		
-		local rnColor = {}
-		if rn < 0x80 then 
-			rnColor.r = rn*2 -- less red if low number
-			rnColor.g = 0xFF
-		else
-			rnColor.r = 0xFF
-			rnColor.g = 0x1FF - rn*2 -- less green if high number
-		end
-		rnColor.b = math.min(rnColor.r, rnColor.g)
-		rnColor.a = 0xFF
+		local rn = rns.rng1:getRNasCent(RN_start+rn_i)
 		
 		self:drawString(line_i, char_i+3*rn_i, 
-			rns.rng1:getRNasString(RN_start+rn_i), rnColor)
+			string.format("%02d", rn), rnColors[rn])
 	end
 end
 

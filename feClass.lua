@@ -226,20 +226,20 @@ P.PROMO_GAINS[P.F.BLADE_LORD] 		= {3, 2, 2, 0, 3, 5, 0}
 P.PROMO_GAINS[P.M.KNIGHT_LORD] 		= {4, 2, 0, 1, 1, 3, 0}
 P.PROMO_GAINS[P.M.GREAT_LORD7] 		= {3, 0, 2, 3, 1, 5, 0}
 
-P.PROMO_GAINS[P.F.GREAT_LORD] 		= {0, 0, 0, 0, 0, 0, 0}
-P.PROMO_GAINS[P.M.GREAT_LORD8] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.GREAT_LORD] 		= {4, 2, 2, 1, 3, 5, 0}
+P.PROMO_GAINS[P.M.GREAT_LORD8] 		= {4, 2, 3, 2, 2, 5, 0}
 
-P.PROMO_GAINS[P.F.WYVERN_LORD] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.WYVERN_LORD] 		= {0, 0, 0, 0, 0, 0, 0} -- __
 P.PROMO_GAINS[P.M.WYVERN_LORD] 		= {4, 0, 2, 2, 0, 2, 0} -- 7
 P.PROMO_GAINS[P.F.FALCO_KNIGHT] 	= {5, 2, 0, 0, 2, 2, 0} -- 7
-P.PROMO_GAINS[P.F.WYVERN_KNIGHT]	= {0, 0, 0, 0, 0, 0, 0}
-P.PROMO_GAINS[P.M.WYVERN_KNIGHT]	= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.WYVERN_KNIGHT]	= {3, 2, 1, 2, 1, 1, 0} --__8
+P.PROMO_GAINS[P.M.WYVERN_KNIGHT]	= {3, 1, 2, 3, 0, 1, 0} --__8
 
 P.PROMO_GAINS[P.F.BISHOP] 			= {3, 1, 2, 1, 2, 2, 0} -- 7
 P.PROMO_GAINS[P.M.BISHOP] 			= {3, 2, 1, 0, 3, 2, 0} -- 7
 P.PROMO_GAINS[P.F.SAGE] 			= {3, 1, 1, 0, 3, 3, 0} -- 7
 P.PROMO_GAINS[P.M.SAGE] 			= {4, 1, 0, 0, 3, 3, 0} -- 7
-P.PROMO_GAINS[P.F.DRUID] 			= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.DRUID] 			= {0, 0, 0, 0, 0, 0, 0} -- __
 P.PROMO_GAINS[P.M.DRUID] 			= {4, 0, 0, 3, 2, 2, 0} -- 7
 P.PROMO_GAINS[P.F.VALKYRIE] 		= {3, 2, 1, 0, 2, 3, 0} -- 7
 P.PROMO_GAINS[P.F.MAGE_KNIGHT] 		= {0, 0, 0, 0, 0, 0, 0}
@@ -252,7 +252,7 @@ P.PROMO_GAINS[P.M.GENERAL] 			= {4, 2, 2, 3, 2, 2, 0} -- 7
 P.PROMO_GAINS[P.F.PALADIN] 			= {0, 0, 0, 0, 0, 0, 0}
 P.PROMO_GAINS[P.M.PALADIN] 			= {2, 1, 1, 1, 2, 1, 0} -- 7 
 P.PROMO_GAINS[P.F.GREAT_KNIGHT] 	= {0, 0, 0, 0, 0, 0, 0}
-P.PROMO_GAINS[P.M.GREAT_KNIGHT] 	= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.GREAT_KNIGHT] 	= {3, 2, 1, 2, 2, 1, 0} --__8
 P.PROMO_GAINS[P.F.S_RECRUIT] 		= {0, 0, 0, 0, 0, 0, 0}
 
 P.PROMO_GAINS[P.M.WARRIOR] 			= {3, 1, 2, 0, 3, 3, 0} -- 7
@@ -265,9 +265,9 @@ P.PROMO_GAINS[P.F.SNIPER] 			= {4, 3, 1, 1, 2, 2, 0} -- 7
 P.PROMO_GAINS[P.M.SNIPER] 			= {3, 1, 2, 2, 2, 3, 0} -- 7
 P.PROMO_GAINS[P.M.S_JOURNEYMAN] 	= {0, 0, 0, 0, 0, 0, 0}
 
-P.PROMO_GAINS[P.F.SWORDMASTER] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.SWORDMASTER] 		= {4, 2, 1, 0, 2, 1, 0} -- _8
 P.PROMO_GAINS[P.M.SWORDMASTER] 		= {5, 2, 0, 0, 2, 1, 0} -- 7
-P.PROMO_GAINS[P.F.ASSASSIN] 		= {0, 0, 0, 0, 0, 0, 0} --__
+P.PROMO_GAINS[P.F.ASSASSIN] 		= {2, 1, 1, 1, 2, 1, 0} --__
 P.PROMO_GAINS[P.M.ASSASSIN] 		= {3, 1, 0, 0, 2, 2, 0} --_7
 P.PROMO_GAINS[P.M.ROGUE] 			= {0, 0, 0, 0, 0, 0, 0} --__
 

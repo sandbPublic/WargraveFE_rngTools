@@ -239,15 +239,15 @@ P.NAMES[7] = {
 "Karla", "Renault", "Athos"
 }
 P.DEPLOYED[7] = {
-false, false, true, false, false, -- Marcus
-true, true, false, false, true, -- Bartre, Hector, Matthew
-false, false, false, false, false, 
-true, false, true, false, false, -- Wil, Sain
-false, false, true, false, false, -- Dart
-true, false, false, false, false, -- Ninian/Nils
-false, false, false, false, false, 
-false, false, true, false, false, -- Nino
-false, false, true -- Athos
+false, true,  false, false, false, -- Eliwood Lowen Marcus Rebecca Dorcas
+false, true,  false, false, false, -- Bartre Hector Oswin Serra Matthew
+false, false, false, false, false, -- Guy Merlinus Erk Priscilla Lyn
+true,  false, false, false, false, -- Wil Kent Sain Florina Raven
+true,  false, false, false, false, -- Lucius Canas Dart Fiora Legault
+false, false, false, false, false, -- Ninian/Nils Isadora Heath Rath Hawkeye
+false, false, false, false, false, -- Geitz Wallace Farina Pent Louise
+false, false, false, false, false, -- Karel Harken Nino Jaffar Vaida
+false, false, false -- Karla Renault Athos
 }
 P.GROWTHS[7] = {
 {80, 45, 50, 40, 30, 35, 45}, -- Eliwood
@@ -300,24 +300,24 @@ P.BASE_STATS[7] = {
 {31, 15, 15, 11, 10, 08, 08, 01}, -- Marcus
 {17, 04, 05, 06, 03, 01, 04, 01}, -- Rebecca
 {30, 07, 07, 06, 03, 00, 03, 03}, -- Dorcas
-{29, 09, 05, 03, 04, 00, 04, -10}, -- Bartre PROMO @ 13 gained 11
-{19, 07, 04, 05, 08, 00, 03, -18}, -- Hector PROMO @ 20 gained 19
+{29, 09, 05, 03, 04, 00, 04, 02}, -- Bartre
+{19, 07, 04, 05, 08, 00, 03, 01}, -- Hector
 {28, 13, 09, 05, 13, 03, 03, 09}, -- Oswin
 {17, 02, 05, 08, 02, 05, 06, 01}, -- Serra
-{18, 04, 04, 11, 03, 00, 02, -17}, -- Matthew PROMO @ 20 gained 18
+{18, 04, 04, 11, 03, 00, 02, 02}, -- Matthew
 {21, 06, 11, 11, 05, 00, 05, 03}, -- Guy
 {18, 00, 04, 05, 05, 02, 12, 05}, -- Merlinus
 {17, 05, 06, 07, 02, 04, 03, 01}, -- Erk
 {16, 06, 06, 08, 03, 06, 07, 03}, -- Priscilla
 {18, 05, 10, 11, 02, 00, 05, 04}, -- Lyn
-{21, 06, 05, 06, 05, 01, 07, -7}, -- Wil PROMO @ 12 gained 8
+{21, 06, 05, 06, 05, 01, 07, 04}, -- Wil
 {23, 08, 07, 08, 06, 01, 04, 05}, -- Kent
-{22, 09, 05, 07, 07, 00, 05, -5}, -- Sain PROMO @ 10 gained 6
+{22, 09, 05, 07, 07, 00, 05, 04}, -- Sain
 {18, 06, 08, 09, 04, 05, 08, 03}, -- Florina
 {25, 08, 11, 13, 05, 01, 02, 05}, -- Raven
 {18, 07, 06, 10, 01, 06, 02, 03}, -- Lucius
 {21, 10, 09, 08, 05, 08, 07, 08}, -- Canas
-{34, 12, 10, 08, 06, 01, 03, -4}, -- Dart PROMO @ 13 gained 5 BOOK
+{34, 12, 08, 08, 06, 01, 03, 08}, -- Dart
 {21, 08, 11, 13, 06, 07, 06, 07}, -- Fiora
 {26, 08, 11, 15, 08, 03, 10, 12}, -- Legault
 {14, 00, 00, 12, 05, 04, 10, 01}, -- Ninian/Nils
@@ -332,7 +332,7 @@ P.BASE_STATS[7] = {
 {28, 12, 14, 17, 09, 12, 16, 04}, -- Louise
 {31, 16, 23, 20, 13, 12, 15, 08}, -- Karel
 {38, 21, 20, 17, 15, 10, 12, 08}, -- Harken
-{19, 07, 08, 11, 04, 07, 10, -8}, -- Nino PROMO @ 14 gained 9
+{19, 07, 08, 11, 04, 07, 10, 05}, -- Nino
 {34, 19, 25, 24, 15, 11, 10, 13}, -- Jaffar
 {43, 20, 19, 13, 21, 06, 11, 09}, -- Vaida
 {29, 14, 21, 18, 11, 12, 16, 05}, -- Karla
@@ -394,48 +394,48 @@ P.BASE_STATS_HM[7] = {
 {40, 30, 24, 20, 20, 28, 25, 20} -- Athos
 }
 P.CLASSES[7] = {
-classes.M.LORD, -- Eliwood	
-classes.M.CAVALIER, -- Lowen	
-classes.M.PALADIN, -- Marcus	
-classes.F.ARCHER, -- Rebecca	
-classes.M.FIGHTER, -- Dorcas	
+classes.M.LORD, -- Eliwood
+classes.M.CAVALIER, -- Lowen
+classes.M.PALADIN, -- Marcus
+classes.F.ARCHER, -- Rebecca
+classes.M.FIGHTER, -- Dorcas
 classes.M.WARRIOR, -- Bartre FIGHTER
-classes.M.GREAT_LORD7, -- Hector LORD
-classes.M.ARMOR_KNIGHT, -- Oswin	
-classes.F.CLERIC, -- Serra	
+classes.M.LORD, -- Hector
+classes.M.ARMOR_KNIGHT, -- Oswin
+classes.F.CLERIC, -- Serra
 classes.M.ASSASSIN, -- Matthew	THIEF
 classes.M.MYRMIDON, -- Guy
-classes.M.TRANSPORTER, -- Merlinus	
+classes.M.TRANSPORTER, -- Merlinus
 classes.M.MAGE, -- Erk
-classes.F.TROUBADOUR, -- Priscilla	
-classes.F.LORD, -- Lyn	
-classes.M.SNIPER, -- Wil ARCHER
+classes.F.TROUBADOUR, -- Priscilla
+classes.F.LORD, -- Lyn
+classes.M.ARCHER, -- Wil
 classes.M.CAVALIER, -- Kent
 classes.M.PALADIN, -- Sain CAVALIER
 classes.F.PEGASUS_KNIGHT, -- Florina
 classes.M.MERCENARY, -- Raven
 classes.M.MONK, -- Lucius
-classes.M.SHAMAN, -- Canas	
+classes.M.SHAMAN, -- Canas
 classes.M.BERSERKER, -- Dart PIRATE
-classes.F.PEGASUS_KNIGHT, -- Fiora	
+classes.F.PEGASUS_KNIGHT, -- Fiora
 classes.M.THIEF, -- Legault
 classes.F.DANCER, -- Ninian/Nils
-classes.F.PALADIN, -- Isadora	
-classes.M.WYVERN_RIDER, -- Heath	
+classes.F.PALADIN, -- Isadora
+classes.M.WYVERN_RIDER, -- Heath
 classes.M.NOMAD, -- Rath
-classes.M.BERSERKER, -- Hawkeye	
+classes.M.BERSERKER, -- Hawkeye
 classes.M.WARRIOR, -- Geitz
-classes.M.GENERAL, -- Wallace	
-classes.F.PEGASUS_KNIGHT, -- Farina	
-classes.M.SAGE, -- Pent	
-classes.F.SNIPER, -- Louise	
-classes.M.SWORDMASTER, -- Karel	
+classes.M.GENERAL, -- Wallace
+classes.F.PEGASUS_KNIGHT, -- Farina
+classes.M.SAGE, -- Pent
+classes.F.SNIPER, -- Louise
+classes.M.SWORDMASTER, -- Karel
 classes.M.HERO, -- Harken
 classes.F.SAGE, -- Nino	MAGE
-classes.M.ASSASSIN, -- Jaffar	
+classes.M.ASSASSIN, -- Jaffar
 classes.F.WYVERN_LORD, -- Vaida
-classes.F.SWORDMASTER, -- Karla	
-classes.M.BISHOP, -- Renault	
+classes.F.SWORDMASTER, -- Karla
+classes.M.BISHOP, -- Renault
 classes.M.ARCHSAGE -- Athos
 }
 
@@ -451,7 +451,7 @@ P.NAMES[8] = {
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
 P.DEPLOYED[8] = {
-false, false, true, true, false, 
+true, false, true, true, false, 
 true, false, false, false, true,
 false, false, false, false, true, 
 true, false, false, false, false,
@@ -516,27 +516,27 @@ P.GROWTH_WEIGHTS[8][22] = {2, 0, 0, 2, 4, 1, 1} -- Tethys
 P.BASE_STATS[8] = {
 {16, 04, 08, 09, 03, 01, 05, 01}, --Eirika
 {30, 14, 13, 12, 11, 08, 13, 01}, --Seth
-{20, 09, 05, 09, 06, 01, 02, -9}, --Franz 01 RING WING
-{25, 09, 06, 03, 09, 03, 05, -11}, --Gilliam 04 ICON
+{20, 09, 05, 09, 06, 01, 02, -9}, --Franz 01 (11) RING WING
+{25, 09, 06, 03, 09, 03, 05, -11}, --Gilliam 04 (16) ICON
 {20, 04, 06, 09, 02, 05, 01, 03}, --Moulder
-{24, 07, 07, 11, 06, 05, 04, -9}, --Vanessa 01 ROBE RING
+{24, 07, 07, 11, 06, 05, 04, -9}, --Vanessa 01 (11) ROBE RING
 {15, 05, 02, 03, 03, 00, 08, 01}, --Ross
 {28, 08, 07, 07, 05, 01, 03, 04}, --Garcia
 {17, 04, 05, 06, 03, 02, 04, 01}, --Neimi
-{18, 04, 04, 10, 03, 01, 08, -13}, --Colm 02
+{18, 04, 04, 10, 03, 01, 08, -13}, --Colm 02 (16)
 {19, 06, 06, 08, 02, 06, 02, 02}, --Artur
 {17, 06, 06, 07, 03, 05, 08, 01}, --Lute
 {18, 02, 04, 08, 02, 06, 08, 01}, --Natasha
 {24, 08, 13, 14, 05, 02, 07, 05}, --Joshua
-{23, 08, 09, 11, 07, 02, 08, -15}, --Ephraim 04
-{24, 07, 08, 08, 08, 04, 07, -8}, --Forde 06 TALIS
+{23, 08, 09, 11, 07, 02, 08, -15}, --Ephraim 04 (20)
+{24, 07, 08, 08, 08, 04, 07, -8}, --Forde 06 (15) TALIS
 {25, 09, 06, 07, 09, 01, 06, 05}, --Kyle
 {20, 07, 09, 13, 06, 07, 08, 04}, --Tana
 {16, 04, 03, 04, 02, 03, 06, 01}, --Amelia
 {31, 14, 13, 15, 10, 09, 14, 01}, --Innes
 {32, 14, 13, 13, 10, 04, 08, 10}, --Gerik
 {18, 01, 02, 12, 05, 04, 10, 01}, --Tethys
-{23, 07, 12, 13, 06, 03, 09, -7}, --Marisa 05 DSHIELD
+{23, 07, 12, 13, 06, 03, 09, -7}, --Marisa 05 (13) DSHIELD
 {18, 06, 06, 10, 05, 08, 12, 03}, --L’Arachel
 {43, 16, 11, 09, 11, 06, 04, 01}, --Dozla
 {30, 16, 18, 14, 08, 13, 11, 01}, --Saleh
@@ -620,7 +620,7 @@ function P.deployed(unit_i)
 	return P.DEPLOYED[version][unit_i]
 end
 
-local Afas = 6 -- Vanessa
+local Afas = 0
 function P.setAfas(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
@@ -766,13 +766,14 @@ end
 
 -- scored from 1 (procing every level will not exceed the cap) to 0 (at cap or lvl 20)
 -- 3/4 means level 16, 3 stats away from cap (or level 12, 6 stats away etc)
+-- once used in P.expValueFactor(unit_i, charStats)
 local function procRatioNeededForCap(unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	charStats = charStats or savedStats
 	
 	local ret = {}
 	
-	local levelsTil20 = 20 - charStats[P.LEVEL_I]	
+	local levelsTil20 = 20 - charStats[P.LEVEL_I]
 	for stat_i = 1, 7 do
 		if levelsTil20 <= 0 then
 			ret[stat_i] = 0
@@ -785,20 +786,52 @@ local function procRatioNeededForCap(unit_i, charStats)
 	return ret
 end
 
--- as procRatioNeededForCap goes to 0, value of leveling
--- (and by extension, exp) declines
--- from 1 to 0
+local function growthRateNeededToCap(unit_i, charStats)
+	unit_i = unit_i or P.sel_Unit_i
+	charStats = charStats or savedStats
+	
+	local ret = {}
+	
+	local levelsTil20 = 20 - charStats[P.LEVEL_I]
+	for stat_i = 1, 7 do
+		if levelsTil20 <= 0 then
+			ret[stat_i] = 0
+		else
+			local procsTilStatCap = classes.CAPS[P.class(unit_i)][stat_i] - charStats[stat_i]
+			ret[stat_i] = procsTilStatCap/levelsTil20
+		end
+	end
+
+	return ret
+end
+
+-- adjusts preset stat value weights downward when 
+-- natural growth rates are likely to hit the cap
+local function dynamicStatWeights(unit_i, charStats)
+	unit_i = unit_i or P.sel_Unit_i
+	charStats = charStats or savedStats
+	local ret = {}
+	
+	for stat_i = 1, 7 do
+		ret[stat_i] = P.growthWeights(unit_i)[stat_i]*math.min(1, 
+			100*growthRateNeededToCap(unit_i, charStats)[stat_i]/P.growths(unit_i)[stat_i])
+	end
+	
+	return ret
+end
+
+-- if growth rate needed to cap is less than growth rate, reduce proportionally
 function P.expValueFactor(unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	charStats = charStats or savedStats
 	
 	local ret = 0
 	local weightTotal = 0
-	local pRNFC = procRatioNeededForCap(unit_i, charStats)
+	local dSW = dynamicStatWeights(unit_i, charStats)
 	
 	for stat_i = 1, 7 do
 		weightTotal = weightTotal + P.growthWeights(unit_i)[stat_i]
-		ret = ret + P.growthWeights(unit_i)[stat_i]*pRNFC[stat_i]
+		ret = ret + dSW[stat_i]
 	end
 	
 	if weightTotal == 0 then return 0 end
@@ -818,15 +851,13 @@ function P.statProcScore(HP_RN_i, unit_i, charStats)
 	local avg = 0
 	
 	local procs = P.willLevelStat(HP_RN_i, unit_i, charStats)
-	local pRNFC = procRatioNeededForCap(unit_i, charStats)
+	local dSW = dynamicStatWeights(unit_i, charStats)
 	
 	for stat_i = 1, 7 do
-		local weight = P.growthWeights(unit_i)[stat_i]*pRNFC[stat_i]
-	
 		if procs[stat_i] > 0 then
-			score = score + 100 * weight
+			score = score + 100 * dSW[stat_i]
 		end
-		avg = avg + P.growths(unit_i)[stat_i] * weight -- growths are in cents
+		avg = avg + P.growths(unit_i)[stat_i] * dSW[stat_i] -- growths are in cents
 	end
 	
 	if avg == 0 then return 0 end
@@ -977,7 +1008,7 @@ function P.statData_strings() -- index from 0
 	ret[EF_GROW]	= "Actual Growths "
 	ret[STND_DEV]	= "Standard Dev   "
 		
-	local pRNFC = procRatioNeededForCap(unit_i, charStats)
+	local dSW = dynamicStatWeights(unit_i, charStats)
 	for stat_i = 1, 7 do
 		ret[GROWTHS] = ret[GROWTHS] .. 
 				string.format(" %02d", P.growths()[stat_i])
@@ -989,7 +1020,7 @@ function P.statData_strings() -- index from 0
 				string.format(" %02d", classes.CAPS[P.class()][stat_i])
 				
 		ret[WEIGHTS] = ret[WEIGHTS] .. 
-			string.format(" %02d", 10*P.growthWeights(unit_i)[stat_i]* pRNFC[stat_i])
+			string.format(" %02d", 10*dSW[stat_i])
 		
 		if P.effectiveGrowthRate(stat_i) < 100 then
 			ret[EF_GROW] = ret[EF_GROW] .. 

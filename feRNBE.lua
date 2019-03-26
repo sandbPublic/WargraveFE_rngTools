@@ -483,17 +483,13 @@ function rnbeObj:drawMyBoxes(rect, RNBE_i)
 	rect:drawBox(line_i, INIT_CHARS, self.burns * 3, "red")
 		
 	if self.combat then
-		local hitStart = {}
+		hitStart = self.burns
 
 		for ev_i = 1, self.hitSq.numEvents do
-			if ev_i == 1 then
-				hitStart[1] = self.burns
-			else
-				hitStart[ev_i] = hitStart[ev_i-1] + self.hitSq[ev_i-1].RNsConsumed
-			end
-
-			rect:drawBox(line_i, INIT_CHARS + hitStart[ev_i] * 3, 
+			rect:drawBox(line_i, INIT_CHARS + hitStart * 3, 
 				self.hitSq[ev_i].RNsConsumed * 3, "yellow")
+				
+			hitStart = hitStart + self.hitSq[ev_i].RNsConsumed
 		end
 	end	
 	if self:levelDetected() then
@@ -546,7 +542,7 @@ end
 -- simply increments length of selected phase
 -- and sets ID to new highest value
 -- doesn't restore dependencies
-function P.undoDelete()	
+function P.undoDelete()
 	if P.SPrnbes()[P.SPrnbes().count + 1] then
 		P.SPrnbes().count = P.SPrnbes().count + 1	
 		getLast(P.SPrnbes()).ID = P.SPrnbes().count

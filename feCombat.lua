@@ -332,8 +332,10 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 		-- yet Franz lvl 26 killing Entombed lvl 24 gains 55, not 15 exp?
 		-- in same level, Gilliam doesn't get this "mode bonus" when he otherwise would
 		
-		-- hypothesis: only affects promoted (enemy or player?) or boss units?
-		if enemyValue - playerValue <= 0 and version ~= 6 and self.bonusExp == 40 then
+		-- hypothesis: only affects promoted (enemy or player?) or boss units? in FE8?
+		if enemyValue - playerValue <= 0 and version ~= 6 
+			--and self.bonusExp == 40 
+			then
 			playerValue = math.floor(playerValue/2)
 		end
 		
@@ -408,7 +410,7 @@ function P.combatObj:hitEvent(index, who)
 			if crt > nextRn() then
 				local silencerRn = 0
 				if version >= 7 then 
-					silencerRn = nextRn()
+					silencerRn = nextRn() -- does not roll against Demon King
 				end
 				
 				if classes.hasSilencer(self:data(who).class) and

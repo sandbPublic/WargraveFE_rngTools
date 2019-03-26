@@ -100,10 +100,6 @@ function rnStreamObj:getRNasCent(index)
 	return byteToPercent(self:getRN(index))
 end
 
-function rnStreamObj:getRNasString(index)
-	return string.format("%02d", self:getRNasCent(index))
-end
-
 -- returns false if current generators don't match previous 3 rns
 function rnStreamObj:atPos_bool()
 	return (self.isPrimary and 
@@ -175,7 +171,7 @@ end
 function rnStreamObj:rnSeqString(index, length)
 	local seq = ""
 	for i = 0, length - 1 do
-		seq = seq .. self:getRNasString(index+i) .. " "
+		seq = seq .. string.format("%02d ", self:getRNasCent(index+i))
 	end
 	return seq
 end
@@ -203,7 +199,7 @@ function rnStreamObj:RNstream_strings(colorized, numLines, rnsPerLine)
 			if colorized then
 				lineString = lineString .. "  "
 			else
-				lineString = lineString .. self:getRNasString(rnPos)
+				lineString = lineString .. string.format("%02d", self:getRNasCent(rnPos))
 			end
 		end
 		ret[line_i] = lineString

@@ -229,15 +229,15 @@ while true do
 		if pressed(4) then rnbe.toggleDig() end
 		
 		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
-			local currFogRange = memory.readbyte(0x202BCFD)
+			local currFogRange = memory.readbyte(0x202BC05)
 			if pressed("L", gameCtrl) then
 				currFogRange = currFogRange - 1
-				memory.writebyte(0x202BCFD, currFogRange)
+				memory.writebyte(0x202BC05, currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
 			if pressed("R", gameCtrl) then
 				currFogRange = currFogRange + 1
-				memory.writebyte(0x202BCFD, currFogRange)
+				memory.writebyte(0x202BC05, currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
 			

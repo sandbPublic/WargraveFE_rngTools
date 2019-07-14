@@ -9,7 +9,7 @@ local battleSimBase = {}
 battleSimBase[6] = 0x02039200
 battleSimBase[7] = 0x0203A400
 battleSimBase[8] = 0x0203A500
-P.MIGHT_I 	= 1 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
+P.ATTACK_I 	= 1 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
 P.DEF_I 	= 2 -- includes terrain bonus
 P.AS_I 		= 3 -- Attack speed
 P.HIT_I 	= 4 -- if can't attack, 0xFF
@@ -138,14 +138,14 @@ function P.combatObj:data(who)
 end
 
 function P.combatObj:staff()
-	return self.attacker[P.MIGHT_I] == 255 -- healing only?
+	return self.attacker[P.ATTACK_I] == 255 -- healing only?
 end
 
 function P.combatObj:dmg(who, pierce)
 	if pierce then
-		return self:data(who)[P.MIGHT_I]
+		return self:data(who)[P.ATTACK_I]
 	end
-	return math.max(0, self:data(who)[P.MIGHT_I] - self:data(P.opponent(who))[P.DEF_I])
+	return math.max(0, self:data(who)[P.ATTACK_I] - self:data(P.opponent(who))[P.DEF_I])
 end
 
 function P.combatObj:relAS() -- from attacker perspective
@@ -175,6 +175,21 @@ function P.combatObj:set()
 	
 	if classes.PROMOTED[self:data(P.enum_PLAYER).class] then
 		self:togglePromo(P.enum_PLAYER)
+	end
+	
+	-- try to autodetect promotions based on might, def, attack speed, and enemy level
+	-- will have some false positives, particularly if not at full hp
+	enemyCapability = 2*self:data(P.enum_ENEMY)[P.HP_I] + 2*self:data(P.enum_ENEMY)[P.ATTACK_I] +
+		self:data(P.enum_ENEMY)[P.DEF_I] + self:data(P.enum_ENEMY)[P.AS_I]
+	
+	predictedCapability = 80 + 4*(self:data(P.enum_ENEMY)[P.LEVEL_I]-1)
+	if self:data(P.enum_ENEMY)[P.HIT_I] == 0xFF then
+		predictedCapability = 55 + 8*(self:data(P.enum_ENEMY)[P.LEVEL_I]-1)/3
+	end
+	
+	-- if predicted capability for level is too low, then assume promoted
+	if predictedCapability < enemyCapability then
+		self:togglePromo(P.enum_ENEMY)
 	end
 	
 	self.bonusExp = 0

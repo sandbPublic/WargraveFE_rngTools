@@ -69,8 +69,8 @@ function rectObj:linePixels()
 end
 
 -- for the rnStream rect's colorized rns
-local rnsPerLine = 10
-local rnsLines = 5
+local rnsPerLine = 15
+local rnsLines = 7
 function rectObj:width()
 	local width = 0
 	-- set to max line length
@@ -189,17 +189,22 @@ end
 -- 99 = red
 
 local colorMap = 
-{{63,128,255},
+{
+{63,128,255},
 {63,255,128},
 {255,255,255},
-{255,192,0},
-{255,0,0}}
+{255,255,0},
+{255,0,0}
+}
 
 local rnColors = {}
+local rnBorderColors = {}
 local colorStep = 25
 
 local function setRNColor(rnCent)
 	rnColors[rnCent] = {}
+	rnBorderColors[rnCent] = {}
+	rnBorderColors[rnCent].a = 0xFF
 	rnColors[rnCent].a = 0xFF
 	
 	local colorWeight = rnCent % colorStep
@@ -211,7 +216,10 @@ local function setRNColor(rnCent)
 		+ colorMap[colorRange+1][2] * colorWeight) / colorStep
 	rnColors[rnCent].b = (colorMap[colorRange][3] * (colorStep - colorWeight)
 		+ colorMap[colorRange+1][3] * colorWeight) / colorStep
-
+	
+	rnBorderColors[rnCent].r = rnColors[rnCent].r/4
+	rnBorderColors[rnCent].g = rnColors[rnCent].g/4
+	rnBorderColors[rnCent].b = rnColors[rnCent].b/4
 end
 for rnCent = 0, 99 do
 	setRNColor(rnCent)
@@ -222,7 +230,7 @@ function rectObj:drawColorizedRNString(line_i, char_i, RN_start, length)
 		local rn = rns.rng1:getRNasCent(RN_start+rn_i)
 		
 		self:drawString(line_i, char_i+3*rn_i, 
-			string.format("%02d", rn), rnColors[rn])
+			string.format("%02d", rn), rnColors[rn], rnBorderColors[rn])
 	end
 end
 

@@ -65,9 +65,17 @@ local LEVEL_UP_COLORS = {
 -- registered and manipulated (+/-burns and swapping) to seek outcomes
 local rnbeObj = {}
 
+function rnbeObj:setStats(stats)
+	stats = stats or unitData.getSavedStats()
+
+	self.stats = {}
+	for stat_i = 1, unitData.EXP_I do
+		self.stats[stat_i] = stats[stat_i]
+	end
+end
+
 -- INDEX FROM 1
 function rnbeObj:new(stats, combatO, sel_Unit_i)
-	stats = stats or unitData.getSavedStats() -- todo do we get enemy stats on EP?
 	combatO = combatO or combat.currBattleParams	
 	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
 
@@ -80,10 +88,7 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	o.isPP = P.playerPhase
 	
 	o.unit_i = sel_Unit_i	
-	o.stats = {}
-	for stat_i = 1, unitData.EXP_I do
-		o.stats[stat_i] = stats[stat_i]
-	end
+	o:setStats(stats) -- todo do we get enemy stats on EP?
 	o.batParams = combatO:copy()
 	o.combat = true -- most RNBEs will be combats without levels or digs
 	o.combatWeight = 1
@@ -141,6 +146,15 @@ function rnbeObj:diagnostic()
 		print(str)
 		print(string.format("expGained=%2d eHP=%2d pHP=%2d", 
 			self.hitSq.expGained, self.hitSq.eHP, self.hitSq.pHP))
+			
+		strA = ""
+		strD = ""
+		for data_i = 1, 9 do
+			strA = strA .. string.format("%2d ",self.batParams.attacker[data_i])
+			strD = strD .. string.format("%2d ",self.batParams.defender[data_i])
+		end
+		print(strA)
+		print(strD)
 		
 	end
 	
@@ -389,6 +403,10 @@ function rnbeObj:headerString(RNBE_i)
 	
 	if self.batParams:data(combat.enum_ENEMY).class ~= classes.F.LORD then
 		specialStringEvents = specialStringEvents .. " class " .. tostring(self.batParams:data(combat.enum_ENEMY).class)
+	end
+	
+	if self.combatWeight ~= 1 then
+		specialStringEvents = specialStringEvents .. " cmb x" .. tostring(self.combatWeight)
 	end
 	
 	return ret .. string.format("%2d %s%s%s",
@@ -657,6 +675,11 @@ function P.toggleBatParam(func, var)
 		P.updateRNBEs()
 	end
 end
+function P.updateStats()
+	if P.SPrnbes().count <= 0 then return end
+	
+	P.get():setStats()
+end
 
 function P.changeEnemyID(amount)
 	if P.SPrnbes().count <= 0 then return end
@@ -856,11 +879,11 @@ function P.suggestedPermutation(fast)
 	P.updateRNBEs(1)
 	
 	print()
-	for RNBE_i = 1, PPrnbes.count do		
+	for RNBE_i = 1, PPrnbes.count do
 		PPrnbes[RNBE_i]:evaluation_fn(true)
 	end
 	print()
-	for RNBE_i = 1, EPrnbes.count do		
+	for RNBE_i = 1, EPrnbes.count do
 		EPrnbes[RNBE_i]:evaluation_fn(true)
 	end
 	

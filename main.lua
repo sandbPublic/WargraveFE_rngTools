@@ -97,6 +97,8 @@ local function pressed(key, ctrl)
 	return ctrl.thisFrame[key] and not ctrl.lastFrame[key]
 end
 
+local update2ndary = false
+
 while true do
 	local reprintRNs = false
 	local reprintStats = false
@@ -106,7 +108,9 @@ while true do
 		rnbe.updateRNBEs(1)
 	end
 	
-	--rns.rng2:update()
+	if update2ndary then
+		rns.rng2:update()
+	end
 	
 	updateCtrl(keybCtrl, input.get())
 	updateCtrl(gameCtrl, joypad.get(0))
@@ -213,9 +217,10 @@ while true do
 			
 			reprintStats = true
 			unitData.saveStats()
+			rnbe.updateStats()
 		end
 		
-		if pressed(13) then rnbe.togglePhase() end
+		if pressed(13) then unitData.setAfas() end
 	else
 		if pressed(1) then rnbe.undoDelete() end
 		if pressed(2) then
@@ -247,10 +252,10 @@ while true do
 		
 		if keybCtrl.thisFrame[hotkeys[7].key] then
 			if pressed("L", gameCtrl) then
-				rnbe.adjustCombatWeight(-0.25)
+				rnbe.adjustCombatWeight(-0.5)
 			end		
 			if pressed("R", gameCtrl) then
-				rnbe.adjustCombatWeight(0.25)
+				rnbe.adjustCombatWeight(0.5)
 			end
 		end
 		
@@ -270,26 +275,19 @@ while true do
 			end
 		end	
 		
-		if pressed(9) then rnbe.toggleBurnAmount() end		
-		if pressed(10) then rnbe.searchFutureOutcomes() end	
+		if pressed(9) then rnbe.toggleBurnAmount() end
+		if pressed(10) then rnbe.searchFutureOutcomes() end
 		
 		if pressed(11) then
-			if rnbe.SPrnbes().count > 0 then
-				rnbe.get():printCache()
-			else
-				print("no rnbes")
-			end
+			update2ndary = not update2ndary
+			print("update2ndary = " .. tostring(update2ndary))
 		end
 		
-		if pressed(12) then
-			rnbe.diagnostic()
-		end
+		if pressed(12) then rnbe.diagnostic() end
 		
-		if pressed(13) then
-			unitData.setAfas()
-		end
+		if pressed(13) then rnbe.togglePhase() end
 	end
-		
+	
 	if reprintRNs then
 		printStringArray(rns.rng1:RNstream_strings(false, 5, 10), 5)
 	end

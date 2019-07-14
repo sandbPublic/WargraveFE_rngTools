@@ -55,7 +55,8 @@ function rnStreamObj:new(rngMemoryOffset, primary)
 	o.pos = 0 -- position in the rn stream relative to gba power on
 	o.prevPos = 0
 	o.rnsGenerated = 0 -- more descriptive than count
-		
+	o.lastFrameUpdated = 0 -- prevent 2ndary from printing a lot during crits
+	
 	return o
 end
 
@@ -134,6 +135,13 @@ function rnStreamObj:update()
 			end
 		end
 		
+		-- prevent 2ndary from printing a lot during crits
+		if (not self.isPrimary) and (vba.framecount() - self.lastFrameUpdated) <= 4 then
+			self.lastFrameUpdated = vba.framecount()
+			return
+		end
+		self.lastFrameUpdated = vba.framecount()
+		
 		local rnPosDelta = self:rnsLastConsumed()
 		
 		local str = string.format("rng pos %4d -> %4d, %d", self.prevPos, self.pos, rnPosDelta)
@@ -150,9 +158,16 @@ function rnStreamObj:update()
 			if self.isPrimary then
 				print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
 			else
-				for rn2_i = self.pos, self.pos+1 do -- show next two
-					print(string.format("%08X %%11 %2d", self:getRN(rn2_i), self:getRN(rn2_i)%11))
+				str = "Next: "
+				for rn2_i = self.pos, self.pos+30 do -- show next 30
+				--	print(string.format("%08X %%B %X", self:getRN(rn2_i), self:getRN(rn2_i)%11))
+					if self:getRN(rn2_i)%11 == 0 then
+						str = str .. "!"
+					else
+						str = str .. "."
+					end
 				end
+				print(str)
 			end
 		else
 			print(str)
@@ -180,7 +195,7 @@ end
 -- colorized for gui leaves the numbers blank so they can be drawn colored later
 function rnStreamObj:RNstream_strings(colorized, numLines, rnsPerLine)
 	local ret = {}
-		
+	
 	-- put the first line before the current position for context
 	local firstLineRnPos = math.floor(self.pos/rnsPerLine-1)*rnsPerLine
 	if firstLineRnPos < 0 then firstLineRnPos = 0 end

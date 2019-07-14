@@ -413,10 +413,19 @@ function rnbeObj:headerString(RNBE_i)
 		self.ID, unitData.names(self.unit_i), self:resultString(), specialStringEvents)
 end
 
+function rnbeObj:healable()
+	if self.combat then
+		return self.hitSq.pHP < self.stats[1]
+	end
+	return self:levelDetected() and 
+		unitData.willLevelStat(self.postCombatRN_i, self.unit_i, self.stats)[1] == 1
+end
+
 -- measure in units of exp
 -- perfect combat value == 100 exp
 -- can adjust combat weight
 -- dig = 50 exp
+-- if healing is relevant, +11xp if player hp is less than max
 function rnbeObj:evaluation_fn(printV)
 	local score = 0	
 	local printStr = string.format("%02d", self.ID)
@@ -443,9 +452,14 @@ function rnbeObj:evaluation_fn(printV)
 			printStr = printStr .. string.format(" d2e %.2f  d2p %.2f  exp %dx%.2f", 
 					dmgToEnemy, dmgToPlayer, self.hitSq.expGained, self.expValueFactor)
 		end
+		
+		score = score * self.combatWeight
 	end
 	
-	score = score * self.combatWeight
+	if self:healable() then
+		score = score + 11
+		printStr = printStr .. " healable"
+	end
 	
 	if self:levelDetected() then
 		score = score + self:levelScore()*self.expValueFactor

@@ -21,6 +21,8 @@ P.GROWTH_WEIGHTS = {}
 P.BASE_STATS = {} -- store base stats, names, deployed, and classes in one table?
 P.BASE_STATS_HM = {} -- hard mode
 P.CLASSES = {}
+P.PROMOTIONS = {}
+P.PROMOTED_AT = {}
 
 P.NUM_OF_UNITS[6] = 54
 P.NAMES[6] = {
@@ -298,7 +300,7 @@ P.BASE_STATS[7] = {
 {18, 05, 05, 07, 05, 00, 07, 01}, -- Eliwood
 {23, 07, 05, 07, 07, 00, 03, 02}, -- Lowen
 {31, 15, 15, 11, 10, 08, 08, 01}, -- Marcus
-{17, 04, 05, 06, 03, 01, 04, -13}, -- Rebecca base 01, gained 14
+{17, 04, 05, 06, 03, 01, 04, 01}, -- Rebecca
 {30, 07, 07, 06, 03, 00, 03, 03}, -- Dorcas
 {29, 09, 05, 03, 04, 00, 04, 02}, -- Bartre
 {19, 07, 04, 05, 08, 00, 03, 01}, -- Hector
@@ -311,18 +313,18 @@ P.BASE_STATS[7] = {
 {16, 06, 06, 08, 03, 06, 07, 03}, -- Priscilla
 {18, 05, 10, 11, 02, 00, 05, 04}, -- Lyn
 {21, 06, 05, 06, 05, 01, 07, 04}, -- Wil
-{23, 08, 07, 08, 06, 01, 04, -5}, -- Kent base 05, gained 6
+{23, 08, 07, 08, 06, 01, 04, 05}, -- Kent
 {22, 09, 05, 07, 07, 00, 05, 04}, -- Sain
 {18, 06, 08, 09, 04, 05, 08, 03}, -- Florina
 {25, 08, 11, 13, 05, 01, 02, 05}, -- Raven
 {18, 07, 06, 10, 01, 06, 02, 04}, -- Lucius
-{21, 10, 09, 08, 05, 08, 07, -7}, -- Canas base 08, gained 8
+{21, 10, 09, 08, 05, 08, 07, 08}, -- Canas
 {34, 12, 08, 08, 06, 01, 03, 08}, -- Dart
 {21, 08, 11, 13, 06, 07, 06, 07}, -- Fiora
 {26, 08, 11, 15, 08, 03, 10, 12}, -- Legault
 {14, 00, 00, 12, 05, 04, 10, 01}, -- Ninian/Nils
 {28, 13, 12, 16, 08, 06, 10, 01}, -- Isadora
-{28, 11, 08, 07, 10, 01, 07, -3}, -- Heath base 07, gained 4
+{28, 11, 08, 07, 10, 01, 07, 07}, -- Heath
 {27, 09, 10, 11, 08, 02, 05, 09}, -- Rath
 {50, 18, 14, 11, 14, 10, 13, 04}, -- Hawkeye
 {40, 17, 12, 13, 11, 03, 10, 03}, -- Geitz
@@ -351,7 +353,6 @@ P.GROWTH_WEIGHTS[7][21] = {20, 50, 20, 40, 30, 10, 10} -- lucius more mag for wa
 P.GROWTH_WEIGHTS[7][22] = {20, 60, 20, 40, 20, 10, 10} -- canas more mag for warp
 P.GROWTH_WEIGHTS[7][26] = {30, 00, 00, 20, 20, 10, 10} -- Ninian/Nils (ideally won't take more than 1 hit anyway)
 P.GROWTH_WEIGHTS[7][28] = {20, 35, 20, 60, 25, 10, 10} -- Heath, critically low speed
-
 
 P.BASE_STATS_HM[7] = {
 {18, 05, 05, 07, 05, 00, 07, 01}, -- Eliwood	
@@ -400,12 +401,12 @@ P.BASE_STATS_HM[7] = {
 }
 P.CLASSES[7] = {
 classes.M.LORD,			-- Eliwood
-classes.M.CAVALIER,		-- Lowen CAVALIER PALADIN
+classes.M.CAVALIER,		-- Lowen
 classes.M.PALADIN,		-- Marcus
-classes.F.SNIPER,		-- Rebecca ARCHER SNIPER
+classes.F.ARCHER,		-- Rebecca
 classes.M.FIGHTER,		-- Dorcas
 classes.M.FIGHTER,		-- Bartre
-classes.M.LORD,			-- Hector LORD GREAT_LORD7
+classes.M.LORD,			-- Hector
 classes.M.ARMOR_KNIGHT,	-- Oswin
 classes.F.CLERIC,		-- Serra
 classes.M.THIEF,		-- Matthew
@@ -414,19 +415,19 @@ classes.M.TRANSPORTER,	-- Merlinus
 classes.M.MAGE,			-- Erk
 classes.F.TROUBADOUR,	-- Priscilla
 classes.F.LORD,			-- Lyn
-classes.M.SNIPER,		-- Wil ARCHER SNIPER
-classes.M.PALADIN,		-- Kent CAVALIER PALADIN
-classes.M.CAVALIER,		-- Sain CAVALIER PALADIN
+classes.M.ARCHER,		-- Wil
+classes.M.CAVALIER,		-- Kent
+classes.M.CAVALIER,		-- Sain
 classes.F.PEGASUS_KNIGHT, -- Florina
 classes.M.MERCENARY,	-- Raven
-classes.M.MONK,			-- Lucius MONK BISHOP
-classes.M.DRUID,		-- Canas SHAMAN DRUID
-classes.M.PIRATE,		-- Dart PIRATE BERSERKER
-classes.F.PEGASUS_KNIGHT, -- Fiora PEGASUS_KNIGHT FALCO_KNIGHT
+classes.M.MONK,			-- Lucius
+classes.M.SHAMAN,		-- Canas
+classes.M.PIRATE,		-- Dart
+classes.F.PEGASUS_KNIGHT, -- Fiora
 classes.M.THIEF,		-- Legault
 classes.F.DANCER,		-- Ninian/Nils
 classes.F.PALADIN,		-- Isadora
-classes.M.WYVERN_LORD,	-- Heath WYVERN_RIDER WYVERN_LORD
+classes.M.WYVERN_RIDER,	-- Heath
 classes.M.NOMAD,		-- Rath
 classes.M.BERSERKER,	-- Hawkeye
 classes.M.WARRIOR,		-- Geitz
@@ -436,12 +437,68 @@ classes.M.SAGE,			-- Pent
 classes.F.SNIPER,		-- Louise
 classes.M.SWORDMASTER,	-- Karel
 classes.M.HERO,			-- Harken
-classes.F.MAGE,			-- Nino MAGE SAGE
+classes.F.MAGE,			-- Nino
 classes.M.ASSASSIN,		-- Jaffar
 classes.F.WYVERN_LORD,	-- Vaida
 classes.F.SWORDMASTER,	-- Karla
 classes.M.BISHOP,		-- Renault
 classes.M.ARCHSAGE		-- Athos
+}
+P.PROMOTIONS[7] = {
+classes.M.KNIGHT_LORD,	-- Eliwood
+classes.M.PALADIN,		-- Lowen
+classes.M.PALADIN,		-- Marcus
+classes.F.SNIPER,		-- Rebecca
+classes.M.WARRIOR,		-- Dorcas
+classes.M.WARRIOR,		-- Bartre
+classes.M.GREAT_LORD7,	-- Hector
+classes.M.GENERAL,		-- Oswin
+classes.F.BISHOP,		-- Serra
+classes.M.ASSASSIN,		-- Matthew
+classes.M.SWORDMASTER,	-- Guy
+classes.M.TRANSPORTER,	-- Merlinus
+classes.M.SAGE,			-- Erk
+classes.F.VALKYRIE,		-- Priscilla
+classes.F.BLADE_LORD,	-- Lyn
+classes.M.SNIPER,		-- Wil
+classes.M.PALADIN,		-- Kent
+classes.M.PALADIN,		-- Sain
+classes.F.FALCO_KNIGHT, -- Florina
+classes.M.HERO,			-- Raven
+classes.M.BISHOP,		-- Lucius
+classes.M.DRUID,		-- Canas
+classes.M.BERSERKER,	-- Dart
+classes.F.FALCO_KNIGHT, -- Fiora
+classes.M.ASSASSIN,		-- Legault
+classes.F.DANCER,		-- Ninian/Nils
+classes.F.PALADIN,		-- Isadora
+classes.M.WYVERN_LORD,	-- Heath
+classes.M.RANGER,		-- Rath
+classes.M.BERSERKER,	-- Hawkeye
+classes.M.WARRIOR,		-- Geitz
+classes.M.GENERAL,		-- Wallace
+classes.F.FALCO_KNIGHT, -- Farina
+classes.M.SAGE,			-- Pent
+classes.F.SNIPER,		-- Louise
+classes.M.SWORDMASTER,	-- Karel
+classes.M.HERO,			-- Harken
+classes.F.SAGE,			-- Nino
+classes.M.ASSASSIN,		-- Jaffar
+classes.F.WYVERN_LORD,	-- Vaida
+classes.F.SWORDMASTER,	-- Karla
+classes.M.BISHOP,		-- Renault
+classes.M.ARCHSAGE		-- Athos
+}
+P.PROMOTED_AT[7] = {
+00, 00, 00, 15, 00, -- Eliwood Lowen Marcus Rebecca Dorcas
+00, 00, 00, 00, 00, -- Bartre Hector Oswin Serra Matthew
+00, 00, 00, 00, 00, -- Guy Merlinus Erk Priscilla Lyn
+00, 11, 00, 00, 00, -- Wil Kent Sain Florina Raven
+00, 16, 00, 00, 00, -- Lucius Canas Dart Fiora Legault
+00, 00, 11, 00, 00, -- Ninian/Nils Isadora Heath Rath Hawkeye
+00, 00, 00, 00, 00, -- Geitz Wallace Farina Pent Louise
+00, 00, 00, 00, 00, -- Karel Harken Nino Jaffar Vaida
+00, 00, 00 -- Karla Renault Athos
 }
 
 P.NUM_OF_UNITS[8] = 43 -- including the 10 unlockable postgame units
@@ -621,7 +678,7 @@ function P.deployed(unit_i)
 	return P.DEPLOYED[version][unit_i]
 end
 
-local Afas = 24
+local Afas = 0
 function P.setAfas(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
@@ -654,16 +711,37 @@ function P.growthWeights(unit_i)
 	return P.GROWTH_WEIGHTS[version][unit_i]
 end
 
+function P.hasPromoted(unit_i)
+	return P.PROMOTED_AT[version][unit_i] > 0
+end
+
+function P.canPromote(unit_i)
+	return P.class(unit_i) ~= P.promotion(unit_i)
+end
+
+function P.levelsPrePromotion(unit_i)
+	return P.PROMOTED_AT[version][unit_i] - P.BASE_STATS[version][unit_i][P.LEVEL_I]
+end
+
 function P.class(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
-	
+		
+	if P.hasPromoted(unit_i) then
+		return P.promotion(unit_i)
+	end
 	return P.CLASSES[version][unit_i]
+end
+
+function P.promotion(unit_i)
+	unit_i = unit_i or P.sel_Unit_i
+	
+	return P.PROMOTIONS[version][unit_i]
 end
 
 function P.bases(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
-	if P.BASE_STATS[version][unit_i][P.LEVEL_I] > 0 then
+	if not P.hasPromoted(unit_i) then
 		return P.BASE_STATS[version][unit_i]
 	end
 	
@@ -673,7 +751,7 @@ function P.bases(unit_i)
 			P.BASE_STATS[version][unit_i][stat_i] + 
 				classes.PROMO_GAINS[P.class(unit_i)][stat_i]
 	end
-	promotedBaseStats[P.LEVEL_I] = P.BASE_STATS[version][unit_i][P.LEVEL_I]
+	promotedBaseStats[P.LEVEL_I] = 1 - P.levelsPrePromotion(unit_i)
 	return promotedBaseStats
 end
 
@@ -757,10 +835,14 @@ function P.levelUpProcs_string(HP_RN_i, unit_i, charStats)
 	return seq
 end
 
---works with levels too
+-- works for levels too
 local function statsGained(stat_i, unit_i, stat)
 	unit_i = unit_i or P.sel_Unit_i
 	stat = stat or savedStats[stat_i]
+	
+	if stat_i == P.LEVEL_I and P.hasPromoted(unit_i) then
+		return stat - 1 + P.levelsPrePromotion(unit_i)
+	end
 	
 	return stat - P.bases(unit_i)[stat_i]
 end
@@ -854,8 +936,26 @@ local function dynamicStatWeights(unit_i, charStats)
 			-- 1 - (1 - P(less than cap | gained levelsTil20 - 1 levels)) =
 			-- P(less than cap | gained levelsTil20 - 1 levels)
 			
-			ret[stat_i] = P.growthWeights(unit_i)[stat_i]*
+			local probCapUnreachableIfNotProcing = 
 				cumulativeBinDistrib(procsTilStatCap-1, levelsTil20-1, P.growths(unit_i)[stat_i]/100)
+			
+			-- if more likely to hit promoted class cap than unpromoted, use that probability
+			if P.canPromote(unit_i) then
+				local procsTilStatCap_P = classes.CAPS[P.promotion(unit_i)][stat_i] 
+					- charStats[stat_i] - classes.PROMO_GAINS[P.promotion(unit_i)][stat_i]
+				
+				-- may need levels to even reach promotion
+				local levelsTil20_P = 19 + math.max(10 - charStats[P.LEVEL_I], 0)
+				
+				probCapUnreachableIfNotProcing_P = 
+					cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, P.growths(unit_i)[stat_i]/100)
+					
+				if probCapUnreachableIfNotProcing > probCapUnreachableIfNotProcing_P then
+					probCapUnreachableIfNotProcing = probCapUnreachableIfNotProcing_P
+				end
+			end
+			
+			ret[stat_i] = P.growthWeights(unit_i)[stat_i]*probCapUnreachableIfNotProcing
 		end
 	end
 	
@@ -1022,6 +1122,8 @@ end
 function P.statData_strings() -- index from 0
 	local ret = {}
 	
+	local showPromo = P.canPromote() and feGUI.pulse(480)
+	
 	local indexer = -1
 	local function nextInd()
 		indexer = indexer+1
@@ -1044,7 +1146,11 @@ function P.statData_strings() -- index from 0
 	if savedStats[9] == 255 then
 		ret[STATS]	= "Stats    " .. string.format(" %02d --", savedStats[P.LEVEL_I])
 	end
-	ret[CAPS]		= "Caps           " 
+	ret[CAPS]		= "Caps           " 	
+	if showPromo then
+		ret[CAPS]		= "Caps      PROMO" 
+	end
+	
 	ret[WEIGHTS]	= "Weights  " .. string.format(" x%4.2f", P.expValueFactor(unit_i, charStats))
 	if P.sel_Unit_i ~= Afas then
 		ret[GROWTHS]= "Growths        "
@@ -1058,19 +1164,28 @@ function P.statData_strings() -- index from 0
 	for stat_i = 1, 7 do
 		ret[GROWTHS] = ret[GROWTHS] .. 
 				string.format(" %02d", P.growths()[stat_i])
-	
-		ret[STATS] = ret[STATS] .. 
-				string.format(" %02d", savedStats[stat_i])
 		
-		ret[CAPS] = ret[CAPS] .. 
-				string.format(" %02d", classes.CAPS[P.class()][stat_i])
+		if showPromo then
+			ret[STATS] = ret[STATS] .. string.format(" %02d", savedStats[stat_i] 
+					+ classes.PROMO_GAINS[P.promotion(unit_i)][stat_i])
+		else
+			ret[STATS] = ret[STATS] .. string.format(" %02d", savedStats[stat_i])
+		end
+		
+		if showPromo then
+			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[P.promotion(unit_i)][stat_i])
+		else
+			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[P.class()][stat_i])
+		end
+		
+		
 		
 		ret[WEIGHTS] = ret[WEIGHTS] .. 
-			string.format(" %02d", dSW[stat_i])
+				string.format(" %02d", dSW[stat_i])
 		
 		if P.effectiveGrowthRate(stat_i) < 100 then
 			ret[EF_GROW] = ret[EF_GROW] .. 
-				string.format(" %02d", P.effectiveGrowthRate(stat_i))
+					string.format(" %02d", P.effectiveGrowthRate(stat_i))
 		else
 			ret[EF_GROW] = ret[EF_GROW] .. " A0"
 		end

@@ -127,8 +127,10 @@ end
 -- units animate on a 48 == 8 * 6 frame cycle when highlighted
 -- 72 == 8 * 9 frame cycle when not
 -- cursor has 32 == 8 * 4 frame cycle
-function P.pulse()
-	return (vba.framecount() % 48) < 24
+function P.pulse(cycle)
+	cycle = cycle or 48
+
+	return (vba.framecount() % cycle) < cycle/2
 end
 
 function P.flashcolor(color, color2)

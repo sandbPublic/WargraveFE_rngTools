@@ -71,7 +71,7 @@ P.F.BLADE_LORD 		= nextInd() -- Lyndis
 P.M.KNIGHT_LORD 	= nextInd() -- Eliwood
 P.M.GREAT_LORD7 	= nextInd() -- Hector
 
-P.F.GREAT_LORD 		= nextInd() -- Eirika
+P.F.GREAT_LORD8		= nextInd() -- Eirika
 P.M.GREAT_LORD8 	= nextInd() -- Ephraim
 
 P.F.WYVERN_LORD 	= nextInd()
@@ -166,7 +166,7 @@ P.CAPS[P.F.BLADE_LORD]		= {60, 24, 29, 30, 22, 22, 30}
 P.CAPS[P.M.KNIGHT_LORD]		= {60, 27, 26, 24, 23, 25, 30}
 P.CAPS[P.M.GREAT_LORD7]		= {60, 30, 24, 24, 29, 20, 30}
 
-P.CAPS[P.F.GREAT_LORD]		= {60, 24, 29, 30, 22, 25, 30}
+P.CAPS[P.F.GREAT_LORD8]		= {60, 24, 29, 30, 22, 25, 30}
 P.CAPS[P.M.GREAT_LORD8]		= {60, 27, 26, 24, 23, 23, 30}
 
 P.CAPS[P.F.WYVERN_LORD] 	= {60, 25, 26, 24, 27, 23, 30} -- 78
@@ -226,7 +226,7 @@ P.PROMO_GAINS[P.F.BLADE_LORD] 		= {3, 2, 2, 0, 3, 5, 0}
 P.PROMO_GAINS[P.M.KNIGHT_LORD] 		= {4, 2, 0, 1, 1, 3, 0}
 P.PROMO_GAINS[P.M.GREAT_LORD7] 		= {3, 0, 2, 3, 1, 5, 0}
 
-P.PROMO_GAINS[P.F.GREAT_LORD] 		= {4, 2, 2, 1, 3, 5, 0}
+P.PROMO_GAINS[P.F.GREAT_LORD8] 		= {4, 2, 2, 1, 3, 5, 0}
 P.PROMO_GAINS[P.M.GREAT_LORD8] 		= {4, 2, 3, 2, 2, 5, 0}
 
 P.PROMO_GAINS[P.F.WYVERN_LORD] 		= {0, 0, 0, 0, 0, 0, 0} -- __

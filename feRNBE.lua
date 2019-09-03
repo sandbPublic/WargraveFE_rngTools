@@ -385,10 +385,16 @@ function rnbeObj:headerString(RNBE_i)
 	
 	local specialStringEvents = ""	
 	
+	if self.burns ~= 0 then
+		specialStringEvents = specialStringEvents .. 
+			string.format(" burns %d", self.burns)
+	end
+	
 	if self.enemyID ~= 0 then
 		specialStringEvents = specialStringEvents .. 
 			string.format(" eID %d %dhp", self.enemyID, self.enemyHP)
 	end
+
 	local weapon = self.batParams:data(combat.enum_PLAYER).weapon
 	if weapon ~= combat.enum_NORMAL then
 		specialStringEvents = specialStringEvents .. " " 
@@ -414,11 +420,11 @@ function rnbeObj:headerString(RNBE_i)
 end
 
 function rnbeObj:healable()
-	if self.combat then
-		return self.hitSq.pHP < self.stats[1]
+	if self.combat and self.hitSq.pHP < self.stats[1] then
+		return true
 	end
-	return self:levelDetected() and 
-		unitData.willLevelStat(self.postCombatRN_i, self.unit_i, self.stats)[1] == 1
+	return self:levelDetected() 
+		and unitData.willLevelStat(self.postCombatRN_i, self.unit_i, self.stats)[1] >= 1
 end
 
 -- measure in units of exp
@@ -457,7 +463,7 @@ function rnbeObj:evaluation_fn(printV)
 	end
 	
 	if self:healable() then
-		score = score + 11
+		score = score + 6
 		printStr = printStr .. " healable"
 	end
 	

@@ -15,7 +15,7 @@ P.AS_I 		= 3 -- Attack speed
 P.HIT_I 	= 4 -- if can't attack, 0xFF
 P.CRIT_I 	= 5 
 P.HP_I 		= 6 -- current HP
-P.LEVEL_I	= 7 -- for Great Shield, Pierce, and Sure Strike
+P.LEVEL_I	= 7 -- for Great Shield, Pierce, Sure Strike, and exp cap at level 19
 P.EXP_I		= 8 -- for level up detection
 P.LUCK_I	= 9 -- for devil axe, not read from memory here
 local relativeBattleAddrs = {}
@@ -39,10 +39,11 @@ P.enum_NORMAL = 1
 P.enum_DEVIL  = 2
 P.enum_DRAIN  = 3 -- nosferatu
 P.enum_BRAVE  = 4
-P.enum_STONE  = 5
-P.enum_POISON = 6
+P.enum_HALVE  = 5
+P.enum_STONE  = 6
+P.enum_POISON = 7
 
-P.WEAPON_TYPE_STRINGS = {"normal", "devil", "drain", "brave", "stone", "poison"}
+P.WEAPON_TYPE_STRINGS = {"normal", "devil", "drain", "brave", "halve", "stone", "poison"}
 
 local function battleAddrs(attacker, index)
 	if attacker then
@@ -184,12 +185,14 @@ function P.combatObj:set()
 	
 	predictedCapability = 80 + 4*(self:data(P.enum_ENEMY)[P.LEVEL_I]-1)
 	if self:data(P.enum_ENEMY)[P.HIT_I] == 0xFF then
-		predictedCapability = 55 + 8*(self:data(P.enum_ENEMY)[P.LEVEL_I]-1)/3
+		predictedCapability = 60 + 8*(self:data(P.enum_ENEMY)[P.LEVEL_I]-1)/3
 	end
 	
 	-- if predicted capability for level is too low, then assume promoted
 	if predictedCapability < enemyCapability then
 		self:togglePromo(P.enum_ENEMY)
+		print(string.format("auto toggle promo, enemyCapability %d, predicted %d",
+				enemyCapability, predictedCapability))
 	end
 	
 	self.bonusExp = 0
@@ -212,10 +215,9 @@ function P.combatObj:toggleBonusExp()
 	print(string.format("bonus xp: %d", self.bonusExp)) 
 end
 
--- converts 255/0xFF/-1 to "---"
 local function hitToString(hit)
-	if hit == 255 then return "---" end
-	return string.format("%3d", hit)
+	if hit <= 100 then return string.format("%3d", hit) end
+	return string.format("%02X", hit)
 end
 
 function P.combatObj:toStrings()
@@ -231,8 +233,8 @@ function P.combatObj:toStrings()
 		if not self:isPlayer(who) then
 			name = "Enemy"
 		end
-		if self:data(who)[P.EXP_I] == 255 then
-			experStr = "--"
+		if self:data(who)[P.EXP_I] > 100 then
+			experStr = string.format("%02X", self:data(who)[P.EXP_I])
 		end
 		
 		local ret = string.format("%-10.10s%2d.%s %3s %3s %2d %2d",
@@ -311,11 +313,17 @@ end
 function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
 	if (not self:canLevel() or self:defenderIsWall()) then return 0 end
 	
+	if self:data(P.enum_PLAYER)[P.LEVEL_I] % 20 == 0 then
+		return 0
+	end
+	
 	local playerClass = self:data(P.enum_PLAYER).class
 	local playerClassPower = classes.EXP_POWER[playerClass]	
 	local expFromDmg = math.max(1,
 		(31+self:data(P.enum_ENEMY)[P.LEVEL_I]
 		   -self:data(P.enum_PLAYER)[P.LEVEL_I])/playerClassPower)
+	
+	local ret = expFromDmg
 	
 	if kill then
 		-- todo: load enemy class from RAM?
@@ -356,10 +364,15 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 		
 		-- eggs always yield 50xp
 		
-		return math.min(100, math.floor(expFromDmg+silencerMult*math.max(0, 
+		ret = math.min(100, math.floor(expFromDmg+silencerMult*math.max(0, 
 			enemyValue-playerValue + 20 + self.bonusExp)))
 	end
-	return math.floor(expFromDmg)
+	
+	if self:data(P.enum_PLAYER)[P.LEVEL_I] % 20 == 19 then
+		return math.min(math.floor(ret), 100 - self:data(P.enum_PLAYER)[P.EXP_I])
+	end
+	
+	return math.floor(ret)
 end
 
 -- string action type, int dmg, int rnsConsumed, bool expGained, bool silenced
@@ -371,6 +384,10 @@ function P.combatObj:hitEvent(index, who)
 	
 	if self:data(who).weapon == P.enum_STONE then
 		retHitEv.dmg = 999
+	end
+	
+	if self:data(who).weapon == P.enum_HALVE then
+		--retHitEv.dmg = 999
 	end
 	
 	retHitEv.expGained = true -- assume true and falsify
@@ -524,12 +541,14 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	end
 	
 	setNext(P.enum_ATTACKER)
-	if self:data(who)[P.HIT_I] ~= 255 then
-		setNext(P.enum_DEFENDER) -- defender might not counter
+	defenderCounters = (self.defender[P.HIT_I] ~= 255)
+	
+	if defenderCounters then
+		setNext(P.enum_DEFENDER)
 	end
-	if self:doubles(P.enum_ATTACKER) then
+	if self:doubles(P.enum_ATTACKER) and self.attacker.weapon ~= P.enum_HALVE then
 		setNext(P.enum_ATTACKER)
-	elseif self:doubles(P.enum_DEFENDER) then
+	elseif self:doubles(P.enum_DEFENDER) and defenderCounters then
 		setNext(P.enum_DEFENDER)
 	end
 

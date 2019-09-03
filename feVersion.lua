@@ -1,4 +1,4 @@
-version = 7
+version = 8
 
 function cycleVersion()
 	version = version + 1

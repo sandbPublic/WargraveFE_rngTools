@@ -20,9 +20,18 @@ P.GROWTHS = {}
 P.GROWTH_WEIGHTS = {}
 P.BASE_STATS = {} -- store base stats, names, deployed, and classes in one table?
 P.BASE_STATS_HM = {} -- hard mode
+P.BOOSTERS = {}
 P.CLASSES = {}
 P.PROMOTIONS = {}
 P.PROMOTED_AT = {}
+
+local indexer = 0
+local function nextInd()
+	indexer = indexer + 1
+	return indexer
+end
+
+
 
 P.NUM_OF_UNITS[6] = 54
 P.NAMES[6] = {
@@ -227,8 +236,52 @@ classes.M.BISHOP, 			-- Yodel
 classes.M.SWORDMASTER 		-- Karel
 }
 
--- ninian/nils treated as one unit
-P.NUM_OF_UNITS[7] = 43
+indexer = 0
+local ELIWOOD = nextInd()
+local LOWEN = nextInd()
+local MARCUS = nextInd()
+local REBECCA = nextInd()
+local DORCAS = nextInd()
+local BARTRE = nextInd()
+local HECTOR = nextInd()
+local OSWIN = nextInd()
+local SERRA = nextInd()
+local MATTHEW = nextInd()
+local GUY = nextInd()
+local MERLINUS = nextInd()
+local ERK = nextInd()
+local PRISCILLA = nextInd()
+local LYN = nextInd()
+local WIL = nextInd()
+local KENT = nextInd()
+local SAIN = nextInd()
+local FLORINA = nextInd()
+local RAVEN = nextInd()
+local LUCIUS = nextInd()
+local CANAS = nextInd()
+local DART = nextInd()
+local FIORA = nextInd()
+local LEGAULT = nextInd()
+local NINIAN_NILS = nextInd()
+local ISADORA = nextInd()
+local HEATH = nextInd()
+local RATH = nextInd()
+local HAWKEYE = nextInd()
+local GEITZ = nextInd()
+local WALLACE = nextInd()
+local FARINA = nextInd()
+local PENT = nextInd()
+local LOUISE = nextInd()
+local KAREL = nextInd()
+local HARKEN = nextInd()
+local NINO = nextInd()
+local JAFFAR = nextInd()
+local VAIDA = nextInd()
+local KARLA = nextInd()
+local RENAULT = nextInd()
+local ATHOS = nextInd()
+
+P.NUM_OF_UNITS[7] = indexer
 P.NAMES[7] = {
 "Eliwood", "Lowen", "Marcus", "Rebecca", "Dorcas",
 "Bartre", "Hector", "Oswin", "Serra", "Matthew",
@@ -239,17 +292,6 @@ P.NAMES[7] = {
 "Geitz", "Wallace", "Farina", "Pent", "Louise",
 "Karel", "Harken", "Nino", "Jaffar", "Vaida",
 "Karla", "Renault", "Athos"
-}
-P.DEPLOYED[7] = {
-true,  false, false, true,  false, -- Eliwood Lowen Marcus Rebecca Dorcas
-false, true,  false, false, false, -- Bartre Hector Oswin Serra Matthew
-true,  false, false, false, false, -- Guy Merlinus Erk Priscilla Lyn
-false, true,  false, false, false, -- Wil Kent Sain Florina Raven
-false, true,  false, false, false, -- Lucius Canas Dart Fiora Legault
-true,  false, true,  false, false, -- Ninian/Nils Isadora Heath Rath Hawkeye
-false, false, false, false, false, -- Geitz Wallace Farina Pent Louise
-false, false, false, false, false, -- Karel Harken Nino Jaffar Vaida
-false, false, false -- Karla Renault Athos
 }
 P.GROWTHS[7] = {
 {80, 45, 50, 40, 30, 35, 45}, -- Eliwood
@@ -341,19 +383,6 @@ P.BASE_STATS[7] = {
 {43, 12, 22, 20, 15, 18, 10, 16}, -- Renault
 {40, 30, 24, 20, 20, 28, 25, 20}, -- Athos
 }
--- hard mode bases?
-P.GROWTH_WEIGHTS[7] = {}
-for unit_i = 1, P.NUM_OF_UNITS[7] do
-	P.GROWTH_WEIGHTS[7][unit_i] = {20, 40, 20, 50, 30, 10, 10}
-	-- speed>str>def>skl=hp>res=luck
-end
-
---P.GROWTH_WEIGHTS[7][26] = {20, 40, 20, 30, 30, 10, 10} -- Rebecca (hit 19 speed)
-P.GROWTH_WEIGHTS[7][21] = {20, 50, 20, 40, 30, 10, 10} -- lucius more mag for warp
-P.GROWTH_WEIGHTS[7][22] = {20, 60, 20, 40, 20, 10, 10} -- canas more mag for warp
-P.GROWTH_WEIGHTS[7][26] = {30, 00, 00, 20, 20, 10, 10} -- Ninian/Nils (ideally won't take more than 1 hit anyway)
-P.GROWTH_WEIGHTS[7][28] = {20, 35, 20, 60, 25, 10, 10} -- Heath, critically low speed
-
 P.BASE_STATS_HM[7] = {
 {18, 05, 05, 07, 05, 00, 07, 01}, -- Eliwood	
 {23, 07, 05, 07, 07, 00, 03, 02}, -- Lowen	
@@ -489,19 +518,91 @@ classes.F.SWORDMASTER,	-- Karla
 classes.M.BISHOP,		-- Renault
 classes.M.ARCHSAGE		-- Athos
 }
+
+P.DEPLOYED[7] = {}
+P.BOOSTERS[7] = {}
+P.GROWTH_WEIGHTS[7] = {}
+for unit_i = 1, P.NUM_OF_UNITS[7] do
+	P.GROWTH_WEIGHTS[7][unit_i] = {20, 40, 20, 50, 30, 10, 10}
+	-- speed>str>def>skl=hp>res=luck
+	P.BOOSTERS[7][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
+end
+
+P.DEPLOYED[7][ELIWOOD] = true
+P.DEPLOYED[7][REBECCA] = true
+P.DEPLOYED[7][HECTOR] = true
+P.DEPLOYED[7][GUY] = true
+P.DEPLOYED[7][KENT] = true
+P.DEPLOYED[7][CANAS] = true
+P.DEPLOYED[7][NINIAN_NILS] = true
+P.DEPLOYED[7][HEATH] = true
+P.DEPLOYED[7][JAFFAR] = true
+P.DEPLOYED[7][ATHOS] = true
+--P.GROWTH_WEIGHTS[7][21] = {20, 50, 20, 40, 30, 10, 10} -- lucius more mag for warp
+--P.GROWTH_WEIGHTS[7][22] = {20, 60, 20, 40, 20, 10, 10} -- canas more mag for warp
+P.GROWTH_WEIGHTS[7][NINIAN_NILS] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+P.BOOSTERS[7][KENT]  = {0, 0, 0, 2, 0, 2, 2, 0} -- talisman, wings, icon
+P.BOOSTERS[7][HEATH] = {0, 0, 0, 0, 2, 0, 0, 0} -- shield
+P.BOOSTERS[7][ATHOS] = {7, 0, 0, 0, 0, 0, 0, 0} -- robe
+
 P.PROMOTED_AT[7] = {
-00, 00, 00, 15, 00, -- Eliwood Lowen Marcus Rebecca Dorcas
-00, 00, 00, 00, 00, -- Bartre Hector Oswin Serra Matthew
-00, 00, 00, 00, 00, -- Guy Merlinus Erk Priscilla Lyn
-00, 11, 00, 00, 00, -- Wil Kent Sain Florina Raven
-00, 16, 00, 00, 00, -- Lucius Canas Dart Fiora Legault
-00, 00, 11, 00, 00, -- Ninian/Nils Isadora Heath Rath Hawkeye
-00, 00, 00, 00, 00, -- Geitz Wallace Farina Pent Louise
-00, 00, 00, 00, 00, -- Karel Harken Nino Jaffar Vaida
-00, 00, 00 -- Karla Renault Athos
+19,  0,  0, 15,  0, -- Eliwood Lowen Marcus Rebecca Dorcas
+ 0, 20,  0,  0,  0, -- Bartre Hector Oswin Serra Matthew
+17,  0,  0,  0,  0, -- Guy Merlinus Erk Priscilla Lyn
+ 0, 11,  0,  0,  0, -- Wil Kent Sain Florina Raven
+ 0, 16,  0,  0,  0, -- Lucius Canas Dart Fiora Legault
+ 0,  0, 11,  0,  0, -- Ninian/Nils Isadora Heath Rath Hawkeye
+ 0,  0,  0,  0,  0, -- Geitz Wallace Farina Pent Louise
+ 0,  0,  0,  0,  0, -- Karel Harken Nino Jaffar Vaida
+ 0,  0,  0 			-- Karla Renault Athos
 }
 
-P.NUM_OF_UNITS[8] = 43 -- including the 10 unlockable postgame units
+indexer = 0
+local EIRIKA = nextInd()
+local SETH = nextInd()
+local FRANZ = nextInd()
+local GILLIAM = nextInd()
+local MOULDER = nextInd()
+local VANESSA = nextInd()
+local ROSS = nextInd()
+local GARCIA = nextInd()
+local NEIMI = nextInd()
+local COLM = nextInd()
+local ARTUR = nextInd()
+local LUTE = nextInd()
+local NATASHA = nextInd()
+local JOSHUA = nextInd()
+local EPHRAIM = nextInd()
+local FORDE = nextInd()
+local KYLE = nextInd()
+local TANA = nextInd()
+local AMELIA = nextInd()
+local INNES = nextInd()
+local GERIK = nextInd()
+local TETHYS = nextInd()
+local MARISA = nextInd()
+local LARACHEL = nextInd()
+local DOZLA = nextInd()
+local SALEH = nextInd()
+local EWAN = nextInd()
+local CORMAG = nextInd()
+local RENNAC = nextInd()
+local DUESSEL = nextInd()
+local KNOLL = nextInd()
+local MYRRH = nextInd()
+local SYRENE = nextInd()
+local CAELLACH = nextInd()
+local ORSON = nextInd()
+local RIEV = nextInd()
+local ISMAIRE = nextInd()
+local SELENA = nextInd()
+local GLEN = nextInd()
+local HAYDEN = nextInd()
+local VALTER = nextInd()
+local FADO = nextInd()
+local LYON = nextInd()
+
+P.NUM_OF_UNITS[8] = indexer -- including the 10 unlockable postgame units
 P.NAMES[8] = {
 "Eirika", "Seth", "Franz", "Gilliam", "Moulder",
 "Vanessa", "Ross", "Garcia", "Neimi", "Colm",
@@ -512,16 +613,6 @@ P.NAMES[8] = {
 "Knoll", "Myrrh", "Syrene", "Caellach", "Orson",
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
-P.DEPLOYED[8] = {
-true, false, true, true, false, 
-true, false, false, false, true,
-false, false, false, false, true, 
-true, false, false, false, false,
-false, true, true, false, true, 
-false, false, false, false, false,
-false, false, false, false, false, 
-false, false, false, false, false,
-false, false, false}
 P.GROWTHS[8] = {
 {70, 40, 60, 60, 30, 30, 60}, --Eirika
 {90, 50, 45, 45, 40, 30, 25}, --Seth
@@ -567,34 +658,30 @@ P.GROWTHS[8] = {
 {85, 55, 40, 30, 45, 25, 25}, --Fado
 {85, 50, 55, 55, 45, 55, 30}  --Lyon
 }
-P.GROWTH_WEIGHTS[8] = {}
-for unit_i = 1, P.NUM_OF_UNITS[8] do
-	P.GROWTH_WEIGHTS[8][unit_i] = {20, 40, 20, 50, 30, 10, 10}
-end
 P.BASE_STATS[8] = {
 {16, 04, 08, 09, 03, 01, 05, 01}, --Eirika
 {30, 14, 13, 12, 11, 08, 13, 01}, --Seth
-{20, 09, 05, 09, 06, 01, 02, -9}, --Franz 01 (11) RING WING
-{25, 09, 06, 03, 09, 03, 05, -11}, --Gilliam 04 (16) ICON
+{20, 07, 05, 07, 06, 01, 02, 01}, --Franz
+{25, 09, 06, 03, 09, 03, 03, 04}, --Gilliam
 {20, 04, 06, 09, 02, 05, 01, 03}, --Moulder
-{24, 07, 07, 11, 06, 05, 04, -9}, --Vanessa 01 (11) ROBE RING
+{17, 05, 07, 11, 06, 05, 04, 01}, --Vanessa
 {15, 05, 02, 03, 03, 00, 08, 01}, --Ross
 {28, 08, 07, 07, 05, 01, 03, 04}, --Garcia
 {17, 04, 05, 06, 03, 02, 04, 01}, --Neimi
-{18, 04, 04, 10, 03, 01, 08, -13}, --Colm 02 (16)
+{18, 04, 04, 10, 03, 01, 08, 02}, --Colm
 {19, 06, 06, 08, 02, 06, 02, 02}, --Artur
 {17, 06, 06, 07, 03, 05, 08, 01}, --Lute
 {18, 02, 04, 08, 02, 06, 08, 01}, --Natasha
 {24, 08, 13, 14, 05, 02, 07, 05}, --Joshua
-{23, 08, 09, 11, 07, 02, 08, -15}, --Ephraim 04 (20)
-{24, 07, 08, 08, 08, 04, 07, -8}, --Forde 06 (15) TALIS
+{23, 08, 09, 11, 07, 02, 08, 04}, --Ephraim
+{24, 07, 08, 08, 08, 02, 07, 06}, --Forde
 {25, 09, 06, 07, 09, 01, 06, 05}, --Kyle
 {20, 07, 09, 13, 06, 07, 08, 04}, --Tana
 {16, 04, 03, 04, 02, 03, 06, 01}, --Amelia
 {31, 14, 13, 15, 10, 09, 14, 01}, --Innes
 {32, 14, 13, 13, 10, 04, 08, 10}, --Gerik
 {18, 01, 02, 12, 05, 04, 10, 01}, --Tethys
-{23, 07, 12, 13, 06, 03, 09, -7}, --Marisa 05 (13) DSHIELD
+{23, 07, 12, 13, 04, 03, 09, 05}, --Marisa
 {18, 06, 06, 10, 05, 08, 12, 03}, --L’Arachel
 {43, 16, 11, 09, 11, 06, 04, 01}, --Dozla
 {30, 16, 18, 14, 08, 13, 11, 01}, --Saleh
@@ -617,50 +704,120 @@ P.BASE_STATS[8] = {
 {44, 22, 13, 11, 17, 19, 04, 14}, --Lyon
 }
 P.CLASSES[8] = {
-classes.F.LORD, --Eirika LORD GREAT_LORD
-classes.M.PALADIN, --Seth
-classes.M.PALADIN, --Franz CAVALIER PALADIN
-classes.M.GREAT_KNIGHT, --Gilliam ARMOR_KNIGHT
-classes.M.CLERIC, --Moulder BISHOP
-classes.F.WYVERN_KNIGHT, --Vanessa PEGASUS_KNIGHT WYVERN_KNIGHT
-classes.M.JOURNEYMAN, --Ross BERSERKER
-classes.M.FIGHTER, --Garcia FIGHTER WARRIOR
-classes.F.ARCHER, --Neimi
-classes.M.ASSASSIN, --Colm THIEF ASSASSIN
-classes.M.MONK, --Artur
-classes.F.MAGE, --Lute
-classes.F.CLERIC, --Natasha CLERIC VALKYRIE
-classes.M.MYRMIDON, --Joshua MYRMIDON SWORDMASTER
-classes.M.GREAT_LORD8, --Ephraim LORD GREAT_LORD8
-classes.M.PALADIN, --Forde CAVALIER PALADIN
-classes.M.CAVALIER, --Kyle CAVALIER PALADIN
-classes.F.PEGASUS_KNIGHT, --Tana
-classes.F.RECRUIT, --Amelia
-classes.M.SNIPER, --Innes
-classes.M.MERCENARY, --Gerik
-classes.F.DANCER, --Tethys
-classes.F.SWORDMASTER, --Marisa MYRMIDON SWORDMASTER
-classes.F.TROUBADOUR, --L’Arachel
-classes.M.BERSERKER, --Dozla
-classes.M.SAGE, --Saleh
-classes.M.PUPIL, --Ewan
-classes.M.WYVERN_RIDER, --Cormag
-classes.M.ROGUE, --Rennac
-classes.M.GREAT_KNIGHT, --Duessel 
-classes.M.SHAMAN, --Knoll
-classes.F.MANAKETE, --Myrrh
-classes.F.FALCO_KNIGHT, --Syrene
-classes.M.HERO, --Caellach
-classes.M.PALADIN, --Orson
-classes.M.BISHOP, --Riev
-classes.F.SWORDMASTER, --Ismaire
-classes.F.MAGE_KNIGHT, --Selena
-classes.M.WYVERN_LORD, --Glen
-classes.M.RANGER, --Hayden
-classes.M.WYVERN_KNIGHT, --Valter
-classes.M.GENERAL, --Fado
-classes.M.NECROMANCER --Lyon
+classes.F.LORD,				--Eirika
+classes.M.PALADIN,			--Seth
+classes.M.CAVALIER,			--Franz
+classes.M.ARMOR_KNIGHT,		--Gilliam
+classes.M.CLERIC,			--Moulder
+classes.F.PEGASUS_KNIGHT,	--Vanessa
+classes.M.JOURNEYMAN,		--Ross
+classes.M.FIGHTER,			--Garcia
+classes.F.ARCHER,			--Neimi
+classes.M.THIEF,			--Colm
+classes.M.MONK,				--Artur
+classes.F.MAGE,				--Lute
+classes.F.CLERIC,			--Natasha
+classes.M.MYRMIDON,			--Joshua
+classes.M.LORD,				--Ephraim
+classes.M.CAVALIER,			--Forde
+classes.M.CAVALIER,			--Kyle
+classes.F.PEGASUS_KNIGHT,	--Tana
+classes.F.RECRUIT,			--Amelia
+classes.M.SNIPER,			--Innes
+classes.M.MERCENARY,		--Gerik
+classes.F.DANCER,			--Tethys
+classes.F.MYRMIDON,			--Marisa
+classes.F.TROUBADOUR,		--L’Arachel
+classes.M.BERSERKER,		--Dozla
+classes.M.SAGE,				--Saleh
+classes.M.PUPIL,			--Ewan
+classes.M.WYVERN_RIDER,		--Cormag
+classes.M.ROGUE,			--Rennac
+classes.M.GREAT_KNIGHT,		--Duessel 
+classes.M.SHAMAN,			--Knoll
+classes.F.MANAKETE,			--Myrrh
+classes.F.FALCO_KNIGHT,		--Syrene
+classes.M.HERO,				--Caellach
+classes.M.PALADIN,			--Orson
+classes.M.BISHOP,			--Riev
+classes.F.SWORDMASTER,		--Ismaire
+classes.F.MAGE_KNIGHT,		--Selena
+classes.M.WYVERN_LORD,		--Glen
+classes.M.RANGER,			--Hayden
+classes.M.WYVERN_KNIGHT,	--Valter
+classes.M.GENERAL,			--Fado
+classes.M.NECROMANCER		--Lyon
 }
+P.PROMOTIONS[8] = {
+classes.F.GREAT_LORD8,		--Eirika
+classes.M.PALADIN,			--Seth
+classes.M.PALADIN,			--Franz
+classes.M.GREAT_KNIGHT,		--Gilliam
+classes.M.BISHOP,			--Moulder SAGE
+classes.F.WYVERN_KNIGHT,	--Vanessa
+classes.M.BERSERKER,		--Ross
+classes.M.WARRIOR,			--Garcia HERO
+classes.F.RANGER, 			--Neimi
+classes.M.ASSASSIN,			--Colm
+classes.M.BISHOP, 			--Artur SAGE
+classes.F.MAGE_KNIGHT, 		--Lute
+classes.F.VALKYRIE,			--Natasha
+classes.M.SWORDMASTER,		--Joshua
+classes.M.GREAT_LORD8,		--Ephraim
+classes.M.PALADIN,			--Forde
+classes.M.PALADIN,			--Kyle
+classes.F.WYVERN_KNIGHT, 	--Tana
+classes.F.PALADIN,			--Amelia
+classes.M.SNIPER,			--Innes
+classes.M.RANGER,			--Gerik HERO
+classes.F.DANCER,			--Tethys
+classes.F.SWORDMASTER,		--Marisa
+classes.F.MAGE_KNIGHT,		--L’Arachel
+classes.M.BERSERKER,		--Dozla
+classes.M.SAGE,				--Saleh
+classes.M.MAGE_KNIGHT,		--Ewan
+classes.M.WYVERN_KNIGHT,	--Cormag
+classes.M.ROGUE,			--Rennac
+classes.M.GREAT_KNIGHT,		--Duessel 
+classes.M.SUMMONER,			--Knoll
+classes.F.MANAKETE,			--Myrrh
+classes.F.FALCO_KNIGHT,		--Syrene
+classes.M.HERO,				--Caellach
+classes.M.PALADIN,			--Orson
+classes.M.BISHOP,			--Riev
+classes.F.SWORDMASTER,		--Ismaire
+classes.F.MAGE_KNIGHT,		--Selena
+classes.M.WYVERN_LORD,		--Glen
+classes.M.RANGER,			--Hayden
+classes.M.WYVERN_KNIGHT,	--Valter
+classes.M.GENERAL,			--Fado
+classes.M.NECROMANCER		--Lyon
+}
+
+P.DEPLOYED[8] = {}
+P.BOOSTERS[8] = {}
+P.GROWTH_WEIGHTS[8] = {}
+for unit_i = 1, P.NUM_OF_UNITS[8] do
+	P.GROWTH_WEIGHTS[8][unit_i] = {20, 40, 20, 50, 30, 10, 10}
+	P.BOOSTERS[8][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
+end
+
+P.DEPLOYED[8][EIRIKA] = true
+P.GROWTH_WEIGHTS[8][TETHYS] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+
+P.PROMOTED_AT[8] = {
+ 0,  0,  0,  0,  0, -- Eirika Seth Franz Gilliam Moulder
+ 0,  0,  0,  0,  0, -- Vanessa Ross Garcia Neimi Colm
+ 0,  0,  0,  0,  0, -- Artur Lute Natasha Joshua Ephraim
+ 0,  0,  0,  0,  0, -- Forde Kyle Tana Amelia Innes
+ 0,  0,  0,  0,  0, -- Gerik Tethys Marisa L'Arachel Dozla
+ 0,  0,  0,  0,  0, -- Saleh Ewan Cormag Rennac Duessel
+ 0,  0,  0,  0,  0, -- Knoll Myrrh Syrene Caellach Orson
+ 0,  0,  0,  0,  0, -- Riev Ismaire Selena Glen Hayden
+ 0,  0,  0			-- Valter Fado Lyon
+}
+
+
 
 P.sel_Unit_i = 1
 
@@ -741,18 +898,20 @@ end
 function P.bases(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
-	if not P.hasPromoted(unit_i) then
-		return P.BASE_STATS[version][unit_i]
+	local ret = {}
+	for stat_i = 1, 8 do
+		ret[stat_i] = P.BASE_STATS[version][unit_i][stat_i] + P.BOOSTERS[version][unit_i][stat_i]
 	end
 	
-	local promotedBaseStats = {}
-	for stat_i = 1, 7 do
-		promotedBaseStats[stat_i] = 
-			P.BASE_STATS[version][unit_i][stat_i] + 
-				classes.PROMO_GAINS[P.class(unit_i)][stat_i]
+	if not P.hasPromoted(unit_i) then
+		return ret
 	end
-	promotedBaseStats[P.LEVEL_I] = 1 - P.levelsPrePromotion(unit_i)
-	return promotedBaseStats
+	
+	for stat_i = 1, 7 do
+		ret[stat_i] = ret[stat_i] + classes.PROMO_GAINS[P.class(unit_i)][stat_i]
+	end
+	ret[P.LEVEL_I] = 1 - P.levelsPrePromotion(unit_i)
+	return ret
 end
 
 function P.nextDeployed()
@@ -918,6 +1077,11 @@ end
 -- natural growth rates are likely to hit the cap
 local function dynamicStatWeights(unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
+	
+	if P.class(unit_i) == classes.F.DANCER or P.class(unit_i) == classes.M.BARD then
+		return P.growthWeights(unit_i)
+	end
+	
 	charStats = charStats or savedStats
 	local ret = {}
 	
@@ -1177,8 +1341,6 @@ function P.statData_strings() -- index from 0
 		else
 			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[P.class()][stat_i])
 		end
-		
-		
 		
 		ret[WEIGHTS] = ret[WEIGHTS] .. 
 				string.format(" %02d", dSW[stat_i])

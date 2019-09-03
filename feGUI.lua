@@ -130,7 +130,7 @@ end
 function P.pulse(cycle)
 	cycle = cycle or 48
 
-	return (vba.framecount() % cycle) < cycle/2
+	return (vba.framecount() % cycle) < (cycle/2)
 end
 
 function P.flashcolor(color, color2)

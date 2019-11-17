@@ -31,9 +31,62 @@ local function nextInd()
 	return indexer
 end
 
+local ROY = nextInd()
+local MARCUS = nextInd()
+local ALLEN = nextInd()
+local LANCE = nextInd()
+local WOLT = nextInd()
+local BORS = nextInd()
+local MERLINUS = nextInd()
+local ELLEN = nextInd()
+local DIECK = nextInd()
+local WADE  = nextInd()
+local LOTT = nextInd()
+local SHANNA = nextInd()
+local CHAD = nextInd()
+local LUGH = nextInd()
+local CLARINE = nextInd()
+local RUTGER = nextInd()
+local SAUL = nextInd()
+local DOROTHY = nextInd()
+local SUE = nextInd()
+local ZEALOT = nextInd()
+local TRECK = nextInd()
+local NOAH = nextInd()
+local ASTOHL = nextInd()
+local LILINA = nextInd()
+local WENDY = nextInd()
+local BARTH = nextInd()
+local OUJAY = nextInd()
+local FIR = nextInd()
+local SHIN = nextInd()
+local GONZALES = nextInd()
+local GEESE = nextInd()
+local KLEIN = nextInd()
+local TATE = nextInd()
+local LALUM = nextInd()
+local ECHIDNA = nextInd()
+local ELPHIN = nextInd()
+local BARTRE = nextInd()
+local RAY = nextInd()
+local CATH = nextInd()
+local MIREDY = nextInd()
+local PERCIVAL = nextInd()
+local CECILIA = nextInd()
+local SOFIYA = nextInd()
+local IGRENE = nextInd()
+local GARRET = nextInd()
+local FA = nextInd()
+local HUGH = nextInd()
+local ZEIS = nextInd()
+local DOUGLAS = nextInd()
+local NIIME = nextInd()
+local DAYAN = nextInd()
+local JUNO = nextInd()
+local YODEL = nextInd()
+local KAREL = nextInd()
 
-
-P.NUM_OF_UNITS[6] = 54
+P.NUM_OF_UNITS[6] = indexer
 P.NAMES[6] = {
 "Roy", "Marcus", "Allen", "Lance", "Wolt", 
 "Bors", "Merlinus", "Ellen", "Dieck", "Wade", 
@@ -48,73 +101,59 @@ P.NAMES[6] = {
 "Percival", "Cecilia", "Sophia", "Igrene", "Garret", 
 "Fa", "Hugh", "Zeis", "Douglas", "Niime", 
 "Dayan", "Juno", "Yodel", "Karel"}
-P.DEPLOYED[6] = {
-true, false, true, false, true, 
-false, false, true, true, false,
-true, true, false, true, false, 
-false, true, false, false, false,
-
-false, true, true, false, false, 
-true, false, true, false, false,
-true, false, true, false, false, 
-false, false, false, true, false,
-
-false, false, false, false, false, 
-false, true, false, false, false,
-false, false, false, true}
 P.GROWTHS[6] = {
 {80, 40, 50, 40, 25, 30, 60}, -- Roy
-{60, 25, 20, 25, 15, 20, 20},
-{85, 45, 40, 45, 25, 10, 40},
-{80, 40, 45, 50, 20, 15, 35},
+{60, 25, 20, 25, 15, 20, 20}, -- Marcus
+{85, 45, 40, 45, 25, 10, 40}, -- Allen
+{80, 40, 45, 50, 20, 15, 35}, -- Lance
 {80, 40, 50, 40, 20, 10, 40}, -- Wolt
-{90, 30, 30, 40, 35, 10, 50},
+{90, 30, 30, 40, 35, 10, 50}, -- Bors
 {00, 00, 50, 50, 20, 05, 00}, -- Merlinus
-{45, 50, 30, 20, 05, 60, 70},
-{90, 40, 40, 30, 20, 15, 35},
+{45, 50, 30, 20, 05, 60, 70}, -- Ellen
+{90, 40, 40, 30, 20, 15, 35}, -- Dieck
 {75, 50, 45, 20, 30, 05, 45}, -- Wade 
-{80, 30, 30, 35, 40, 15, 30},
-{45, 30, 55, 60, 10, 25, 60},
-{85, 50, 50, 80, 25, 15, 60},
-{50, 40, 50, 50, 15, 30, 35},
+{80, 30, 30, 35, 40, 15, 30}, -- Lott
+{45, 30, 55, 60, 10, 25, 60}, -- Shanna
+{85, 50, 50, 80, 25, 15, 60}, -- Chad
+{50, 40, 50, 50, 15, 30, 35}, -- Lugh
 {40, 30, 40, 50, 10, 40, 65}, -- Clarine
-{80, 30, 60, 50, 20, 20, 30},
-{60, 40, 45, 45, 15, 50, 15},
+{80, 30, 60, 50, 20, 20, 30}, -- Rutger
+{60, 40, 45, 45, 15, 50, 15}, -- Saul
 {85, 50, 45, 45, 15, 15, 35}, -- Dorothy
-{55, 30, 55, 65, 10, 15, 50},
-{75, 25, 20, 20, 30, 15, 15},
-{85, 40, 30, 35, 30, 05, 50},
-{75, 30, 45, 30, 30, 10, 40},
-{90, 35, 40, 50, 20, 20, 15},
-{45, 75, 20, 35, 10, 35, 50},
-{85, 40, 40, 40, 30, 10, 45},
-{00, 60, 25, 20, 40, 02, 20},
-{85, 40, 30, 45, 20, 15, 55},
-{75, 25, 50, 55, 15, 20, 50},
-{75, 45, 50, 50, 10, 15, 25},
-{90, 60, 15, 50, 25, 05, 35},
-{85, 50, 30, 40, 20, 10, 40},
-{60, 35, 40, 45, 15, 25, 50},
-{60, 40, 45, 55, 15, 20, 40},
-{70, 10, 05, 70, 20, 30, 80},
-{75, 30, 25, 30, 15, 15, 20},
-{80, 05, 05, 65, 25, 55, 65},
-{70, 40, 20, 30, 20, 05, 20},
-{55, 45, 55, 40, 15, 35, 15},
-{80, 40, 45, 85, 15, 20, 50},
-{75, 50, 50, 45, 20, 05, 25},
-{75, 30, 25, 35, 20, 10, 20},
-{60, 35, 45, 25, 20, 25, 25},
-{60, 55, 40, 30, 20, 55, 20},
-{70, 35, 25, 35, 10, 05, 20},
-{70, 45, 25, 25, 15, 05, 15},
+{55, 30, 55, 65, 10, 15, 50}, -- Sue
+{75, 25, 20, 20, 30, 15, 15}, -- Zealot
+{85, 40, 30, 35, 30, 05, 50}, -- Treck
+{75, 30, 45, 30, 30, 10, 40}, -- Noah
+{90, 35, 40, 50, 20, 20, 15}, -- Astohl
+{45, 75, 20, 35, 10, 35, 50}, -- Lilina
+{85, 40, 40, 40, 30, 10, 45}, -- Wendy
+{00, 60, 25, 20, 40, 02, 20}, -- Barth
+{85, 40, 30, 45, 20, 15, 55}, -- Oujay
+{75, 25, 50, 55, 15, 20, 50}, -- Fir
+{75, 45, 50, 50, 10, 15, 25}, -- Shin
+{90, 60, 15, 50, 25, 05, 35}, -- Gonzales
+{85, 50, 30, 40, 20, 10, 40}, -- Geese
+{60, 35, 40, 45, 15, 25, 50}, -- Klein
+{60, 40, 45, 55, 15, 20, 40}, -- Tate
+{70, 10, 05, 70, 20, 30, 80}, -- Lalum
+{75, 30, 25, 30, 15, 15, 20}, -- Echidna
+{80, 05, 05, 65, 25, 55, 65}, -- Elphin
+{70, 40, 20, 30, 20, 05, 20}, -- Bartre
+{55, 45, 55, 40, 15, 35, 15}, -- Ray
+{80, 40, 45, 85, 15, 20, 50}, -- Cath
+{75, 50, 50, 45, 20, 05, 25}, -- Miredy
+{75, 30, 25, 35, 20, 10, 20}, -- Percival
+{60, 35, 45, 25, 20, 25, 25}, -- Cecilia
+{60, 55, 40, 30, 20, 55, 20}, -- Sofiya
+{70, 35, 25, 35, 10, 05, 20}, -- Igrene
+{70, 45, 25, 25, 15, 05, 15}, -- Garret
 {30, 90, 85, 65, 30, 50, 50}, -- Fa
-{75, 30, 30, 45, 20, 15, 25},
-{80, 60, 50, 35, 25, 05, 20},
-{60, 30, 30, 30, 30, 05, 20},
+{75, 30, 30, 45, 20, 15, 25}, -- Hugh
+{80, 60, 50, 35, 25, 05, 20}, -- Zeis
+{60, 30, 30, 30, 30, 05, 20}, -- Douglas
 {25, 15, 15, 15, 15, 20, 05}, -- Niime
-{55, 20, 20, 15, 10, 10, 20},
-{50, 20, 35, 30, 10, 10, 45},
+{55, 20, 20, 15, 10, 10, 20}, -- Dayan
+{50, 20, 35, 30, 10, 10, 45}, -- Juno
 {20, 30, 15, 10, 10, 20, 20}, -- Yodel
 {10, 30, 40, 40, 10, 00, 20}  -- Karel
 }
@@ -134,10 +173,10 @@ P.BASE_STATS[6] = {
 {16, 03, 03, 10, 04, 02, 00, 01}, -- Chad
 {16, 04, 05, 06, 05, 03, 05, 01}, -- Lugh
 {15, 02, 05, 09, 08, 02, 05, 01}, -- Clarine
-{22, 07, 12, 13, 02, 05, 00, 04}, -- Rutger								
+{22, 07, 12, 13, 02, 05, 00, 04}, -- Rutger
 {20, 04, 06, 10, 02, 02, 05, 05}, -- Saul
 {19, 05, 06, 06, 03, 04, 02, 03}, -- Dorothy
-{18, 05, 07, 08, 04, 05, 00, 01}, -- Sue								
+{18, 05, 07, 08, 04, 05, 00, 01}, -- Sue
 {35, 10, 12, 13, 05, 11, 07, 01}, -- Zealot
 {25, 08, 06, 07, 05, 08, 00, 04}, -- Treck
 {27, 08, 07, 09, 06, 07, 01, 07}, -- Noah
@@ -146,24 +185,24 @@ P.BASE_STATS[6] = {
 {19, 04, 03, 03, 06, 08, 01, 01}, -- Wendy
 {25, 10, 06, 05, 02, 14, 01, 09}, -- Barth
 {24, 07, 10, 09, 06, 04, 00, 03}, -- Oujay
-{19, 06, 09, 10, 03, 03, 01, 01}, -- Fir								
-{24, 07, 08, 10, 06, 07, 00, 05}, -- Shin								
-{36, 12, 05, 09, 05, 06, 00, 05}, -- Gonzales								
+{19, 06, 09, 10, 03, 03, 01, 01}, -- Fir
+{24, 07, 08, 10, 06, 07, 00, 05}, -- Shin
+{36, 12, 05, 09, 05, 06, 00, 05}, -- Gonzales
 {33, 10, 09, 09, 09, 08, 00, 10}, -- Geese
-{27, 13, 13, 11, 10, 08, 06, 01}, -- Klein							
-{22, 06, 08, 11, 03, 07, 06, 08}, -- Tate								
+{27, 13, 13, 11, 10, 08, 06, 01}, -- Klein
+{22, 06, 08, 11, 03, 07, 06, 08}, -- Tate
 {14, 01, 02, 11, 09, 02, 04, 01}, -- Lalum
 {35, 13, 19, 18, 06, 08, 07, 01}, -- Echidna
 {15, 01, 03, 10, 11, 04, 01, 01}, -- Elphin
 {48, 22, 11, 10, 14, 10, 03, 01}, -- Bartre
 {23, 12, 09, 09, 06, 05, 10, 12}, -- Ray
-{16, 03, 07, 11, 08, 02, 01, 05}, -- Cath								
-{30, 12, 11, 10, 05, 13, 03, 10}, -- Miredy								
-{43, 17, 13, 18, 12, 14, 11, 05}, -- Percival								
+{16, 03, 07, 11, 08, 02, 01, 05}, -- Cath
+{30, 12, 11, 10, 05, 13, 03, 10}, -- Miredy
+{43, 17, 13, 18, 12, 14, 11, 05}, -- Percival
 {30, 11, 07, 10, 10, 07, 13, 01}, -- Cecilia
 {15, 06, 02, 04, 03, 01, 08, 01}, -- Sofiya
 {32, 16, 18, 15, 09, 11, 10, 01}, -- Igrene
-{49, 17, 13, 10, 12, 09, 04, 01}, -- Garret								
+{49, 17, 13, 10, 12, 09, 04, 01}, -- Garret
 {16, 02, 02, 03, 07, 02, 06, 01}, -- Fa
 {26, 13, 11, 12, 10, 09, 09, 15}, -- Hugh
 {28, 14, 09, 08, 06, 12, 02, 07}, -- Zeis
@@ -175,65 +214,144 @@ P.BASE_STATS[6] = {
 {44, 20, 28, 23, 18, 15, 13, 19}  -- Karel
 }
 -- hard mode bases?
-P.GROWTH_WEIGHTS[6] = {}
-for unit_i = 1, P.NUM_OF_UNITS[6] do
-	P.GROWTH_WEIGHTS[6][unit_i] = {1.0, 2.0, 1.0, 2.0, 2.0, 1.0, 1.0}
-end
 P.CLASSES[6] = {
-classes.M.MASTER_LORD, 		-- Roy LORD
+classes.M.LORD, 			-- Roy
 classes.M.PALADIN, 			-- Marcus
-classes.M.PALADIN, 			-- Allen CAVALIER
-classes.M.PALADIN, 			-- Lance CAVALIER
-classes.M.SNIPER, 			-- Wolt ARCHER
-classes.M.GENERAL, 			-- Bors ARMOR_KNIGHT
+classes.M.CAVALIER, 		-- Allen
+classes.M.CAVALIER, 		-- Lance
+classes.M.ARCHER, 			-- Wolt 
+classes.M.ARMOR_KNIGHT, 	-- Bors 
 classes.M.TRANSPORTER, 		-- Merlinus
-classes.F.BISHOP, 			-- Ellen CLERIC
-classes.M.HERO, 			-- Dieck MERCENARY
-classes.M.WARRIOR, 			-- Wade FIGHTER
-classes.M.WARRIOR, 			-- Lott FIGHTER
-classes.F.PEGASUS_KNIGHT, 	-- Thany PEGASUS_KNIGHT
+classes.F.CLERIC, 			-- Ellen
+classes.M.MERCENARY, 		-- Dieck
+classes.M.FIGHTER, 			-- Wade
+classes.M.FIGHTER, 			-- Lott
+classes.F.PEGASUS_KNIGHT, 	-- Thany
 classes.M.THIEF, 			-- Chad
-classes.M.SAGE, 			-- Lugh MAGE
-classes.F.VALKYRIE, 		-- Clarine TROUBADOUR
-classes.M.SWORDMASTER, 		-- Rutger MYRMIDON
-classes.M.BISHOP, 			-- Saul CLERIC
-classes.F.SNIPER, 			-- Dorothy ARCHER
-classes.F.RANGER, 			-- Sue NOMAD
+classes.M.MAGE, 			-- Lugh
+classes.F.TROUBADOUR, 		-- Clarine 
+classes.M.MYRMIDON, 		-- Rutger 
+classes.M.CLERIC, 			-- Saul
+classes.F.ARCHER, 			-- Dorothy 
+classes.F.NOMAD, 			-- Sue 
 classes.M.PALADIN, 			-- Zealot
-classes.M.PALADIN, 			-- Treck CAVALIER
-classes.M.PALADIN, 			-- Noah CAVALIER
+classes.M.CAVALIER, 		-- Treck
+classes.M.CAVALIER, 		-- Noah
 classes.M.THIEF, 			-- Astohl
-classes.F.SAGE, 			-- Lilina MAGE
-classes.F.GENERAL, 			-- Wendy ARMOR_KNIGHT
-classes.M.GENERAL, 			-- Barth ARMOR_KNIGHT
-classes.M.HERO, 			-- Oujay MERCENARY
-classes.F.SWORDMASTER, 		-- Fir MYRMIDON
-classes.M.RANGER, 			-- Shin NOMAD
-classes.M.BERSERKER, 		-- Gonzales BRIGAND
-classes.M.PIRATE, 			-- Geese PIRATE
+classes.F.MAGE, 			-- Lilina
+classes.F.ARMOR_KNIGHT, 	-- Wendy
+classes.M.ARMOR_KNIGHT, 	-- Barth
+classes.M.MERCENARY, 		-- Oujay
+classes.F.MYRMIDON, 		-- Fir
+classes.M.NOMAD, 			-- Shin
+classes.M.BRIGAND, 			-- Gonzales
+classes.M.PIRATE, 			-- Geese
 classes.M.SNIPER, 			-- Klein
-classes.F.FALCO_KNIGHT, 	-- Tate PEGASUS_KNIGHT
+classes.F.PEGASUS_KNIGHT, 	-- Tate
 classes.F.DANCER, 			-- Lalum
 classes.F.HERO, 			-- Echidna
 classes.M.BARD, 			-- Elphin
 classes.M.WARRIOR, 			-- Bartre
-classes.M.DRUID, 			-- Ray SHAMAN
+classes.M.SHAMAN, 			-- Ray
 classes.F.THIEF, 			-- Cath
-classes.F.WYVERN_LORD, 		-- Miredy WYVERN_RIDER
+classes.F.WYVERN_RIDER, 	-- Miredy 
 classes.M.PALADIN, 			-- Percival
 classes.F.VALKYRIE, 		-- Cecilia
-classes.F.DRUID, 			-- Sofiya SHAMAN
+classes.F.SHAMAN, 			-- Sofiya
 classes.F.SNIPER, 			-- Igrene
 classes.M.BERSERKER, 		-- Garret
 classes.F.MANAKETE, 		-- Fa
-classes.M.MAGE, 			-- Hugh MAGE
-classes.M.WYVERN_LORD, 		-- Zeis WYVERN_RIDER
+classes.M.MAGE, 			-- Hugh
+classes.M.WYVERN_RIDER, 	-- Zeis
 classes.M.GENERAL, 			-- Douglas
 classes.F.DRUID, 			-- Niime
 classes.M.RANGER, 			-- Dayan
 classes.F.FALCO_KNIGHT, 	-- Juno
 classes.M.BISHOP, 			-- Yodel
 classes.M.SWORDMASTER 		-- Karel
+}
+P.PROMOTIONS[6] = {
+classes.M.MASTER_LORD, 		-- Roy
+classes.M.PALADIN, 			-- Marcus
+classes.M.PALADIN, 			-- Allen
+classes.M.PALADIN, 			-- Lance
+classes.M.SNIPER, 			-- Wolt
+classes.M.GENERAL, 			-- Bors
+classes.M.TRANSPORTER, 		-- Merlinus
+classes.F.BISHOP, 			-- Ellen
+classes.M.HERO, 			-- Dieck
+classes.M.WARRIOR, 			-- Wade
+classes.M.WARRIOR, 			-- Lott
+classes.F.FALCO_KNIGHT, 	-- Thany
+classes.M.THIEF, 			-- Chad
+classes.M.SAGE, 			-- Lugh
+classes.F.VALKYRIE, 		-- Clarine
+classes.M.SWORDMASTER, 		-- Rutger
+classes.M.BISHOP, 			-- Saul
+classes.F.SNIPER, 			-- Dorothy
+classes.F.RANGER, 			-- Sue
+classes.M.PALADIN, 			-- Zealot
+classes.M.PALADIN, 			-- Treck
+classes.M.PALADIN, 			-- Noah
+classes.M.THIEF, 			-- Astohl
+classes.F.SAGE, 			-- Lilina
+classes.F.GENERAL, 			-- Wendy
+classes.M.GENERAL, 			-- Barth
+classes.M.HERO, 			-- Oujay
+classes.F.SWORDMASTER, 		-- Fir
+classes.M.RANGER, 			-- Shin 
+classes.M.BERSERKER, 		-- Gonzales
+classes.M.BERSERKER, 		-- Geese
+classes.M.SNIPER, 			-- Klein
+classes.F.FALCO_KNIGHT, 	-- Tate
+classes.F.DANCER, 			-- Lalum
+classes.F.HERO, 			-- Echidna
+classes.M.BARD, 			-- Elphin
+classes.M.WARRIOR, 			-- Bartre
+classes.M.DRUID, 			-- Ray
+classes.F.THIEF, 			-- Cath
+classes.F.WYVERN_LORD, 		-- Miredy
+classes.M.PALADIN, 			-- Percival
+classes.F.VALKYRIE, 		-- Cecilia
+classes.F.DRUID, 			-- Sofiya
+classes.F.SNIPER, 			-- Igrene
+classes.M.BERSERKER, 		-- Garret
+classes.F.MANAKETE, 		-- Fa
+classes.M.SAGE, 			-- Hugh
+classes.M.WYVERN_LORD, 		-- Zeis
+classes.M.GENERAL, 			-- Douglas
+classes.F.DRUID, 			-- Niime
+classes.M.RANGER, 			-- Dayan
+classes.F.FALCO_KNIGHT, 	-- Juno
+classes.M.BISHOP, 			-- Yodel
+classes.M.SWORDMASTER 		-- Karel
+}
+
+P.DEPLOYED[6] = {}
+P.BOOSTERS[6] = {}
+P.GROWTH_WEIGHTS[6] = {}
+for unit_i = 1, P.NUM_OF_UNITS[6] do
+	P.GROWTH_WEIGHTS[6][unit_i] = {20, 40, 20, 50, 30, 10, 10}
+	-- speed>str>def>skl=hp>res=luck
+	P.BOOSTERS[6][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
+end
+
+P.DEPLOYED[6][ROY] = true
+P.GROWTH_WEIGHTS[6][LALUM] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+P.GROWTH_WEIGHTS[6][ELPHIN] = {30, 00, 00, 20, 20, 10, 10}
+
+P.PROMOTED_AT[6] = {
+ 0,  0,  0,  0,  0, -- Roy Marcus Allen Lance Wolt
+ 0,  0,  0,  0,  0, -- Bors Merlinus Ellen Dieck Wade 
+ 0,  0,  0,  0,  0, -- Lott Shanna Chad Lugh Clarine
+ 0,  0,  0,  0,  0, -- Rutger Saul Dorothy Sue Zealot
+ 0,  0,  0,  0,  0, -- Treck Noah Astore Lilina Wendy
+ 0,  0,  0,  0,  0, -- Barth Ogier Fir Shin Gonzales
+ 0,  0,  0,  0,  0, -- Geese Klein Tate Lalum Echidna
+ 0,  0,  0,  0,  0, -- Elphin Bartre Ray Cath Milady
+ 0,  0,  0,  0,  0, -- Percival Cecilia Sophia Igrene Garret 
+ 0,  0,  0,  0,  0, -- Fa Hugh Zeis Douglas Niime
+ 0,  0,  0,  0      -- Dayan Juno Yodel Karel
 }
 
 indexer = 0
@@ -816,7 +934,6 @@ P.PROMOTED_AT[8] = {
  0,  0,  0,  0,  0, -- Riev Ismaire Selena Glen Hayden
  0,  0,  0			-- Valter Fado Lyon
 }
-
 
 
 P.sel_Unit_i = 1

@@ -98,6 +98,11 @@ local function pressed(key, ctrl)
 end
 
 local update2ndary = false
+local fogAddr = {}
+
+fogAddr[6] = 0x202AA55
+fogAddr[7] = 0x202BC05
+fogAddr[8] = 0x202BCFD
 
 while true do
 	local reprintRNs = false
@@ -234,20 +239,17 @@ while true do
 		if pressed(4) then rnbe.toggleDig() end
 		
 		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
-			local currFogRange = memory.readbyte(0x202BC05)
+			local currFogRange = memory.readbyte(fogAddr[version])
 			if pressed("L", gameCtrl) then
 				currFogRange = currFogRange - 1
-				memory.writebyte(0x202BC05, currFogRange)
+				memory.writebyte(fogAddr[version], currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
 			if pressed("R", gameCtrl) then
 				currFogRange = currFogRange + 1
-				memory.writebyte(0x202BC05, currFogRange)
+				memory.writebyte(fogAddr[version], currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
-			
-			--0x202BC05 FE7
-			--0x202BCFD FE8
 		end	
 		
 		if keybCtrl.thisFrame[hotkeys[7].key] then

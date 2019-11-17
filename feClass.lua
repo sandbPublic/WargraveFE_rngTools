@@ -156,8 +156,7 @@ P.EXP_KILL_MODIFIER[P.F.ASSASSIN] = -20
 P.EXP_KILL_MODIFIER[P.M.ASSASSIN] = -20
 P.EXP_KILL_MODIFIER[P.M.ROGUE] 	  = -20
 
--- assume same caps from game to game for now...
-P.CAPS[P.F.DANCER]			= {60, 10, 10, 30, 24, 26, 30} -- 78
+P.CAPS[P.F.DANCER]			= {60, 10, 10, 30, 24, 26, 30} -- ?78
 P.CAPS[P.M.BARD]			= {60, 10, 10, 30, 24, 26, 30}
 
 P.CAPS[P.M.MASTER_LORD]		= {60, 25, 25, 25, 25, 25, 30}
@@ -170,57 +169,70 @@ P.CAPS[P.F.GREAT_LORD8]		= {60, 24, 29, 30, 22, 25, 30}
 P.CAPS[P.M.GREAT_LORD8]		= {60, 27, 26, 24, 23, 23, 30}
 
 P.CAPS[P.F.WYVERN_LORD] 	= {60, 25, 26, 24, 27, 23, 30} -- 78
+							-- 6:  25, 26, 23, 29, 23
 P.CAPS[P.M.WYVERN_LORD]		= {60, 27, 25, 23, 28, 22, 30} -- 78
+							-- 6:  26, 26, 23, 30, 22
 P.CAPS[P.F.FALCO_KNIGHT]	= {60, 23, 25, 28, 23, 26, 30}
+							-- 6:  23, 25, 28, 24, 28
 P.CAPS[P.M.WYVERN_KNIGHT]	= {60, 25, 26, 28, 24, 22, 30}
 P.CAPS[P.F.WYVERN_KNIGHT]	= {60, 24, 27, 29, 23, 23, 30}
 
 P.CAPS[P.F.BISHOP]			= {60, 25, 25, 26, 21, 30, 30}
+							-- 6:  26, 25, 26, 21, 30
 P.CAPS[P.M.BISHOP]			= {60, 25, 26, 24, 22, 30, 30}
+							-- 6:  25, 26, 25, 22, 30
 P.CAPS[P.F.SAGE]			= {60, 30, 28, 26, 21, 25, 30} -- 78
+							-- 6:  30, 28, 25, 20, 25	
 P.CAPS[P.M.SAGE]			= {60, 28, 30, 26, 21, 25, 30} -- 78
+							-- 6:  28, 30, 25, 20, 25
 P.CAPS[P.F.DRUID]			= {60, 29, 24, 26, 20, 29, 30}
 P.CAPS[P.M.DRUID]			= {60, 29, 26, 26, 21, 28, 30}
+							-- 6:  29, 24, 26, 21, 28
 P.CAPS[P.F.VALKYRIE]		= {60, 25, 24, 25, 24, 28, 30}
+							-- 6:  27, 24, 25, 24, 28
 P.CAPS[P.M.SUMMONER]		= {60, 27, 27, 26, 20, 28, 30}
 P.CAPS[P.M.S_PUPIL]			= {60, 29, 28, 27, 21, 26, 30}
 P.CAPS[P.M.MAGE_KNIGHT]		= {60, 24, 26, 25, 24, 25, 30}
 P.CAPS[P.F.MAGE_KNIGHT]		= {60, 25, 24, 25, 24, 28, 30}
 
 P.CAPS[P.F.GENERAL]			= {60, 27, 28, 25, 29, 26, 30} -- 8 none in 7, but different stats?
+							-- 6:  25, 25, 22, 30, 26
 P.CAPS[P.M.GENERAL]			= {60, 29, 27, 24, 30, 25, 30} -- 78
-P.CAPS[P.F.PALADIN]			= {60, 23, 27, 25, 24, 26, 30} -- 78
+							-- 6:  27, 25, 21, 30, 25
+P.CAPS[P.F.PALADIN]			= {60, 23, 27, 25, 24, 26, 30} -- 78 none in 6, but different stats?
 P.CAPS[P.M.PALADIN]			= {60, 25, 26, 24, 25, 25, 30} -- 78
-P.CAPS[P.F.GREAT_KNIGHT]	= {60, 26, 26, 25, 28, 26, 30}
-P.CAPS[P.M.GREAT_KNIGHT]	= {60, 28, 24, 24, 29, 25, 30}
-P.CAPS[P.F.S_RECRUIT]		= {60, 23, 30, 29, 22, 26, 30}
+							-- 6:  25, 28, 25, 25, 25
+P.CAPS[P.F.GREAT_KNIGHT]	= {60, 26, 26, 25, 28, 26, 30} --__8
+P.CAPS[P.M.GREAT_KNIGHT]	= {60, 28, 24, 24, 29, 25, 30} --__8
+P.CAPS[P.F.S_RECRUIT]		= {60, 23, 30, 29, 22, 26, 30} --__8
 
 P.CAPS[P.M.WARRIOR]			= {60, 30, 28, 26, 26, 22, 30}
+							-- 6:  30, 26, 24, 28, 20
 P.CAPS[P.M.BERSERKER]		= {60, 30, 29, 28, 23, 21, 30}
-P.CAPS[P.F.HERO]			= {60, 24, 30, 26, 24, 24, 30} -- 678
-P.CAPS[P.M.HERO]			= {60, 25, 30, 26, 25, 22, 30} -- 678
-P.CAPS[P.F.RANGER]			= {60, 23, 28, 30, 22, 25, 30} -- 678
-P.CAPS[P.M.RANGER]			= {60, 25, 28, 30, 24, 23, 30} -- _78
-P.CAPS[P.F.SNIPER]			= {60, 24, 30, 29, 24, 24, 30} -- _78
-P.CAPS[P.M.SNIPER]			= {60, 25, 30, 28, 25, 23, 30} -- _78
-if version == 6 then 
-	P.CAPS[P.M.RANGER][5] = 23 
-	P.CAPS[P.F.SNIPER][2] = 23
-end
+							-- 6:  30, 24, 28, 22, 24
+P.CAPS[P.F.HERO]			= {60, 24, 30, 26, 24, 24, 30} --678
+P.CAPS[P.M.HERO]			= {60, 25, 30, 26, 25, 22, 30} --678
+P.CAPS[P.F.RANGER]			= {60, 23, 28, 30, 22, 25, 30} --678
+P.CAPS[P.M.RANGER]			= {60, 25, 28, 30, 24, 23, 30} -- 78
+							-- 6:  23, 28, 30, 24, 23
+P.CAPS[P.F.SNIPER]			= {60, 24, 30, 29, 24, 24, 30} -- 78
+							-- 6:  23, 30, 29, 24, 24
+P.CAPS[P.M.SNIPER]			= {60, 25, 30, 28, 25, 23, 30} -- 78
+							-- 6:  24, 30, 29, 22, 23
 
-P.CAPS[P.M.S_JOURNEYMAN]	= {60, 26, 29, 28, 23, 23, 30}
+P.CAPS[P.M.S_JOURNEYMAN]	= {60, 26, 29, 28, 23, 23, 30} --__8
 
-P.CAPS[P.F.SWORDMASTER]		= {60, 22, 29, 30, 22, 25, 30} -- 78
-P.CAPS[P.M.SWORDMASTER]		= {60, 24, 29, 30, 22, 23, 30} -- 78
-P.CAPS[P.F.ASSASSIN]		= {60, 20, 30, 30, 20, 20, 30} -- 78
-P.CAPS[P.M.ASSASSIN]		= {60, 20, 30, 30, 20, 20, 30} -- 78
-P.CAPS[P.M.ROGUE]			= {60, 20, 30, 30, 20, 20, 30}
+P.CAPS[P.F.SWORDMASTER]		= {60, 22, 29, 30, 22, 25, 30} --678
+P.CAPS[P.M.SWORDMASTER]		= {60, 24, 29, 30, 22, 23, 30} --678
+P.CAPS[P.F.ASSASSIN]		= {60, 20, 30, 30, 20, 20, 30} --_78
+P.CAPS[P.M.ASSASSIN]		= {60, 20, 30, 30, 20, 20, 30} --_78
+P.CAPS[P.M.ROGUE]			= {60, 20, 30, 30, 20, 20, 30} --__8
 
 P.CAPS[P.M.ARCHSAGE]		= {60, 30, 30, 25, 20, 30, 30}
 P.CAPS[P.M.NECROMANCER]		= {60, 30, 25, 25, 30, 30, 30}
 -- check other versions
 
-P.PROMO_GAINS[P.M.MASTER_LORD] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.M.MASTER_LORD] 		= {4, 2, 3, 2, 2, 5, 0}
 
 P.PROMO_GAINS[P.F.BLADE_LORD] 		= {3, 2, 2, 0, 3, 5, 0}
 P.PROMO_GAINS[P.M.KNIGHT_LORD] 		= {4, 2, 0, 1, 1, 3, 0}
@@ -229,47 +241,71 @@ P.PROMO_GAINS[P.M.GREAT_LORD7] 		= {3, 0, 2, 3, 1, 5, 0}
 P.PROMO_GAINS[P.F.GREAT_LORD8] 		= {4, 2, 2, 1, 3, 5, 0}
 P.PROMO_GAINS[P.M.GREAT_LORD8] 		= {4, 2, 3, 2, 2, 5, 0}
 
-P.PROMO_GAINS[P.F.WYVERN_LORD] 		= {0, 0, 0, 0, 0, 0, 0} -- __
+P.PROMO_GAINS[P.F.WYVERN_LORD] 		= {5, 2, 2, 2, 2, 2, 0} --6__
 P.PROMO_GAINS[P.M.WYVERN_LORD] 		= {4, 0, 2, 2, 0, 2, 0} -- 7
+							    -- 6:  5, 2, 2, 2, 2, 1
+								-- 8:  4, 2, 2, 0, 2, 0
 P.PROMO_GAINS[P.F.FALCO_KNIGHT] 	= {5, 2, 0, 0, 2, 2, 0} -- 7
+							    -- 6:  6, 2, 2, 2, 2, 2
+								-- 8:  5, 2, 0, 2, 2, 2
 P.PROMO_GAINS[P.F.WYVERN_KNIGHT]	= {3, 2, 1, 2, 1, 1, 0} --__8
 P.PROMO_GAINS[P.M.WYVERN_KNIGHT]	= {3, 1, 2, 3, 0, 1, 0} --__8
 
-P.PROMO_GAINS[P.F.BISHOP] 			= {3, 1, 2, 1, 2, 2, 0} -- 7
-P.PROMO_GAINS[P.M.BISHOP] 			= {3, 2, 1, 0, 3, 2, 0} -- 7
-P.PROMO_GAINS[P.F.SAGE] 			= {3, 1, 1, 0, 3, 3, 0} -- 7
-P.PROMO_GAINS[P.M.SAGE] 			= {4, 1, 0, 0, 3, 3, 0} -- 7
-P.PROMO_GAINS[P.F.DRUID] 			= {0, 0, 0, 0, 0, 0, 0} -- __
-P.PROMO_GAINS[P.M.DRUID] 			= {4, 0, 0, 3, 2, 2, 0} -- 7
-P.PROMO_GAINS[P.F.VALKYRIE] 		= {3, 2, 1, 0, 2, 3, 0} -- 7
-P.PROMO_GAINS[P.F.MAGE_KNIGHT] 		= {0, 0, 0, 0, 0, 0, 0}
-P.PROMO_GAINS[P.M.MAGE_KNIGHT] 		= {0, 0, 0, 0, 0, 0, 0}
-P.PROMO_GAINS[P.M.SUMMONER] 		= {0, 0, 0, 0, 0, 0, 0}
-P.PROMO_GAINS[P.M.S_PUPIL] 			= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.BISHOP] 			= {3, 1, 2, 1, 2, 2, 0} -- 78
+							    -- 6:  3, 3, 3, 2, 2, 3
+P.PROMO_GAINS[P.M.BISHOP] 			= {3, 2, 1, 0, 3, 2, 0} -- 78
+							    -- 6:  3, 3, 3, 2, 2, 3
+P.PROMO_GAINS[P.F.SAGE] 			= {3, 1, 1, 0, 3, 3, 0} -- 78
+							    -- 6:  3, 3, 3, 3, 1, 2
+P.PROMO_GAINS[P.M.SAGE] 			= {4, 1, 0, 0, 3, 3, 0} -- 78
+							    -- 6:  4, 4, 2, 1, 2, 2
+P.PROMO_GAINS[P.F.DRUID] 			= {2, 4, 2, 3, 2, 2, 0} --6__
+P.PROMO_GAINS[P.M.DRUID] 			= {4, 0, 0, 3, 2, 2, 0} -- 78
+							    -- 6:  3, 4, 2, 2, 2, 2
+P.PROMO_GAINS[P.F.VALKYRIE] 		= {3, 2, 1, 0, 2, 3, 0} -- 78
+							    -- 6:  4, 3, 2, 2, 2, 3
+P.PROMO_GAINS[P.F.MAGE_KNIGHT] 		= {3, 2, 1, 0, 2, 2, 0} --__8
+P.PROMO_GAINS[P.M.MAGE_KNIGHT] 		= {4, 2, 0, 0, 2, 2, 0} --__8
+P.PROMO_GAINS[P.M.SUMMONER] 		= {3, 0, 1, 3, 1, 3, 0} --__8
+P.PROMO_GAINS[P.M.S_PUPIL] 			= {4, 2, 0, 1, 3, 3, 0} --__8
 
-P.PROMO_GAINS[P.F.GENERAL] 			= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.GENERAL] 			= {3, 2, 3, 2, 3, 3, 0} -- _8
+							    -- 6:  4, 4, 2, 4, 3, 3
 P.PROMO_GAINS[P.M.GENERAL] 			= {4, 2, 2, 3, 2, 2, 0} -- 7
-P.PROMO_GAINS[P.F.PALADIN] 			= {0, 0, 0, 0, 0, 0, 0}
-P.PROMO_GAINS[P.M.PALADIN] 			= {2, 1, 1, 1, 2, 1, 0} -- 7 
-P.PROMO_GAINS[P.F.GREAT_KNIGHT] 	= {0, 0, 0, 0, 0, 0, 0}
+							    -- 6:  4, 3, 2, 3, 4, 3
+								-- 8:  4, 2, 2, 3, 2, 3
+P.PROMO_GAINS[P.F.PALADIN] 			= {1, 1, 1, 2, 1, 2, 0} --__8
+P.PROMO_GAINS[P.M.PALADIN] 			= {2, 1, 1, 1, 2, 1, 0} -- 78
+							    -- 6:  3, 2, 2, 2, 2, 3 
+P.PROMO_GAINS[P.F.GREAT_KNIGHT] 	= {3, 1, 1, 2, 2, 2, 0} --__8
 P.PROMO_GAINS[P.M.GREAT_KNIGHT] 	= {3, 2, 1, 2, 2, 1, 0} --__8
-P.PROMO_GAINS[P.F.S_RECRUIT] 		= {0, 0, 0, 0, 0, 0, 0}
+P.PROMO_GAINS[P.F.S_RECRUIT] 		= {2, 2, 1, 1, 2, 1, 0} --__8
 
 P.PROMO_GAINS[P.M.WARRIOR] 			= {3, 1, 2, 0, 3, 3, 0} -- 7
+							    -- 6:  8, 3, 3, 2, 3, 0
 P.PROMO_GAINS[P.M.BERSERKER] 		= {4, 1, 1, 1, 2, 2, 0} -- 7
-P.PROMO_GAINS[P.F.HERO] 			= {0, 0, 0, 0, 0, 0, 0}
+							    -- 6:  4, 2, 5, 2, 3, 0 brigand
+							    -- 6:  5, 3, 4, 1, 3, 0 pirate
+P.PROMO_GAINS[P.F.HERO] 			= {6, 3, 5, 5, 4, 3, 0} --6__ but does not exist?
 P.PROMO_GAINS[P.M.HERO] 			= {4, 0, 2, 2, 2, 2, 0} -- 7
-P.PROMO_GAINS[P.F.RANGER] 			= {0, 0, 0, 0, 0, 0, 0}
+							    -- 6:  4, 2, 1, 2, 4, 2
+P.PROMO_GAINS[P.F.RANGER] 			= {0, 0, 0, 0, 0, 0, 0} --  _8
+							    -- 6:  6, 2, 1, 1, 2, 4
 P.PROMO_GAINS[P.M.RANGER] 			= {3, 2, 1, 1, 3, 3, 0} -- 7
+							    -- 6:  5, 2, 2, 2, 2, 3
 P.PROMO_GAINS[P.F.SNIPER] 			= {4, 3, 1, 1, 2, 2, 0} -- 7
+							    -- 6:  2, 3, 3, 3, 2, 3
 P.PROMO_GAINS[P.M.SNIPER] 			= {3, 1, 2, 2, 2, 3, 0} -- 7
-P.PROMO_GAINS[P.M.S_JOURNEYMAN] 	= {0, 0, 0, 0, 0, 0, 0}
+							    -- 6:  3, 3, 3, 2, 2, 2
+P.PROMO_GAINS[P.M.S_JOURNEYMAN] 	= {0, 0, 0, 0, 0, 0, 0} -- __8
 
 P.PROMO_GAINS[P.F.SWORDMASTER] 		= {4, 2, 1, 0, 2, 1, 0} -- _8
+							    -- 6:  4, 3, 2, 2, 3, 2
 P.PROMO_GAINS[P.M.SWORDMASTER] 		= {5, 2, 0, 0, 2, 1, 0} -- 7
-P.PROMO_GAINS[P.F.ASSASSIN] 		= {2, 1, 1, 1, 2, 1, 0} --__
-P.PROMO_GAINS[P.M.ASSASSIN] 		= {3, 1, 0, 0, 2, 2, 0} --_7
-P.PROMO_GAINS[P.M.ROGUE] 			= {0, 0, 0, 0, 0, 0, 0} --__
+							    -- 6:  5, 2, 2, 1, 3, 2
+P.PROMO_GAINS[P.F.ASSASSIN] 		= {2, 1, 1, 1, 2, 1, 0} --__8
+P.PROMO_GAINS[P.M.ASSASSIN] 		= {3, 1, 0, 0, 2, 2, 0} --_78
+P.PROMO_GAINS[P.M.ROGUE] 			= {0, 0, 0, 0, 0, 0, 0} --__8
 
 P.PROMO_GAINS[P.M.ARCHSAGE] 		= {0, 0, 0, 0, 0, 0, 0}
 P.PROMO_GAINS[P.M.NECROMANCER] 		= {0, 0, 0, 0, 0, 0, 0}

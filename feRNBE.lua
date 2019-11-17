@@ -6,8 +6,10 @@ local P = {}
 rnbe = P -- random number block event
 
 local PPrnbes = {} -- Player Phase rnbes
-PPrnbes.count = 0
 local EPrnbes = {} -- Enemy Phase rnbes
+
+-- deletions are merely decrementing this number, allowing for undoing deletion
+PPrnbes.count = 0
 EPrnbes.count = 0
 P.playerPhase = true
 
@@ -84,7 +86,7 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	self.__index = self
 	 
 	o.ID = P.SPrnbes().count -- order in which rnbes were registered
-	o.dependency = {} -- to enforce dependencies: certain rnbes must precede others
+	o.comesAfter = {} -- enforces dependencies: certain rnbes must precede others
 	o.isPP = P.playerPhase
 	
 	o.unit_i = sel_Unit_i	
@@ -138,9 +140,9 @@ function rnbeObj:diagnostic()
 		print(batParamStrings[2])
 		
 		local str = ""
-		for hitSq_i = 1, self.hitSq.numEvents do
-			local event = self.hitSq[hitSq_i]
-			str = str .. event.action .. string.format(" %2d dmg, ", event.dmg)
+		for _, hitEvent in ipairs(self.hitSq) do
+			local event = hitEvent
+			str = str .. hitEvent.action .. string.format(" %2d dmg, ", hitEvent.dmg)
 		end
 		
 		print(str)
@@ -166,7 +168,7 @@ function rnbeObj:diagnostic()
 		end
 	end
 	
-	print(self.dependency)
+	print(self.comesAfter)
 	
 	print("stats")
 	print(self.stats)
@@ -437,7 +439,7 @@ function rnbeObj:evaluation_fn(printV)
 	local printStr = string.format("%02d", self.ID)
 	
 	-- could have empty combat if enemy HP == 0 e.g. another unit killed this enemy this phase
-	if self.combat and self.hitSq.numEvents > 0 then 
+	if self.combat and self.hitSq[1] then 
 		if self.hitSq[1].action == "STF-X" then
 			score = score + 100
 			if printV then printStr = printStr .. " staff hit" end
@@ -523,11 +525,10 @@ function rnbeObj:drawMyBoxes(rect, RNBE_i)
 	if self.combat then
 		hitStart = self.burns
 
-		for ev_i = 1, self.hitSq.numEvents do
-			rect:drawBox(line_i, INIT_CHARS + hitStart * 3, 
-				self.hitSq[ev_i].RNsConsumed * 3, "yellow")
+		for _, hitEvent in ipairs(self.hitSq) do
+			rect:drawBox(line_i, INIT_CHARS + hitStart * 3, hitEvent.RNsConsumed * 3, "yellow")
 				
-			hitStart = hitStart + self.hitSq[ev_i].RNsConsumed
+			hitStart = hitStart + hitEvent.RNsConsumed
 		end
 	end	
 	if self:levelDetected() then
@@ -566,7 +567,7 @@ function P.removeLastObj()
 			if P.SPrnbes()[RNBE_i].ID > IDremoved then
 				P.SPrnbes()[RNBE_i].ID = P.SPrnbes()[RNBE_i].ID - 1 -- dec own ID
 				for RNBE_j = IDremoved, P.SPrnbes().count do -- dec dependency table after IDremoved
-					P.SPrnbes()[RNBE_i].dependency[RNBE_j] = P.SPrnbes()[RNBE_i].dependency[RNBE_j+1]
+					P.SPrnbes()[RNBE_i].comesAfter[RNBE_j] = P.SPrnbes()[RNBE_i].comesAfter[RNBE_j+1]
 				end
 			end
 		end
@@ -590,7 +591,7 @@ function P.undoDelete()
 	end
 end
 
- -- index from 0, rns blank to be colorized
+-- index from 0, rns blank to be colorized
 function P.toStrings()
 	local ret = {}
 	
@@ -655,7 +656,7 @@ function P.decSel()
 end
 function P.swap()
 	if sel_RNBE_i < P.SPrnbes().count then
-		if P.SPrnbes()[sel_RNBE_i+1].dependency[P.get().ID] then
+		if P.SPrnbes()[sel_RNBE_i+1].comesAfter[P.get().ID] then
 			print(string.format("CAN'T SWAP, %d DEPENDS ON %d, TOGGLE WITH START", 
 				P.SPrnbes()[sel_RNBE_i+1].ID, P.get().ID))
 		else
@@ -667,10 +668,10 @@ function P.swap()
 end
 function P.toggleDependency()
 	if sel_RNBE_i < P.SPrnbes().count then
-		P.SPrnbes()[sel_RNBE_i+1].dependency[P.get().ID] = 
-			not P.SPrnbes()[sel_RNBE_i+1].dependency[P.get().ID]
+		P.SPrnbes()[sel_RNBE_i+1].comesAfter[P.get().ID] = 
+			not P.SPrnbes()[sel_RNBE_i+1].comesAfter[P.get().ID]
 		
-		if P.SPrnbes()[sel_RNBE_i+1].dependency[P.get().ID]	then
+		if P.SPrnbes()[sel_RNBE_i+1].comesAfter[P.get().ID]	then
 			print(string.format("%d NOW DEPENDS ON %d", 
 				P.SPrnbes()[sel_RNBE_i+1].ID, P.get().ID))
 		else
@@ -764,15 +765,14 @@ local function recursivePerm(usedNums, currPerm, currSize)
 	for next_i = 1, P.SPrnbes().count do
 		if not usedNums[next_i] then
 			-- if depends on unused RNBE, don't use yet
-			
-			local dependencyUnused = false
+			local afterAllDependencies = true
 			for check_j = 1, P.SPrnbes().count do
-				if P.getByID(next_i).dependency[check_j] and not usedNums[check_j] then
-					dependencyUnused = true
+				if P.getByID(next_i).comesAfter[check_j] and not usedNums[check_j] then
+					afterAllDependencies = false
 				end
 			end
 			
-			if not dependencyUnused then			
+			if afterAllDependencies then	
 				local newUsedNums = {}
 				local newCurrPerm = {}
 				for copy_j = 1, P.SPrnbes().count do

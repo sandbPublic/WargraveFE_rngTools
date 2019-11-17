@@ -503,12 +503,11 @@ function P.isStaffHit(event)
 end
 
 -- variable number of events, 1 to 6
--- X hit events, numEvents, expGained, lvlUp, totalRNsConsumed, pHP, eHP
+-- X hit events, expGained, lvlUp, totalRNsConsumed, pHP, eHP
 -- can carry enemies hp from previous combat
 function P.combatObj:hitSeq(index, carriedEnemyHP)
 	local ret = {} -- numeric keys are hit events
 	local whos = {} -- unnecessary to return with current functionality
-	ret.numEvents = 0
 	ret.expGained = 1
 	ret.lvlUp = false
 	ret.totalRNsConsumed = 0
@@ -524,7 +523,6 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	local maxEvents = 0 -- combat can end early in death
 		
 	if self:staff() then 
-		ret.numEvents = 1
 		ret[1] = self:staffHitEvent(index)
 		whos[1] = P.enum_ATTACKER
 		ret.totalRNsConsumed = 1
@@ -553,7 +551,6 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	end
 
 	for ev_i, who in ipairs(whos) do
-		ret.numEvents = ev_i -- loop variable will be lost
 		local hE = self:hitEvent(index, who)
 	
 		ret[ev_i] = hE
@@ -572,9 +569,8 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 			ret.lvlUp = self:willLevel(ret.expGained)
 		end
 		
-		-- make lowercase if enemy action
 		if not self:isPlayer(who) then
-			ret[ev_i].action = string.lower(ret[ret.numEvents].action)
+			ret[ev_i].action = string.lower(ret[ev_i].action)
 		end
 		
 		if ret.pHP <= 0 then  -- player died, combat over
@@ -597,8 +593,8 @@ end
 function P.hitSeq_string(hitSq)
 	local hitString = ""
 	
-	for ev_i = 1, hitSq.numEvents do
-		hitString = hitString .. hitSq[ev_i].action .. " "
+	for _, hitEvent in ipairs(hitSq) do
+		hitString = hitString .. hitEvent.action .. " "
 	end
 	
 	hitString = hitString .. hitSq.expGained .. "xp"

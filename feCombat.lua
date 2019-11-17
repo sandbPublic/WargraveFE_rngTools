@@ -127,7 +127,7 @@ function P.combatObj:isPlayer(who)
 end
 
 -- todo
--- level does not update, might given as 0xFF as any non-attacker
+-- level does not update, might is given as 0xFF for any non-attacker
 function P.combatObj:defenderIsWall()
 	return false 
 	-- self.defender[P.LEVEL_I] < 20 and self.defender[P.EXP_I] > 99
@@ -310,7 +310,7 @@ function P.combatObj:willLevel(XPgained)
 	return self:canLevel() and (self:data(P.enum_PLAYER)[P.EXP_I]+XPgained >= 100)
 end
 
-function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
+function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
 	if (not self:canLevel() or self:defenderIsWall()) then return 0 end
 	
 	if self:data(P.enum_PLAYER)[P.LEVEL_I] % 20 == 0 then
@@ -335,9 +335,9 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 		local playerValue = self:data(P.enum_PLAYER)[P.LEVEL_I]*playerClassPower
 			+classes.EXP_KILL_MODIFIER[playerClass]
 		
-		local silencerMult = 1
-		if silenced then
-			silencerMult = 2 -- doubles exp from kill?
+		local assassinateMult = 1
+		if assassinated then
+			assassinateMult = 2 -- doubles exp from kill?
 			-- https://serenesforest.net/forums/index.php?/topic/78394-simplifying-and-correcting-the-experience-calculations/
 		end
 		
@@ -364,7 +364,7 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 		
 		-- eggs always yield 50xp
 		
-		ret = math.min(100, math.floor(expFromDmg+silencerMult*math.max(0, 
+		ret = math.min(100, math.floor(expFromDmg+assassinateMult*math.max(0, 
 			enemyValue-playerValue + 20 + self.bonusExp)))
 	end
 	
@@ -375,7 +375,7 @@ function P.combatObj:expFrom(kill, silenced) --http://serenesforest.net/the-sacr
 	return math.floor(ret)
 end
 
--- string action type, int dmg, int rnsConsumed, bool expGained, bool silenced
+-- string action type, int dmg, int rnsConsumed, bool expWasGained, bool assassinated
 function P.combatObj:hitEvent(index, who)
 	local retHitEv = {}
 	retHitEv.action = ""
@@ -390,12 +390,12 @@ function P.combatObj:hitEvent(index, who)
 		--retHitEv.dmg = 999
 	end
 	
-	retHitEv.expGained = true -- assume true and falsify
+	retHitEv.expWasGained = true -- assume true and falsify
 	
 	if (not self:isPlayer(who)) or self:defenderIsWall() then
-		retHitEv.expGained = false
+		retHitEv.expWasGained = false
 	end
-	retHitEv.silenced = false
+	retHitEv.assassinated = false
 	
 	local hit = self:data(who)[P.HIT_I]
 	local crt = self:data(who)[P.CRIT_I]
@@ -451,7 +451,7 @@ function P.combatObj:hitEvent(index, who)
 					
 					retHitEv.action = "S"
 					retHitEv.dmg = 999
-					retHitEv.silenced = true
+					retHitEv.assassinated = true
 				else
 					if retHitEv.action == "P" then
 						retHitEv.action = "PC"
@@ -470,13 +470,13 @@ function P.combatObj:hitEvent(index, who)
 				if ((31 - self:data(who)[P.LUCK_I] > devilRN) and (version >= 7)) or 
 					((21 - self:data(who)[P.LEVEL_I] > devilRN) and (version == 6)) then
 					retHitEv.action = "DEV"
-					retHitEv.expGained = false -- untested	
+					retHitEv.expWasGained = false -- untested	
 				end
 			end
 		else
 			retHitEv.action = "O"
 			retHitEv.dmg = 0
-			retHitEv.expGained = false
+			retHitEv.expWasGained = false
 		end
 	end
 	
@@ -488,11 +488,11 @@ function P.combatObj:staffHitEvent(index)
 	retStvHitEv.action = "STF-X"
 	retStvHitEv.RNsConsumed = 1
 	retStvHitEv.dmg = 0
-	retStvHitEv.expGained = true
+	retStvHitEv.expWasGained = true
 	
 	if self.attacker[P.HIT_I] <= rns.rng1:getRNasCent(index) then
 		retStvHitEv.action = "STF-O"
-		retStvHitEv.expGained = false
+		retStvHitEv.expWasGained = false
 	end
 	
 	return retStvHitEv
@@ -506,7 +506,7 @@ end
 -- X hit events, numEvents, expGained, lvlUp, totalRNsConsumed, pHP, eHP
 -- can carry enemies hp from previous combat
 function P.combatObj:hitSeq(index, carriedEnemyHP)
-	local ret = {} -- direct index access are hit events
+	local ret = {} -- numeric keys are hit events
 	local whos = {} -- unnecessary to return with current functionality
 	ret.numEvents = 0
 	ret.expGained = 1
@@ -552,28 +552,28 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		setNext(P.enum_DEFENDER)
 	end
 
-	for ev_i = 1, maxEvents do -- loop variable will be lost
-		ret.numEvents = ev_i   -- save it here rather than trying to use ret.numEvents as loop var
-		local hE = self:hitEvent(index, whos[ev_i])
+	for ev_i, who in ipairs(whos) do
+		ret.numEvents = ev_i -- loop variable will be lost
+		local hE = self:hitEvent(index, who)
 	
 		ret[ev_i] = hE
 		index = index + hE.RNsConsumed
 		ret.totalRNsConsumed = ret.totalRNsConsumed + hE.RNsConsumed
 		
-		if (self:isPlayer(whos[ev_i]) and hE.action ~= "DEV") or 
-			(not self:isPlayer(whos[ev_i]) and hE.action == "DEV")then 
+		if (self:isPlayer(who) and hE.action ~= "DEV") or 
+			(not self:isPlayer(who) and hE.action == "DEV")then 
 			ret.eHP = ret.eHP - hE.dmg -- player or enemy-devil damage
 		else
 			ret.pHP = ret.pHP - hE.dmg -- enemy or self-devil damage
 		end
 		
-		if hE.expGained then 
+		if hE.expWasGained then 
 			ret.expGained = self:expFrom()
 			ret.lvlUp = self:willLevel(ret.expGained)
 		end
 		
 		-- make lowercase if enemy action
-		if not self:isPlayer(whos[ev_i]) then
+		if not self:isPlayer(who) then
 			ret[ev_i].action = string.lower(ret[ret.numEvents].action)
 		end
 		
@@ -586,7 +586,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		
 		if ret.eHP <= 0 then  -- enemy died, combat over
 			ret.eHP = 0
-			ret.expGained = self:expFrom(true, hE.silenced)
+			ret.expGained = self:expFrom(true, hE.assassinated)
 			ret.lvlUp = self:willLevel(ret.expGained)
 			return ret
 		end

@@ -14,7 +14,6 @@ EPrnbes.count = 0
 P.playerPhase = true
 
 local perms = {}
-perms.count = 0
 local permsNeedUpdate = false
 
 local function getLast(list)
@@ -747,14 +746,13 @@ local MEM_LIMIT = 500000
 
 -- include logic to enforce dependencies
 local function recursivePerm(usedNums, currPerm, currSize)
-	if perms.count >= MEM_LIMIT then return end
+	if #perms >= MEM_LIMIT then return end
 
 	-- base case
 	if currSize == P.SPrnbes().count then
-		perms.count = perms.count + 1
-		perms[perms.count] = currPerm
+		perms[#perms+1] = currPerm
 		
-		if perms.count >= MEM_LIMIT then
+		if #perms >= MEM_LIMIT then
 			print()
 			print(string.format("MEMORY LIMIT %d REACHED, ABORTING", MEM_LIMIT))
 			print()
@@ -772,7 +770,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 				end
 			end
 			
-			if afterAllDependencies then	
+			if afterAllDependencies then
 				local newUsedNums = {}
 				local newCurrPerm = {}
 				for copy_j = 1, P.SPrnbes().count do
@@ -786,7 +784,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 			end
 		end
 		if currSize == 0 then
-			print(string.format("%d/%d %7d permutations", next_i, P.SPrnbes().count, perms.count))
+			print(string.format("%d/%d %7d permutations", next_i, P.SPrnbes().count, #perms))
 			emu.frameadvance() -- prevent unresponsiveness
 		end
 	end
@@ -796,7 +794,6 @@ function P.permutations()
 	--if not permsNeedUpdate then return end
 
 	perms = {}
-	perms.count = 0
 	
 	-- using nil as false doesn't fill table properly, explicitly fill
 	local usedNums = {}
@@ -809,9 +806,8 @@ function P.permutations()
 	recursivePerm(usedNums, currPerm, 0)
 	permsNeedUpdate = false
 	
-	if perms.count >= MEM_LIMIT then
+	if #perms >= MEM_LIMIT then
 		perms = {}
-		perms.count = 0
 		permsNeedUpdate = true
 	end
 end
@@ -869,9 +865,9 @@ function P.suggestedPermutation(fast)
 		topScores[top_i] = -999
 	end
 	
-	for perm_i = 1, perms.count do
+	for perm_i = 1, #perms do
 		if ((perm_i % 1000 == 0 and (not fast)) or (perm_i % 5000 == 0)) then
-			print(string.format("%7d/%d", perm_i, perms.count))
+			print(string.format("%7d/%d", perm_i, #perms))
 			emu.frameadvance() -- prevent unresponsiveness
 		end
 	

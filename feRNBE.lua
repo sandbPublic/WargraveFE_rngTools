@@ -51,15 +51,14 @@ function P.togglePhase()
 	print("playerPhase = " .. tostring(P.playerPhase))
 end
 
--- go from hue 120 to hue 240 in steps of 20, jagged for contrast
 local LEVEL_UP_COLORS = {
-0x00FF00FF, -- hue 120
-0x00AAFFFF, -- hue 200
-0x00FF55FF, -- hue 140
-0x0055FFFF, -- hue 220
-0x00FFAAFF, -- hue 160
-0x0000FFFF, -- hue 240
-0x00FFFFFF  -- hue 180
+0xFF8080FF, -- hue   0 pink
+0xFFAA00FF, -- hue  40 orange
+0xFFFF00FF, -- hue  60 yellow
+0x00FF00FF, -- hue 100 green
+0x00FFFFFF, -- hue 180 cyan
+0x0000FFFF, -- hue 240 blue
+0xFF00FFFF  -- hue 300 magenta
 }
 
 -- consists of combat, level-up, and/or dig preceded by burns
@@ -76,8 +75,8 @@ function rnbeObj:setStats(stats)
 end
 
 -- INDEX FROM 1
-function rnbeObj:new(stats, combatO, sel_Unit_i)
-	combatO = combatO or combat.currBattleParams	
+function rnbeObj:new(stats, batParams, sel_Unit_i)
+	batParams = batParams or combat.currBattleParams	
 	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
 
 	local o = {}
@@ -90,24 +89,25 @@ function rnbeObj:new(stats, combatO, sel_Unit_i)
 	
 	o.unit_i = sel_Unit_i	
 	o:setStats(stats) -- todo do we get enemy stats on EP?
-	o.batParams = combatO:copy()
-	o.combat = true -- most RNBEs will be combats without levels or digs
-	o.combatWeight = 1
+	o.batParams = batParams:copy()
 	
+	o.hasCombat = true -- most RNBEs will be combats without levels or digs
 	o.lvlUp = false
 	o.dig = false
+	
 	-- as units ram their caps (or have the potential to), the value of their levels drops
 	o.expValueFactor = unitData.expValueFactor(o.unit_i, o.stats)
+	o.combatWeight = 1
 	
 	o.enemyID = 0 -- for units attacking the same enemyID
 	o.enemyHP = 0 -- if a previous unit has damaged this enemy. HP at start of this rnbe
 	o.enemyHPend = 0 -- HP at end of this rnbe
 	-- TODO player HP (from multi combat due to dance, or EP)
 	
-	o.burns = 0 -- TODO AI burns? post burns for rein?
+	o.burns = 0 -- TODO AI burns? post burns for reinforcements?
 	o.startRN_i = 0
 	o.postBurnsRN_i = 0
-	o.hitSq = {} -- not hitSeq, avoid confusion with function
+	o.mHitSeq = {} -- avoid confusion between member variable and function in combatObj
 	o.postCombatRN_i = 0
 	o.nextRN_i = 0
 	o.length = 0
@@ -132,21 +132,21 @@ function rnbeObj:diagnostic()
 	print()
 	print(string.format("Diagnosis of rnbe %d", self.ID))
 
-	if self.combat then	
+	if self.hasCombat then	
 		batParamStrings = self.batParams:toStrings()
 		print(batParamStrings[0])
 		print(batParamStrings[1])
 		print(batParamStrings[2])
 		
 		local str = ""
-		for _, hitEvent in ipairs(self.hitSq) do
+		for _, hitEvent in ipairs(self.mHitSeq) do
 			local event = hitEvent
 			str = str .. hitEvent.action .. string.format(" %2d dmg, ", hitEvent.dmg)
 		end
 		
 		print(str)
 		print(string.format("expGained=%2d eHP=%2d pHP=%2d", 
-			self.hitSq.expGained, self.hitSq.eHP, self.hitSq.pHP))
+			self.mHitSeq.expGained, self.mHitSeq.eHP, self.mHitSeq.pHP))
 			
 		strA = ""
 		strD = ""
@@ -243,7 +243,7 @@ function rnbeObj:setStart(RNBE_i)
 end
 
 function rnbeObj:setEnemyHP(RNBE_i)
-	if not self.combat then 
+	if not self.hasCombat then 
 		self.enemyHP = 0 
 		return 
 	end
@@ -255,7 +255,7 @@ function rnbeObj:setEnemyHP(RNBE_i)
 		for prevCombat_i = RNBE_i-1, 1, -1 do
 			local priorRNBE = P.TPrnbes(self.isPP)[prevCombat_i]
 		
-			if priorRNBE.enemyID == self.enemyID and priorRNBE.combat then
+			if priorRNBE.enemyID == self.enemyID and priorRNBE.hasCombat then
 				self.enemyHP = priorRNBE.enemyHPend
 				return
 			end
@@ -274,12 +274,12 @@ end
 
 -- assumes previous rnbes have updates for optimization
 function rnbeObj:updateFull(RNBE_i)	
-	if self.combat then
-		self.hitSq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHP)
+	if self.hasCombat then
+		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHP)
 		
-		self.postCombatRN_i = self.postBurnsRN_i + self.hitSq.totalRNsConsumed
+		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
 		
-		self.enemyHPend = self.hitSq.eHP
+		self.enemyHPend = self.mHitSeq.eHP
 	else
 		self.postCombatRN_i = self.postBurnsRN_i
 	end
@@ -345,7 +345,7 @@ end
 
 -- auto-detected via experience gain, but can be set to true manually
 function rnbeObj:levelDetected()
-	return self.lvlUp or (self.hitSq.lvlUp and self.combat)
+	return self.lvlUp or (self.mHitSeq.lvlUp and self.hasCombat)
 end
 
 function rnbeObj:levelScore()
@@ -358,8 +358,8 @@ end
 
 function rnbeObj:resultString()
 	local ret = ""
-	if self.combat then
-		ret = ret .. " " .. combat.hitSeq_string(self.hitSq) 
+	if self.hasCombat then
+		ret = ret .. " " .. combat.hitSeq_string(self.mHitSeq) 
 	end
 	if self:levelDetected() then
 		ret = ret .. string.format(" %+d %s", self:levelScore(),
@@ -421,7 +421,7 @@ function rnbeObj:headerString(RNBE_i)
 end
 
 function rnbeObj:healable()
-	if self.combat and self.hitSq.pHP < self.stats[1] then
+	if self.hasCombat and self.mHitSeq.pHP < self.stats[1] then
 		return true
 	end
 	return self:levelDetected() 
@@ -438,8 +438,8 @@ function rnbeObj:evaluation_fn(printV)
 	local printStr = string.format("%02d", self.ID)
 	
 	-- could have empty combat if enemy HP == 0 e.g. another unit killed this enemy this phase
-	if self.combat and self.hitSq[1] then 
-		if self.hitSq[1].action == "STF-X" then
+	if self.hasCombat and self.mHitSeq[1] then 
+		if self.mHitSeq[1].action == "STF-X" then
 			score = score + 100
 			if printV then printStr = printStr .. " staff hit" end
 		else
@@ -448,16 +448,16 @@ function rnbeObj:evaluation_fn(printV)
 			-- should be evaled the same as by 1 unit.
 			-- A - B + (B - C) == A - C
 			
-			local dmgToEnemy = (self.enemyHP-self.hitSq.eHP)/
+			local dmgToEnemy = (self.enemyHP-self.mHitSeq.eHP)/
 				self.batParams:data(combat.enum_ENEMY)[combat.HP_I]
-			local dmgToPlayer = 1-self.hitSq.pHP/
+			local dmgToPlayer = 1-self.mHitSeq.pHP/
 				self.batParams:data(combat.enum_PLAYER)[combat.HP_I]
 			
 			score = score + 100*dmgToEnemy - 200*dmgToPlayer 
-				+ self.hitSq.expGained*self.expValueFactor
+				+ self.mHitSeq.expGained*self.expValueFactor
 			
 			printStr = printStr .. string.format(" d2e %.2f  d2p %.2f  exp %dx%.2f", 
-					dmgToEnemy, dmgToPlayer, self.hitSq.expGained, self.expValueFactor)
+					dmgToEnemy, dmgToPlayer, self.mHitSeq.expGained, self.expValueFactor)
 		end
 		
 		score = score * self.combatWeight
@@ -483,8 +483,8 @@ function rnbeObj:evaluation_fn(printV)
 	return score
 end
 
--- quickly find how many burns necessary for improving the result of the first RNBE
--- for artless rn burning gameplay
+-- quickly find how many burns needed to improve result of the first RNBE
+-- for rn burning gameplay
 function P.searchFutureOutcomes()
 	if PPrnbes.count < 1 then return end
 	
@@ -521,10 +521,10 @@ function rnbeObj:drawMyBoxes(rect, RNBE_i)
 	
 	rect:drawBox(line_i, INIT_CHARS, self.burns * 3, "red")
 		
-	if self.combat then
+	if self.hasCombat then
 		hitStart = self.burns
 
-		for _, hitEvent in ipairs(self.hitSq) do
+		for _, hitEvent in ipairs(self.mHitSeq) do
 			rect:drawBox(line_i, INIT_CHARS + hitStart * 3, hitEvent.RNsConsumed * 3, "yellow")
 				
 			hitStart = hitStart + hitEvent.RNsConsumed
@@ -711,7 +711,7 @@ end
 function P.toggleCombat()
 	if P.SPrnbes().count <= 0 then return end
 	
-	P.get().combat = not P.get().combat
+	P.get().hasCombat = not P.get().hasCombat
 	P.get():clearCache()
 	P.get().enemyID = 0 -- don't want to cause enemyHP to carry
 	P.updateRNBEs()

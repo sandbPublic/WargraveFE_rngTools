@@ -590,15 +590,15 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	return ret
 end
 
-function P.hitSeq_string(hitSq)
+function P.hitSeq_string(argHitSq)
 	local hitString = ""
 	
-	for _, hitEvent in ipairs(hitSq) do
+	for _, hitEvent in ipairs(argHitSq) do
 		hitString = hitString .. hitEvent.action .. " "
 	end
 	
-	hitString = hitString .. hitSq.expGained .. "xp"
-	if hitSq.lvlUp then hitString = hitString .. " Lvl" end	
+	hitString = hitString .. argHitSq.expGained .. "xp"
+	if argHitSq.lvlUp then hitString = hitString .. " Lvl" end	
 	return hitString
 end
 

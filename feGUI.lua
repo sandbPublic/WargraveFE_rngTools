@@ -3,25 +3,25 @@ feGUI = P
 
 P.rects = {}
 P.RNBE_I 			= 1
-P.BATTLE_PARAMS_I 	= 2
-P.RN_STREAM_I		= 3 
+P.RN_STREAM_I		= 2 
+P.BATTLE_PARAMS_I 	= 3
 P.STAT_DATA_I		= 4
 P.LEVEL_UPS_I		= 5
 P.COMPACT_BPS_I		= 6
 
 local RECT_COLORS = {
 	"blue", 
-	"green", 
+	"white", 
 	"red", 
 	"yellow", 
 	"magenta", 
-	"white",
+	"green",
 	"red"
 }
 local RECT_STRINGS = {
-	"RNBE", 
+	"RNBE",
+	"rn stream",
 	"battle parameters", 
-	"rn stream", 
 	"stat data", 
 	"level ups", 
 	"compact btl params",
@@ -150,7 +150,6 @@ function P.flashcolor(color, color2)
 		
 		return inverse
 	end
-
 end
 
 -- drawing functions are opacity agnostic, set gui.opacity before calling
@@ -289,6 +288,7 @@ end
 for rect_i = 1, 6 do
 	P.rects[rect_i] = rectObj:new(rect_i)
 end
+
 function P.selRect()
 	return P.rects[P.selRect_i]
 end
@@ -298,11 +298,13 @@ function P.drawRects()
 	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings()
 	P.rects[P.LEVEL_UPS_I].strings = unitData.levelUp_strings
 	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
-	-- don't want to overwrite currBattleParams generally	
+	-- don't want to overwrite currBattleParams generally
+	
 	if (P.selRect_i == P.COMPACT_BPS_I) and (P.rects[P.COMPACT_BPS_I].opacity > 0) then
 		combat.currBattleParams:set()
 		P.rects[P.COMPACT_BPS_I].strings = combat.currBattleParams:toCompactStrings()
-	end	
+	end
+	
 	P.rects[P.RNBE_I].strings = rnbe.toStrings()
 
 	for rect_i = 1, #P.rects do

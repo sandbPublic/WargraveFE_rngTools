@@ -149,7 +149,7 @@ function P.combatObj:dmg(who, pierce)
 	return math.max(0, self:data(who)[P.ATTACK_I] - self:data(P.opponent(who))[P.DEF_I])
 end
 
-function P.combatObj:relAS() -- from attacker perspective
+function P.combatObj:relAS() -- relative attack speed from attacker's perspective
 	return self.attacker[P.AS_I] - self.defender[P.AS_I]
 end
 
@@ -176,23 +176,6 @@ function P.combatObj:set()
 	
 	if classes.PROMOTED[self:data(P.enum_PLAYER).class] then
 		self:togglePromo(P.enum_PLAYER)
-	end
-	
-	-- try to autodetect promotions based on might, def, attack speed, and enemy level
-	-- will have some false positives, particularly if not at full hp
-	enemyCapability = 2*self:data(P.enum_ENEMY)[P.HP_I] + 2*self:data(P.enum_ENEMY)[P.ATTACK_I] +
-		self:data(P.enum_ENEMY)[P.DEF_I] + self:data(P.enum_ENEMY)[P.AS_I]
-	
-	predictedCapability = 80 + 4*(self:data(P.enum_ENEMY)[P.LEVEL_I]-1)
-	if self:data(P.enum_ENEMY)[P.HIT_I] == 0xFF then
-		predictedCapability = 60 + 8*(self:data(P.enum_ENEMY)[P.LEVEL_I]-1)/3
-	end
-	
-	-- if predicted capability for level is too low, then assume promoted
-	if predictedCapability < enemyCapability then
-		self:togglePromo(P.enum_ENEMY)
-		print(string.format("auto toggle promo, enemyCapability %d, predicted %d",
-				enemyCapability, predictedCapability))
 	end
 	
 	self.bonusExp = 0
@@ -518,9 +501,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	if ret.eHP == 0 then
 		ret.expGained = 0
 		return ret
-	end	
-	
-	local maxEvents = 0 -- combat can end early in death
+	end
 		
 	if self:staff() then 
 		ret[1] = self:staffHitEvent(index)
@@ -529,6 +510,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		return ret
 	end
 	
+	local maxEvents = 0 -- combat can end early in death
 	local function setNext(who)
 		maxEvents = maxEvents + 1
 		whos[maxEvents] = who
@@ -564,13 +546,13 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 			ret.pHP = ret.pHP - hE.dmg -- enemy or self-devil damage
 		end
 		
-		if hE.expWasGained then 
+		if hE.expWasGained then
 			ret.expGained = self:expFrom()
 			ret.lvlUp = self:willLevel(ret.expGained)
 		end
 		
 		if not self:isPlayer(who) then
-			ret[ev_i].action = string.lower(ret[ev_i].action)
+			ret[ev_i].action = string.lower(hE.action)
 		end
 		
 		if ret.pHP <= 0 then  -- player died, combat over
@@ -586,19 +568,19 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 			ret.lvlUp = self:willLevel(ret.expGained)
 			return ret
 		end
-	end	
+	end
 	return ret
 end
 
-function P.hitSeq_string(argHitSq)
+function P.hitSeq_string(argHitSeq)
 	local hitString = ""
 	
-	for _, hitEvent in ipairs(argHitSq) do
+	for _, hitEvent in ipairs(argHitSeq) do
 		hitString = hitString .. hitEvent.action .. " "
 	end
 	
-	hitString = hitString .. argHitSq.expGained .. "xp"
-	if argHitSq.lvlUp then hitString = hitString .. " Lvl" end	
+	hitString = hitString .. argHitSeq.expGained .. "xp"
+	if argHitSeq.lvlUp then hitString = hitString .. " Lvl" end	
 	return hitString
 end
 

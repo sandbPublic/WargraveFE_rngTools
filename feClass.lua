@@ -123,7 +123,7 @@ P.EXP_POWER = {}
 P.PROMOTED = {}
 P.EXP_KILL_MODIFIER = {}
 P.CAPS = {}
-P.PROMO_GAINS = {} -- do these vary from game to game?
+P.PROMO_GAINS = {}
 
 for class_i = 1, P.M.NECROMANCER do
 	P.EXP_POWER[class_i] = 3

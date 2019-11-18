@@ -192,7 +192,7 @@ function rnStreamObj:RNstream_strings(isColorized, numLines, rnsPerLine)
 	if firstLineRnPos < 0 then firstLineRnPos = 0 end
 	
 	for line_i = 0, numLines-1 do
-		local lineString = string.format("%04d:", firstLineRnPos+line_i*rnsPerLine)
+		local lineString = string.format("%05d:", (firstLineRnPos+line_i*rnsPerLine)%100000)
 		for rn_i = 0, rnsPerLine-1 do
 			local rnPos = firstLineRnPos + rnsPerLine*line_i + rn_i
 		

@@ -498,7 +498,7 @@ function P.combatObj:staffHitEvent(index)
 	return retStvHitEv
 end
 
-function P.isStaffHit(event) 
+function P.isStaffHit(event)
 	return event.action == "STF-X"
 end
 

@@ -8,8 +8,7 @@ P.RN_STREAM_I		= 3
 P.STAT_DATA_I		= 4
 P.LEVEL_UPS_I		= 5
 P.COMPACT_BPS_I		= 6
--- burn notifier, don't want to cycle to this though
-P.rects.count 		= 6
+
 local RECT_COLORS = {
 	"blue", 
 	"green", 
@@ -31,7 +30,7 @@ local RECT_STRINGS = {
 
 P.selRect_i = P.RNBE_I
 function P.advanceDisplay()
-	P.selRect_i = rotInc(P.selRect_i, P.rects.count)
+	P.selRect_i = rotInc(P.selRect_i, #P.rects)
 	print("selecting display: " .. RECT_STRINGS[P.selRect_i])
 end
 
@@ -180,7 +179,7 @@ function rectObj:drawString(line_i, char_i, str, color, borderColor)
 
 	gui.text(self:left()+3+char_i*CHAR_PIXELS, 
 			 self:top() +2+line_i*self:linePixels(), 
-		str, color, borderColor)
+			 str, color, borderColor)
 end
 
 -- color code rns
@@ -258,7 +257,7 @@ function rectObj:draw()
 	-- color highlighted RN strings, draw boxes
 	if self.ID == P.RNBE_I then
 		for RNBE_i = 1, rnbe.SPrnbes().count do
-			self:drawColorizedRNString(2*RNBE_i-1, 5, -- 4 digits, space
+			self:drawColorizedRNString(2*RNBE_i-1, 6, -- 5 digits, space
 				rnbe.SPrnbes()[RNBE_i].startRN_i, rnbe.SPrnbes()[RNBE_i].length)
 			rnbe.SPrnbes()[RNBE_i]:drawMyBoxes(self, RNBE_i)
 		end
@@ -268,7 +267,7 @@ function rectObj:draw()
 		if firstLineRnPos < 0 then firstLineRnPos = 0 end
 	
 		for line_i = 0, rnsLines-1 do
-			self:drawColorizedRNString(line_i, 6, -- 4 digits, :, space
+			self:drawColorizedRNString(line_i, 7, -- 5 digits, :, space
 				firstLineRnPos+line_i*rnsPerLine, rnsPerLine)
 		end
 	end
@@ -287,7 +286,7 @@ function rectObj:new(ID_p, color_p)
 	return o
 end
 
-for rect_i = 1, P.rects.count do
+for rect_i = 1, 6 do
 	P.rects[rect_i] = rectObj:new(rect_i)
 end
 function P.selRect()
@@ -306,7 +305,7 @@ function P.drawRects()
 	end	
 	P.rects[P.RNBE_I].strings = rnbe.toStrings()
 
-	for rect_i = 1, P.rects.count do
+	for rect_i = 1, #P.rects do
 		P.rects[rect_i]:draw()
 	end
 	P.burnNoteRect:draw()

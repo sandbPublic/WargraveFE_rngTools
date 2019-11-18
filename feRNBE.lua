@@ -52,13 +52,13 @@ function P.togglePhase()
 end
 
 local LEVEL_UP_COLORS = {
-0xFF8080FF, -- hue   0 pink
-0xFFAA00FF, -- hue  40 orange
-0xFFFF00FF, -- hue  60 yellow
-0x00FF00FF, -- hue 100 green
-0x00FFFFFF, -- hue 180 cyan
-0x0000FFFF, -- hue 240 blue
-0xFF00FFFF  -- hue 300 magenta
+	0xFF8080FF, -- hue   0 pink
+	0xFFAA00FF, -- hue  40 orange
+	0xFFFF00FF, -- hue  60 yellow
+	0x00FF00FF, -- hue 100 green
+	0x00FFFFFF, -- hue 180 cyan
+	0x0000FFFF, -- hue 240 blue
+	0xFF00FFFF  -- hue 300 magenta
 }
 
 -- consists of combat, level-up, and/or dig preceded by burns
@@ -515,9 +515,9 @@ function P.searchFutureOutcomes()
 	PPrnbes[1]:update()
 end
 
-function rnbeObj:drawMyBoxes(rect, RNBE_i)
+function rnbeObj:drawMyBoxes(rect, RNBE_i)		
 	local line_i = 2*RNBE_i-1
-	local INIT_CHARS = 5
+	local INIT_CHARS = 6
 	
 	rect:drawBox(line_i, INIT_CHARS, self.burns * 3, "red")
 		
@@ -601,7 +601,7 @@ function P.toStrings()
 	
 	for RNBE_i = 1, P.SPrnbes().count do
 		ret[2*RNBE_i-2] = P.SPrnbes()[RNBE_i]:headerString(RNBE_i)
-		ret[2*RNBE_i-1] = string.format("%4d ", P.SPrnbes()[RNBE_i].startRN_i)
+		ret[2*RNBE_i-1] = string.format("%5d ", P.SPrnbes()[RNBE_i].startRN_i % 100000)
 	end
 	return ret
 end

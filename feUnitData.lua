@@ -13,8 +13,8 @@ P.LUCK_I = 7
 P.LEVEL_I = 8
 P.EXP_I = 9
 
-P.NUM_OF_UNITS = {}
 P.NAMES = {}
+local INDEX_OF_NAME = {} -- useful to set values for a specific unit
 P.DEPLOYED = {}
 P.GROWTHS = {}
 P.GROWTH_WEIGHTS = {}
@@ -25,68 +25,10 @@ P.CLASSES = {}
 P.PROMOTIONS = {}
 P.PROMOTED_AT = {}
 
-local indexer = 0
-local function nextInd()
-	indexer = indexer + 1
-	return indexer
-end
 
-local ROY = nextInd()
-local MARCUS = nextInd()
-local ALLEN = nextInd()
-local LANCE = nextInd()
-local WOLT = nextInd()
-local BORS = nextInd()
-local MERLINUS = nextInd()
-local ELLEN = nextInd()
-local DIECK = nextInd()
-local WADE  = nextInd()
-local LOTT = nextInd()
-local SHANNA = nextInd()
-local CHAD = nextInd()
-local LUGH = nextInd()
-local CLARINE = nextInd()
-local RUTGER = nextInd()
-local SAUL = nextInd()
-local DOROTHY = nextInd()
-local SUE = nextInd()
-local ZEALOT = nextInd()
-local TRECK = nextInd()
-local NOAH = nextInd()
-local ASTOHL = nextInd()
-local LILINA = nextInd()
-local WENDY = nextInd()
-local BARTH = nextInd()
-local OUJAY = nextInd()
-local FIR = nextInd()
-local SHIN = nextInd()
-local GONZALES = nextInd()
-local GEESE = nextInd()
-local KLEIN = nextInd()
-local TATE = nextInd()
-local LALUM = nextInd()
-local ECHIDNA = nextInd()
-local ELPHIN = nextInd()
-local BARTRE = nextInd()
-local RAY = nextInd()
-local CATH = nextInd()
-local MIREDY = nextInd()
-local PERCIVAL = nextInd()
-local CECILIA = nextInd()
-local SOFIYA = nextInd()
-local IGRENE = nextInd()
-local GARRET = nextInd()
-local FA = nextInd()
-local HUGH = nextInd()
-local ZEIS = nextInd()
-local DOUGLAS = nextInd()
-local NIIME = nextInd()
-local DAYAN = nextInd()
-local JUNO = nextInd()
-local YODEL = nextInd()
-local KAREL = nextInd()
+-- 6
 
-P.NUM_OF_UNITS[6] = indexer
+
 P.NAMES[6] = {
 "Roy", "Marcus", "Allen", "Lance", "Wolt", 
 "Bors", "Merlinus", "Ellen", "Dieck", "Wade", 
@@ -101,6 +43,8 @@ P.NAMES[6] = {
 "Percival", "Cecilia", "Sophia", "Igrene", "Garret", 
 "Fa", "Hugh", "Zeis", "Douglas", "Niime", 
 "Dayan", "Juno", "Yodel", "Karel"}
+INDEX_OF_NAME[6] = {}
+for k,v in pairs(P.NAMES[6]) do INDEX_OF_NAME[v] = k end
 P.GROWTHS[6] = {
 {80, 40, 50, 40, 25, 30, 60}, -- Roy
 {60, 25, 20, 25, 15, 20, 20}, -- Marcus
@@ -330,15 +274,15 @@ classes.M.SWORDMASTER 		-- Karel
 P.DEPLOYED[6] = {}
 P.BOOSTERS[6] = {}
 P.GROWTH_WEIGHTS[6] = {}
-for unit_i = 1, P.NUM_OF_UNITS[6] do
+for unit_i = 1, #P.NAMES[6] do
 	P.GROWTH_WEIGHTS[6][unit_i] = {20, 40, 20, 50, 30, 10, 10}
 	-- speed>str>def>skl=hp>res=luck
 	P.BOOSTERS[6][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
 end
 
-P.DEPLOYED[6][ROY] = true
-P.GROWTH_WEIGHTS[6][LALUM] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
-P.GROWTH_WEIGHTS[6][ELPHIN] = {30, 00, 00, 20, 20, 10, 10}
+P.DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
+P.GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+P.GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 20, 20, 10, 10}
 
 P.PROMOTED_AT[6] = {
  0,  0,  0,  0,  0, -- Roy Marcus Allen Lance Wolt
@@ -354,52 +298,10 @@ P.PROMOTED_AT[6] = {
  0,  0,  0,  0      -- Dayan Juno Yodel Karel
 }
 
-indexer = 0
-local ELIWOOD = nextInd()
-local LOWEN = nextInd()
-local MARCUS = nextInd()
-local REBECCA = nextInd()
-local DORCAS = nextInd()
-local BARTRE = nextInd()
-local HECTOR = nextInd()
-local OSWIN = nextInd()
-local SERRA = nextInd()
-local MATTHEW = nextInd()
-local GUY = nextInd()
-local MERLINUS = nextInd()
-local ERK = nextInd()
-local PRISCILLA = nextInd()
-local LYN = nextInd()
-local WIL = nextInd()
-local KENT = nextInd()
-local SAIN = nextInd()
-local FLORINA = nextInd()
-local RAVEN = nextInd()
-local LUCIUS = nextInd()
-local CANAS = nextInd()
-local DART = nextInd()
-local FIORA = nextInd()
-local LEGAULT = nextInd()
-local NINIAN_NILS = nextInd()
-local ISADORA = nextInd()
-local HEATH = nextInd()
-local RATH = nextInd()
-local HAWKEYE = nextInd()
-local GEITZ = nextInd()
-local WALLACE = nextInd()
-local FARINA = nextInd()
-local PENT = nextInd()
-local LOUISE = nextInd()
-local KAREL = nextInd()
-local HARKEN = nextInd()
-local NINO = nextInd()
-local JAFFAR = nextInd()
-local VAIDA = nextInd()
-local KARLA = nextInd()
-local RENAULT = nextInd()
-local ATHOS = nextInd()
 
-P.NUM_OF_UNITS[7] = indexer
+-- 7
+
+
 P.NAMES[7] = {
 "Eliwood", "Lowen", "Marcus", "Rebecca", "Dorcas",
 "Bartre", "Hector", "Oswin", "Serra", "Matthew",
@@ -411,6 +313,8 @@ P.NAMES[7] = {
 "Karel", "Harken", "Nino", "Jaffar", "Vaida",
 "Karla", "Renault", "Athos"
 }
+INDEX_OF_NAME[7] = {}
+for k,v in pairs(P.NAMES[7]) do INDEX_OF_NAME[v] = k end
 P.GROWTHS[7] = {
 {80, 45, 50, 40, 30, 35, 45}, -- Eliwood
 {90, 30, 30, 30, 40, 30, 50}, -- Lowen
@@ -640,29 +544,14 @@ classes.M.ARCHSAGE		-- Athos
 P.DEPLOYED[7] = {}
 P.BOOSTERS[7] = {}
 P.GROWTH_WEIGHTS[7] = {}
-for unit_i = 1, P.NUM_OF_UNITS[7] do
+for unit_i = 1, #P.NAMES[7] do
 	P.GROWTH_WEIGHTS[7][unit_i] = {20, 40, 20, 50, 30, 10, 10}
 	-- speed>str>def>skl=hp>res=luck
 	P.BOOSTERS[7][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
 end
 
-P.DEPLOYED[7][ELIWOOD] = true
-P.DEPLOYED[7][REBECCA] = true
-P.DEPLOYED[7][HECTOR] = true
-P.DEPLOYED[7][GUY] = true
-P.DEPLOYED[7][KENT] = true
-P.DEPLOYED[7][CANAS] = true
-P.DEPLOYED[7][NINIAN_NILS] = true
-P.DEPLOYED[7][HEATH] = true
-P.DEPLOYED[7][JAFFAR] = true
-P.DEPLOYED[7][ATHOS] = true
---P.GROWTH_WEIGHTS[7][21] = {20, 50, 20, 40, 30, 10, 10} -- lucius more mag for warp
---P.GROWTH_WEIGHTS[7][22] = {20, 60, 20, 40, 20, 10, 10} -- canas more mag for warp
-P.GROWTH_WEIGHTS[7][NINIAN_NILS] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
-P.BOOSTERS[7][KENT]  = {0, 0, 0, 2, 0, 2, 2, 0} -- talisman, wings, icon
-P.BOOSTERS[7][HEATH] = {0, 0, 0, 0, 2, 0, 0, 0} -- shield
-P.BOOSTERS[7][ATHOS] = {7, 0, 0, 0, 0, 0, 0, 0} -- robe
-
+P.DEPLOYED[7][INDEX_OF_NAME["Eliwood"]] = true
+P.GROWTH_WEIGHTS[7][INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
 P.PROMOTED_AT[7] = {
 19,  0,  0, 15,  0, -- Eliwood Lowen Marcus Rebecca Dorcas
  0, 20,  0,  0,  0, -- Bartre Hector Oswin Serra Matthew
@@ -675,52 +564,10 @@ P.PROMOTED_AT[7] = {
  0,  0,  0 			-- Karla Renault Athos
 }
 
-indexer = 0
-local EIRIKA = nextInd()
-local SETH = nextInd()
-local FRANZ = nextInd()
-local GILLIAM = nextInd()
-local MOULDER = nextInd()
-local VANESSA = nextInd()
-local ROSS = nextInd()
-local GARCIA = nextInd()
-local NEIMI = nextInd()
-local COLM = nextInd()
-local ARTUR = nextInd()
-local LUTE = nextInd()
-local NATASHA = nextInd()
-local JOSHUA = nextInd()
-local EPHRAIM = nextInd()
-local FORDE = nextInd()
-local KYLE = nextInd()
-local TANA = nextInd()
-local AMELIA = nextInd()
-local INNES = nextInd()
-local GERIK = nextInd()
-local TETHYS = nextInd()
-local MARISA = nextInd()
-local LARACHEL = nextInd()
-local DOZLA = nextInd()
-local SALEH = nextInd()
-local EWAN = nextInd()
-local CORMAG = nextInd()
-local RENNAC = nextInd()
-local DUESSEL = nextInd()
-local KNOLL = nextInd()
-local MYRRH = nextInd()
-local SYRENE = nextInd()
-local CAELLACH = nextInd()
-local ORSON = nextInd()
-local RIEV = nextInd()
-local ISMAIRE = nextInd()
-local SELENA = nextInd()
-local GLEN = nextInd()
-local HAYDEN = nextInd()
-local VALTER = nextInd()
-local FADO = nextInd()
-local LYON = nextInd()
 
-P.NUM_OF_UNITS[8] = indexer -- including the 10 unlockable postgame units
+-- 8
+
+
 P.NAMES[8] = {
 "Eirika", "Seth", "Franz", "Gilliam", "Moulder",
 "Vanessa", "Ross", "Garcia", "Neimi", "Colm",
@@ -731,6 +578,8 @@ P.NAMES[8] = {
 "Knoll", "Myrrh", "Syrene", "Caellach", "Orson",
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
+INDEX_OF_NAME[8] = {}
+for k,v in pairs(P.NAMES[8]) do INDEX_OF_NAME[v] = k end
 P.GROWTHS[8] = {
 {70, 40, 60, 60, 30, 30, 60}, --Eirika
 {90, 50, 45, 45, 40, 30, 25}, --Seth
@@ -915,13 +764,13 @@ classes.M.NECROMANCER		--Lyon
 P.DEPLOYED[8] = {}
 P.BOOSTERS[8] = {}
 P.GROWTH_WEIGHTS[8] = {}
-for unit_i = 1, P.NUM_OF_UNITS[8] do
+for unit_i = 1, #P.NAMES[8] do
 	P.GROWTH_WEIGHTS[8][unit_i] = {20, 40, 20, 50, 30, 10, 10}
 	P.BOOSTERS[8][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
 end
 
-P.DEPLOYED[8][EIRIKA] = true
-P.GROWTH_WEIGHTS[8][TETHYS] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+P.DEPLOYED[8][INDEX_OF_NAME["Eirika"]] = true
+P.GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
 
 P.PROMOTED_AT[8] = {
  0,  0,  0,  0,  0, -- Eirika Seth Franz Gilliam Moulder
@@ -937,10 +786,6 @@ P.PROMOTED_AT[8] = {
 
 
 P.sel_Unit_i = 1
-
-function P.numOf() 
-	return P.NUM_OF_UNITS[version]
-end
 
 function P.names(unit_i) -- default value P.sel_Unit_i
 	unit_i = unit_i or P.sel_Unit_i
@@ -1033,9 +878,9 @@ end
 
 function P.nextDeployed()
 	local canditate_i = P.sel_Unit_i
-	canditate_i = rotInc(canditate_i, P.numOf())
+	canditate_i = rotInc(canditate_i, #P.NAMES[version])
 	while (canditate_i ~= P.sel_Unit_i and not P.deployed(canditate_i)) do
-		canditate_i = rotInc(canditate_i, P.numOf())
+		canditate_i = rotInc(canditate_i, #P.NAMES[version])
 	end
 	return canditate_i
 end

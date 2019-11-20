@@ -301,7 +301,7 @@ function P.drawRects()
 	-- don't want to overwrite currBattleParams generally
 	
 	if (P.selRect_i == P.COMPACT_BPS_I) and (P.rects[P.COMPACT_BPS_I].opacity > 0) then
-		combat.currBattleParams:set()
+		combat.currBattleParams:set() -- auto update
 		P.rects[P.COMPACT_BPS_I].strings = combat.currBattleParams:toCompactStrings()
 	end
 	

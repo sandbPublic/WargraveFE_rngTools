@@ -45,7 +45,9 @@ function rnStreamObj:new(rngMemoryOffset, primary)
 	
 	o.pos = 0 -- position in the rn stream relative to gba power on
 	o.prevPos = 0
-	o.rnsGenerated = 0 -- more descriptive than count
+	o.rnsGenerated = 0
+	-- # length operator is logarithmic, and indexing from -3 is more natural
+	
 	o.lastFrameUpdated = 0 -- prevent 2ndary from printing a lot during crits
 	
 	return o
@@ -74,13 +76,12 @@ end
 -- generates more if needed
 function rnStreamObj:getRN(pos_i)
 	while pos_i >= self.rnsGenerated do
-		-- generate more rns
 		if self.isPrimary then
 			self[self.rnsGenerated] = nextrng(
 				self[self.rnsGenerated-3], 
 				self[self.rnsGenerated-2], 
 				self[self.rnsGenerated-1])
-			else
+		else
 			self[self.rnsGenerated] = nextrng2(self[self.rnsGenerated-1])
 		end
 		self.rnsGenerated = self.rnsGenerated + 1
@@ -187,15 +188,13 @@ end
 function rnStreamObj:RNstream_strings(isColorized, numLines, rnsPerLine)
 	local ret = {}
 	
-	-- put the first line before the current position for context
-	local firstLineRnPos = math.floor(self.pos/rnsPerLine-1)*rnsPerLine
-	if firstLineRnPos < 0 then firstLineRnPos = 0 end
+	-- put the prior line before the current position for context
+	local currLineRnPos = math.floor(self.pos/rnsPerLine-1)*rnsPerLine
+	if currLineRnPos < 0 then currLineRnPos = 0 end
 	
 	for line_i = 0, numLines-1 do
-		local lineString = string.format("%05d:", (firstLineRnPos+line_i*rnsPerLine)%100000)
-		for rn_i = 0, rnsPerLine-1 do
-			local rnPos = firstLineRnPos + rnsPerLine*line_i + rn_i
-		
+		local lineString = string.format("%05d:", (currLineRnPos)%100000)
+		for rnPos = currLineRnPos, currLineRnPos + rnsPerLine - 1 do
 			if rnPos == self.pos then
 				lineString = lineString .. ">"
 			else
@@ -208,6 +207,8 @@ function rnStreamObj:RNstream_strings(isColorized, numLines, rnsPerLine)
 				lineString = lineString .. string.format("%02d", self:getRNasCent(rnPos))
 			end
 		end
+		
+		currLineRnPos = currLineRnPos + rnsPerLine		
 		ret[line_i] = lineString
 	end
 	return ret

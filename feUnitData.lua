@@ -7,29 +7,26 @@ local P = {}
 unitData = P
 
 -- luck is in the wrong place relative to what is shown on screen:
-P.STAT_NAMES = {"HP", "Str", "Skl", "Spd", "Def", "Res", "Lck", "Lvl", "Exp"}
+-- HP Str Skl Spd Def Res Lck Lvl Exp
 
 P.LUCK_I = 7
 P.LEVEL_I = 8
 P.EXP_I = 9
 
-P.NAMES = {}
+local NAMES = {}
 local INDEX_OF_NAME = {} -- useful to set values for a specific unit
-P.DEPLOYED = {}
-P.GROWTHS = {}
-P.GROWTH_WEIGHTS = {}
-P.BASE_STATS = {} -- store base stats, names, deployed, and classes in one table?
-P.BASE_STATS_HM = {} -- hard mode
-P.BOOSTERS = {}
-P.CLASSES = {}
-P.PROMOTIONS = {}
-P.PROMOTED_AT = {}
+local DEPLOYED = {}
+local GROWTHS = {}
+local GROWTH_WEIGHTS = {}
+local BASE_STATS = {} -- store base stats, names, deployed, and classes in one table?
+local BASE_STATS_HM = {} -- hard mode
+local BOOSTERS = {}
+local CLASSES = {}
+local PROMOTIONS = {}
+local PROMOTED_AT = {}
 
 
--- 6
-
-
-P.NAMES[6] = {
+NAMES[6] = {
 "Roy", "Marcus", "Allen", "Lance", "Wolt", 
 "Bors", "Merlinus", "Ellen", "Dieck", "Wade", 
 "Lott", "Shanna", "Chad", "Lugh", "Clarine", 
@@ -44,8 +41,8 @@ P.NAMES[6] = {
 "Fa", "Hugh", "Zeis", "Douglas", "Niime", 
 "Dayan", "Juno", "Yodel", "Karel"}
 INDEX_OF_NAME[6] = {}
-for k,v in pairs(P.NAMES[6]) do INDEX_OF_NAME[v] = k end
-P.GROWTHS[6] = {
+for k,v in pairs(NAMES[6]) do INDEX_OF_NAME[v] = k end
+GROWTHS[6] = {
 {80, 40, 50, 40, 25, 30, 60}, -- Roy
 {60, 25, 20, 25, 15, 20, 20}, -- Marcus
 {85, 45, 40, 45, 25, 10, 40}, -- Allen
@@ -101,64 +98,64 @@ P.GROWTHS[6] = {
 {20, 30, 15, 10, 10, 20, 20}, -- Yodel
 {10, 30, 40, 40, 10, 00, 20}  -- Karel
 }
-P.BASE_STATS[6] = {
-{18, 05, 05, 07, 07, 05, 00, 01}, -- Roy
-{32, 09, 14, 11, 10, 09, 08, 01}, -- Marcus
-{21, 07, 04, 06, 03, 06, 00, 01}, -- Allen
-{20, 05, 06, 08, 02, 06, 00, 01}, -- Lance
-{18, 04, 04, 05, 02, 04, 00, 01}, -- Wolt
-{20, 07, 04, 03, 04, 11, 00, 01}, -- Bors
-{15, 00, 03, 03, 10, 03, 00, 01}, -- Merlinus
-{16, 01, 06, 08, 08, 00, 06, 02}, -- Ellen
-{26, 09, 12, 10, 05, 06, 01, 05}, -- Dieck
-{28, 08, 03, 05, 04, 03, 00, 02}, -- Wade
-{29, 07, 06, 07, 02, 04, 01, 03}, -- Lott
-{17, 04, 06, 12, 05, 06, 05, 01}, -- Thany
-{16, 03, 03, 10, 04, 02, 00, 01}, -- Chad
-{16, 04, 05, 06, 05, 03, 05, 01}, -- Lugh
-{15, 02, 05, 09, 08, 02, 05, 01}, -- Clarine
-{22, 07, 12, 13, 02, 05, 00, 04}, -- Rutger
-{20, 04, 06, 10, 02, 02, 05, 05}, -- Saul
-{19, 05, 06, 06, 03, 04, 02, 03}, -- Dorothy
-{18, 05, 07, 08, 04, 05, 00, 01}, -- Sue
-{35, 10, 12, 13, 05, 11, 07, 01}, -- Zealot
-{25, 08, 06, 07, 05, 08, 00, 04}, -- Treck
-{27, 08, 07, 09, 06, 07, 01, 07}, -- Noah
-{25, 07, 08, 15, 11, 07, 03, 10}, -- Astohl
-{16, 05, 05, 04, 04, 02, 07, 01}, -- Lilina
-{19, 04, 03, 03, 06, 08, 01, 01}, -- Wendy
-{25, 10, 06, 05, 02, 14, 01, 09}, -- Barth
-{24, 07, 10, 09, 06, 04, 00, 03}, -- Oujay
-{19, 06, 09, 10, 03, 03, 01, 01}, -- Fir
-{24, 07, 08, 10, 06, 07, 00, 05}, -- Shin
-{36, 12, 05, 09, 05, 06, 00, 05}, -- Gonzales
-{33, 10, 09, 09, 09, 08, 00, 10}, -- Geese
-{27, 13, 13, 11, 10, 08, 06, 01}, -- Klein
-{22, 06, 08, 11, 03, 07, 06, 08}, -- Tate
-{14, 01, 02, 11, 09, 02, 04, 01}, -- Lalum
-{35, 13, 19, 18, 06, 08, 07, 01}, -- Echidna
-{15, 01, 03, 10, 11, 04, 01, 01}, -- Elphin
-{48, 22, 11, 10, 14, 10, 03, 01}, -- Bartre
-{23, 12, 09, 09, 06, 05, 10, 12}, -- Ray
-{16, 03, 07, 11, 08, 02, 01, 05}, -- Cath
-{30, 12, 11, 10, 05, 13, 03, 10}, -- Miredy
-{43, 17, 13, 18, 12, 14, 11, 05}, -- Percival
-{30, 11, 07, 10, 10, 07, 13, 01}, -- Cecilia
-{15, 06, 02, 04, 03, 01, 08, 01}, -- Sofiya
-{32, 16, 18, 15, 09, 11, 10, 01}, -- Igrene
-{49, 17, 13, 10, 12, 09, 04, 01}, -- Garret
-{16, 02, 02, 03, 07, 02, 06, 01}, -- Fa
-{26, 13, 11, 12, 10, 09, 09, 15}, -- Hugh
-{28, 14, 09, 08, 06, 12, 02, 07}, -- Zeis
-{46, 19, 13, 08, 11, 20, 05, 08}, -- Douglas
-{25, 21, 20, 16, 15, 05, 18, 18}, -- Niime
-{43, 14, 16, 20, 12, 10, 12, 12}, -- Dayan
-{33, 11, 14, 16, 14, 08, 12, 09}, -- Juno
-{35, 19, 18, 14, 11, 05, 30, 20}, -- Yodel
-{44, 20, 28, 23, 18, 15, 13, 19}  -- Karel
+BASE_STATS[6] = {
+{18, 05, 05, 07, 05, 00, 07, 01}, -- Roy
+{32, 09, 14, 11, 09, 08, 10, 01}, -- Marcus
+{21, 07, 04, 06, 06, 00, 03, 01}, -- Allen
+{20, 05, 06, 08, 06, 00, 02, 01}, -- Lance
+{18, 04, 04, 05, 04, 00, 02, 01}, -- Wolt
+{20, 07, 04, 03, 11, 00, 04, 01}, -- Bors
+{15, 00, 03, 03, 03, 00, 10, 01}, -- Merlinus
+{16, 01, 06, 08, 00, 06, 08, 02}, -- Ellen
+{26, 09, 12, 10, 06, 01, 05, 05}, -- Dieck
+{28, 08, 03, 05, 03, 00, 04, 02}, -- Wade
+{29, 07, 06, 07, 04, 01, 02, 03}, -- Lott
+{17, 04, 06, 12, 06, 05, 05, 01}, -- Thany
+{16, 03, 03, 10, 02, 00, 04, 01}, -- Chad
+{16, 04, 05, 06, 03, 05, 05, 01}, -- Lugh
+{15, 02, 05, 09, 02, 05, 08, 01}, -- Clarine
+{22, 07, 12, 13, 05, 00, 02, 04}, -- Rutger
+{20, 04, 06, 10, 02, 05, 02, 05}, -- Saul
+{19, 05, 06, 06, 04, 02, 03, 03}, -- Dorothy
+{18, 05, 07, 08, 05, 00, 04, 01}, -- Sue
+{35, 10, 12, 13, 11, 07, 05, 01}, -- Zealot
+{25, 08, 06, 07, 08, 00, 05, 04}, -- Treck
+{27, 08, 07, 09, 07, 01, 06, 07}, -- Noah
+{25, 07, 08, 15, 07, 03, 11, 10}, -- Astohl
+{16, 05, 05, 04, 02, 07, 04, 01}, -- Lilina
+{19, 04, 03, 03, 08, 01, 06, 01}, -- Wendy
+{25, 10, 06, 05, 14, 01, 02, 09}, -- Barth
+{24, 07, 10, 09, 04, 00, 06, 03}, -- Oujay
+{19, 06, 09, 10, 03, 01, 03, 01}, -- Fir
+{24, 07, 08, 10, 07, 00, 06, 05}, -- Shin
+{36, 12, 05, 09, 06, 00, 05, 05}, -- Gonzales
+{33, 10, 09, 09, 08, 00, 09, 10}, -- Geese
+{27, 13, 13, 11, 08, 06, 10, 01}, -- Klein
+{22, 06, 08, 11, 07, 06, 03, 08}, -- Tate
+{14, 01, 02, 11, 02, 04, 09, 01}, -- Lalum
+{35, 13, 19, 18, 08, 07, 06, 01}, -- Echidna
+{15, 01, 03, 10, 04, 01, 11, 01}, -- Elphin
+{48, 22, 11, 10, 10, 03, 14, 01}, -- Bartre
+{23, 12, 09, 09, 05, 10, 06, 12}, -- Ray
+{16, 03, 07, 11, 02, 01, 08, 05}, -- Cath
+{30, 12, 11, 10, 13, 03, 05, 10}, -- Miredy
+{43, 17, 13, 18, 14, 11, 12, 05}, -- Percival
+{30, 11, 07, 10, 07, 13, 10, 01}, -- Cecilia
+{15, 06, 02, 04, 01, 08, 03, 01}, -- Sofiya
+{32, 16, 18, 15, 11, 10, 09, 01}, -- Igrene
+{49, 17, 13, 10, 09, 04, 12, 01}, -- Garret
+{16, 02, 02, 03, 02, 06, 07, 01}, -- Fa
+{26, 13, 11, 12, 09, 09, 10, 15}, -- Hugh
+{28, 14, 09, 08, 12, 02, 06, 07}, -- Zeis
+{46, 19, 13, 08, 20, 05, 11, 08}, -- Douglas
+{25, 21, 20, 16, 05, 18, 15, 18}, -- Niime
+{43, 14, 16, 20, 10, 12, 12, 12}, -- Dayan
+{33, 11, 14, 16, 08, 12, 14, 09}, -- Juno
+{35, 19, 18, 14, 05, 30, 11, 20}, -- Yodel
+{44, 20, 28, 23, 15, 13, 18, 19}  -- Karel
 }
 -- hard mode bases?
-P.CLASSES[6] = {
+CLASSES[6] = {
 classes.M.LORD, 			-- Roy
 classes.M.PALADIN, 			-- Marcus
 classes.M.CAVALIER, 		-- Allen
@@ -214,7 +211,7 @@ classes.F.FALCO_KNIGHT, 	-- Juno
 classes.M.BISHOP, 			-- Yodel
 classes.M.SWORDMASTER 		-- Karel
 }
-P.PROMOTIONS[6] = {
+PROMOTIONS[6] = {
 classes.M.MASTER_LORD, 		-- Roy
 classes.M.PALADIN, 			-- Marcus
 classes.M.PALADIN, 			-- Allen
@@ -271,38 +268,8 @@ classes.M.BISHOP, 			-- Yodel
 classes.M.SWORDMASTER 		-- Karel
 }
 
-P.DEPLOYED[6] = {}
-P.BOOSTERS[6] = {}
-P.GROWTH_WEIGHTS[6] = {}
-for unit_i = 1, #P.NAMES[6] do
-	P.GROWTH_WEIGHTS[6][unit_i] = {20, 40, 20, 50, 30, 10, 10}
-	-- speed>str>def>skl=hp>res=luck
-	P.BOOSTERS[6][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
-end
 
-P.DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
-P.GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
-P.GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 20, 20, 10, 10}
-
-P.PROMOTED_AT[6] = {
- 0,  0,  0,  0,  0, -- Roy Marcus Allen Lance Wolt
- 0,  0,  0,  0,  0, -- Bors Merlinus Ellen Dieck Wade 
- 0,  0,  0,  0,  0, -- Lott Shanna Chad Lugh Clarine
- 0,  0,  0,  0,  0, -- Rutger Saul Dorothy Sue Zealot
- 0,  0,  0,  0,  0, -- Treck Noah Astore Lilina Wendy
- 0,  0,  0,  0,  0, -- Barth Ogier Fir Shin Gonzales
- 0,  0,  0,  0,  0, -- Geese Klein Tate Lalum Echidna
- 0,  0,  0,  0,  0, -- Elphin Bartre Ray Cath Milady
- 0,  0,  0,  0,  0, -- Percival Cecilia Sophia Igrene Garret 
- 0,  0,  0,  0,  0, -- Fa Hugh Zeis Douglas Niime
- 0,  0,  0,  0      -- Dayan Juno Yodel Karel
-}
-
-
--- 7
-
-
-P.NAMES[7] = {
+NAMES[7] = {
 "Eliwood", "Lowen", "Marcus", "Rebecca", "Dorcas",
 "Bartre", "Hector", "Oswin", "Serra", "Matthew",
 "Guy", "Merlinus", "Erk", "Priscilla", "Lyn",
@@ -314,8 +281,8 @@ P.NAMES[7] = {
 "Karla", "Renault", "Athos"
 }
 INDEX_OF_NAME[7] = {}
-for k,v in pairs(P.NAMES[7]) do INDEX_OF_NAME[v] = k end
-P.GROWTHS[7] = {
+for k,v in pairs(NAMES[7]) do INDEX_OF_NAME[v] = k end
+GROWTHS[7] = {
 {80, 45, 50, 40, 30, 35, 45}, -- Eliwood
 {90, 30, 30, 30, 40, 30, 50}, -- Lowen
 {65, 30, 50, 25, 15, 35, 30}, -- Marcus
@@ -360,7 +327,7 @@ P.GROWTHS[7] = {
 {60, 40, 30, 35, 20, 40, 15}, -- Renault
 {00, 00, 00, 00, 00, 00, 00}  -- Athos
 }
-P.BASE_STATS[7] = {
+BASE_STATS[7] = {
 {18, 05, 05, 07, 05, 00, 07, 01}, -- Eliwood
 {23, 07, 05, 07, 07, 00, 03, 02}, -- Lowen
 {31, 15, 15, 11, 10, 08, 08, 01}, -- Marcus
@@ -405,7 +372,7 @@ P.BASE_STATS[7] = {
 {43, 12, 22, 20, 15, 18, 10, 16}, -- Renault
 {40, 30, 24, 20, 20, 28, 25, 20}, -- Athos
 }
-P.BASE_STATS_HM[7] = {
+BASE_STATS_HM[7] = {
 {18, 05, 05, 07, 05, 00, 07, 01}, -- Eliwood	
 {23, 07, 05, 07, 07, 00, 03, 02}, -- Lowen	
 {31, 15, 15, 11, 10, 08, 08, 01}, -- Marcus	
@@ -450,7 +417,7 @@ P.BASE_STATS_HM[7] = {
 {43, 12, 22, 20, 15, 18, 10, 16}, -- Renault	
 {40, 30, 24, 20, 20, 28, 25, 20} -- Athos
 }
-P.CLASSES[7] = {
+CLASSES[7] = {
 classes.M.LORD,			-- Eliwood
 classes.M.CAVALIER,		-- Lowen
 classes.M.PALADIN,		-- Marcus
@@ -495,7 +462,7 @@ classes.F.SWORDMASTER,	-- Karla
 classes.M.BISHOP,		-- Renault
 classes.M.ARCHSAGE		-- Athos
 }
-P.PROMOTIONS[7] = {
+PROMOTIONS[7] = {
 classes.M.KNIGHT_LORD,	-- Eliwood
 classes.M.PALADIN,		-- Lowen
 classes.M.PALADIN,		-- Marcus
@@ -541,34 +508,8 @@ classes.M.BISHOP,		-- Renault
 classes.M.ARCHSAGE		-- Athos
 }
 
-P.DEPLOYED[7] = {}
-P.BOOSTERS[7] = {}
-P.GROWTH_WEIGHTS[7] = {}
-for unit_i = 1, #P.NAMES[7] do
-	P.GROWTH_WEIGHTS[7][unit_i] = {20, 40, 20, 50, 30, 10, 10}
-	-- speed>str>def>skl=hp>res=luck
-	P.BOOSTERS[7][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
-end
 
-P.DEPLOYED[7][INDEX_OF_NAME["Eliwood"]] = true
-P.GROWTH_WEIGHTS[7][INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
-P.PROMOTED_AT[7] = {
-19,  0,  0, 15,  0, -- Eliwood Lowen Marcus Rebecca Dorcas
- 0, 20,  0,  0,  0, -- Bartre Hector Oswin Serra Matthew
-17,  0,  0,  0,  0, -- Guy Merlinus Erk Priscilla Lyn
- 0, 11,  0,  0,  0, -- Wil Kent Sain Florina Raven
- 0, 16,  0,  0,  0, -- Lucius Canas Dart Fiora Legault
- 0,  0, 11,  0,  0, -- Ninian/Nils Isadora Heath Rath Hawkeye
- 0,  0,  0,  0,  0, -- Geitz Wallace Farina Pent Louise
- 0,  0,  0,  0,  0, -- Karel Harken Nino Jaffar Vaida
- 0,  0,  0 			-- Karla Renault Athos
-}
-
-
--- 8
-
-
-P.NAMES[8] = {
+NAMES[8] = {
 "Eirika", "Seth", "Franz", "Gilliam", "Moulder",
 "Vanessa", "Ross", "Garcia", "Neimi", "Colm",
 "Artur", "Lute", "Natasha", "Joshua", "Ephraim",
@@ -579,8 +520,8 @@ P.NAMES[8] = {
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
 INDEX_OF_NAME[8] = {}
-for k,v in pairs(P.NAMES[8]) do INDEX_OF_NAME[v] = k end
-P.GROWTHS[8] = {
+for k,v in pairs(NAMES[8]) do INDEX_OF_NAME[v] = k end
+GROWTHS[8] = {
 {70, 40, 60, 60, 30, 30, 60}, --Eirika
 {90, 50, 45, 45, 40, 30, 25}, --Seth
 {80, 40, 40, 50, 25, 20, 40}, --Franz
@@ -625,7 +566,7 @@ P.GROWTHS[8] = {
 {85, 55, 40, 30, 45, 25, 25}, --Fado
 {85, 50, 55, 55, 45, 55, 30}  --Lyon
 }
-P.BASE_STATS[8] = {
+BASE_STATS[8] = {
 {16, 04, 08, 09, 03, 01, 05, 01}, --Eirika
 {30, 14, 13, 12, 11, 08, 13, 01}, --Seth
 {20, 07, 05, 07, 06, 01, 02, 01}, --Franz
@@ -670,7 +611,7 @@ P.BASE_STATS[8] = {
 {46, 20, 14, 12, 18, 11, 05, 11}, --Fado
 {44, 22, 13, 11, 17, 19, 04, 14}, --Lyon
 }
-P.CLASSES[8] = {
+CLASSES[8] = {
 classes.F.LORD,				--Eirika
 classes.M.PALADIN,			--Seth
 classes.M.CAVALIER,			--Franz
@@ -715,7 +656,7 @@ classes.M.WYVERN_KNIGHT,	--Valter
 classes.M.GENERAL,			--Fado
 classes.M.NECROMANCER		--Lyon
 }
-P.PROMOTIONS[8] = {
+PROMOTIONS[8] = {
 classes.F.GREAT_LORD8,		--Eirika
 classes.M.PALADIN,			--Seth
 classes.M.PALADIN,			--Franz
@@ -761,40 +702,43 @@ classes.M.GENERAL,			--Fado
 classes.M.NECROMANCER		--Lyon
 }
 
-P.DEPLOYED[8] = {}
-P.BOOSTERS[8] = {}
-P.GROWTH_WEIGHTS[8] = {}
-for unit_i = 1, #P.NAMES[8] do
-	P.GROWTH_WEIGHTS[8][unit_i] = {20, 40, 20, 50, 30, 10, 10}
-	P.BOOSTERS[8][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
+
+for v = 6, 8 do
+	DEPLOYED[v] = {}
+	GROWTH_WEIGHTS[v] = {}
+	BOOSTERS[v] = {}
+	PROMOTED_AT[v] = {}
+	for unit_i = 1, #NAMES[v] do
+		GROWTH_WEIGHTS[v][unit_i] = {20, 40, 20, 50, 30, 10, 10}
+		-- speed>str>def>skl=hp>res=luck
+		BOOSTERS[v][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
+		PROMOTED_AT[v] = 0
+	end
 end
 
-P.DEPLOYED[8][INDEX_OF_NAME["Eirika"]] = true
-P.GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
+DEPLOYED[6][INDEX_OF_NAME["Marcus"]] = true
+GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 20, 20, 10, 10}
 
-P.PROMOTED_AT[8] = {
- 0,  0,  0,  0,  0, -- Eirika Seth Franz Gilliam Moulder
- 0,  0,  0,  0,  0, -- Vanessa Ross Garcia Neimi Colm
- 0,  0,  0,  0,  0, -- Artur Lute Natasha Joshua Ephraim
- 0,  0,  0,  0,  0, -- Forde Kyle Tana Amelia Innes
- 0,  0,  0,  0,  0, -- Gerik Tethys Marisa L'Arachel Dozla
- 0,  0,  0,  0,  0, -- Saleh Ewan Cormag Rennac Duessel
- 0,  0,  0,  0,  0, -- Knoll Myrrh Syrene Caellach Orson
- 0,  0,  0,  0,  0, -- Riev Ismaire Selena Glen Hayden
- 0,  0,  0			-- Valter Fado Lyon
-}
+DEPLOYED[7][INDEX_OF_NAME["Eliwood"]] = true
+GROWTH_WEIGHTS[7][INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+
+DEPLOYED[8][INDEX_OF_NAME["Eirika"]] = true
+GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+
 
 
 P.sel_Unit_i = 1
 
 function P.names(unit_i) -- default value P.sel_Unit_i
 	unit_i = unit_i or P.sel_Unit_i
-	return P.NAMES[version][unit_i]
+	return NAMES[version][unit_i]
 end
 
 function P.deployed(unit_i) 
 	unit_i = unit_i or P.sel_Unit_i
-	return P.DEPLOYED[version][unit_i]
+	return DEPLOYED[version][unit_i]
 end
 
 local Afas = 0
@@ -814,24 +758,24 @@ function P.growths(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
 	if unit_i ~= Afas then
-		return P.GROWTHS[version][unit_i]
+		return GROWTHS[version][unit_i]
 	end
 	
 	local afasGrowths = {}
 	for stat_i = 1, 7 do
 		afasGrowths[stat_i] = 
-			P.GROWTHS[version][unit_i][stat_i] + 5
+			GROWTHS[version][unit_i][stat_i] + 5
 	end
 	return afasGrowths
 end
 
 function P.growthWeights(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
-	return P.GROWTH_WEIGHTS[version][unit_i]
+	return GROWTH_WEIGHTS[version][unit_i]
 end
 
 function P.hasPromoted(unit_i)
-	return P.PROMOTED_AT[version][unit_i] > 0
+	return PROMOTED_AT[version][unit_i] > 0
 end
 
 function P.canPromote(unit_i)
@@ -839,7 +783,7 @@ function P.canPromote(unit_i)
 end
 
 function P.levelsPrePromotion(unit_i)
-	return P.PROMOTED_AT[version][unit_i] - P.BASE_STATS[version][unit_i][P.LEVEL_I]
+	return PROMOTED_AT[version][unit_i] - BASE_STATS[version][unit_i][P.LEVEL_I]
 end
 
 function P.class(unit_i)
@@ -848,13 +792,13 @@ function P.class(unit_i)
 	if P.hasPromoted(unit_i) then
 		return P.promotion(unit_i)
 	end
-	return P.CLASSES[version][unit_i]
+	return CLASSES[version][unit_i]
 end
 
 function P.promotion(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
-	return P.PROMOTIONS[version][unit_i]
+	return PROMOTIONS[version][unit_i]
 end
 
 function P.bases(unit_i)
@@ -862,7 +806,7 @@ function P.bases(unit_i)
 	
 	local ret = {}
 	for stat_i = 1, 8 do
-		ret[stat_i] = P.BASE_STATS[version][unit_i][stat_i] + P.BOOSTERS[version][unit_i][stat_i]
+		ret[stat_i] = BASE_STATS[version][unit_i][stat_i] + BOOSTERS[version][unit_i][stat_i]
 	end
 	
 	if not P.hasPromoted(unit_i) then
@@ -878,9 +822,9 @@ end
 
 function P.nextDeployed()
 	local canditate_i = P.sel_Unit_i
-	canditate_i = rotInc(canditate_i, #P.NAMES[version])
+	canditate_i = rotInc(canditate_i, #NAMES[version])
 	while (canditate_i ~= P.sel_Unit_i and not P.deployed(canditate_i)) do
-		canditate_i = rotInc(canditate_i, #P.NAMES[version])
+		canditate_i = rotInc(canditate_i, #NAMES[version])
 	end
 	return canditate_i
 end

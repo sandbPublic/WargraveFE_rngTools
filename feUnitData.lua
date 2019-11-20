@@ -25,23 +25,21 @@ local CLASSES = {}
 local PROMOTIONS = {}
 local PROMOTED_AT = {}
 
-
+-- disambiguate Marcus, Merlinus, Bartre, and Karel from FE7 versions
 NAMES[6] = {
-"Roy", "Marcus", "Allen", "Lance", "Wolt", 
-"Bors", "Merlinus", "Ellen", "Dieck", "Wade", 
+"Roy", "Marcus6", "Allen", "Lance", "Wolt", 
+"Bors", "Merlinus6", "Ellen", "Dieck", "Wade", 
 "Lott", "Shanna", "Chad", "Lugh", "Clarine", 
 "Rutger", "Saul", "Dorothy", "Sue", "Zealot",
  
 "Treck", "Noah", "Astore", "Lilina", "Wendy", 
 "Barth", "Ogier", "Fir", "Shin", "Gonzales", 
 "Geese", "Klein", "Tate", "Lalum", "Echidna", 
-"Elphin", "Bartre", "Ray", "Cath", "Milady", 
+"Elphin", "Bartre6", "Ray", "Cath", "Milady", 
 
 "Percival", "Cecilia", "Sophia", "Igrene", "Garret", 
 "Fa", "Hugh", "Zeis", "Douglas", "Niime", 
-"Dayan", "Juno", "Yodel", "Karel"}
-INDEX_OF_NAME[6] = {}
-for k,v in pairs(NAMES[6]) do INDEX_OF_NAME[v] = k end
+"Dayan", "Juno", "Yodel", "Karel6"}
 GROWTHS[6] = {
 {80, 40, 50, 40, 25, 30, 60}, -- Roy
 {60, 25, 20, 25, 15, 20, 20}, -- Marcus
@@ -128,7 +126,7 @@ BASE_STATS[6] = {
 {24, 07, 10, 09, 04, 00, 06, 03}, -- Oujay
 {19, 06, 09, 10, 03, 01, 03, 01}, -- Fir
 {24, 07, 08, 10, 07, 00, 06, 05}, -- Shin
-{36, 12, 05, 09, 06, 00, 05, 05}, -- Gonzales
+{36, 12, 05, 09, 06, 00, 05, 05}, -- Gonzales, level depends on route
 {33, 10, 09, 09, 08, 00, 09, 10}, -- Geese
 {27, 13, 13, 11, 08, 06, 10, 01}, -- Klein
 {22, 06, 08, 11, 07, 06, 03, 08}, -- Tate
@@ -137,7 +135,7 @@ BASE_STATS[6] = {
 {15, 01, 03, 10, 04, 01, 11, 01}, -- Elphin
 {48, 22, 11, 10, 10, 03, 14, 01}, -- Bartre
 {23, 12, 09, 09, 05, 10, 06, 12}, -- Ray
-{16, 03, 07, 11, 02, 01, 08, 05}, -- Cath
+{16, 03, 07, 11, 02, 01, 08, 05}, -- Cath, more stats if recruited later
 {30, 12, 11, 10, 13, 03, 05, 10}, -- Miredy
 {43, 17, 13, 18, 14, 11, 12, 05}, -- Percival
 {30, 11, 07, 10, 07, 13, 10, 01}, -- Cecilia
@@ -154,7 +152,6 @@ BASE_STATS[6] = {
 {35, 19, 18, 14, 05, 30, 11, 20}, -- Yodel
 {44, 20, 28, 23, 15, 13, 18, 19}  -- Karel
 }
--- hard mode bases?
 CLASSES[6] = {
 classes.M.LORD, 			-- Roy
 classes.M.PALADIN, 			-- Marcus
@@ -280,8 +277,6 @@ NAMES[7] = {
 "Karel", "Harken", "Nino", "Jaffar", "Vaida",
 "Karla", "Renault", "Athos"
 }
-INDEX_OF_NAME[7] = {}
-for k,v in pairs(NAMES[7]) do INDEX_OF_NAME[v] = k end
 GROWTHS[7] = {
 {80, 45, 50, 40, 30, 35, 45}, -- Eliwood
 {90, 30, 30, 30, 40, 30, 50}, -- Lowen
@@ -371,51 +366,6 @@ BASE_STATS[7] = {
 {29, 14, 21, 18, 11, 12, 16, 05}, -- Karla
 {43, 12, 22, 20, 15, 18, 10, 16}, -- Renault
 {40, 30, 24, 20, 20, 28, 25, 20}, -- Athos
-}
-BASE_STATS_HM[7] = {
-{18, 05, 05, 07, 05, 00, 07, 01}, -- Eliwood	
-{23, 07, 05, 07, 07, 00, 03, 02}, -- Lowen	
-{31, 15, 15, 11, 10, 08, 08, 01}, -- Marcus	
-{17, 04, 05, 06, 03, 01, 04, 01}, -- Rebecca	
-{30, 07, 07, 06, 03, 00, 03, 03}, -- Dorcas	
-{29, 09, 05, 03, 04, 00, 04, 02}, -- Bartre	
-{19, 07, 04, 05, 08, 00, 03, 01}, -- Hector	
-{28, 13, 09, 05, 13, 03, 03, 09}, -- Oswin	
-{17, 02, 05, 08, 02, 05, 06, 01}, -- Serra	
-{18, 04, 04, 11, 03, 00, 02, 02}, -- Matthew	
-{21, 06, 11, 11, 05, 00, 05, 03}, -- Guy	hm									
-{18, 00, 04, 05, 05, 02, 12, 05}, -- Merlinus	
-{17, 05, 06, 07, 02, 04, 03, 01}, -- Erk	
-{16, 06, 06, 08, 03, 06, 07, 03}, -- Priscilla	
-{18, 05, 10, 11, 02, 00, 05, 04}, -- Lyn	
-{21, 06, 05, 06, 05, 01, 07, 04}, -- Wil	
-{23, 08, 07, 08, 06, 01, 04, 05}, -- Kent	
-{22, 09, 05, 07, 07, 00, 05, 04}, -- Sain	
-{18, 06, 08, 09, 04, 05, 08, 03}, -- Florina	
-{25, 08, 11, 13, 05, 01, 02, 05}, -- Raven	hm					
-{18, 07, 06, 10, 01, 06, 02, 03}, -- Lucius	
-{21, 10, 09, 08, 05, 08, 07, 08}, -- Canas	
-{34, 12, 08, 08, 06, 01, 03, 08}, -- Dart	
-{21, 08, 11, 13, 06, 07, 06, 07}, -- Fiora	
-{26, 08, 11, 15, 08, 03, 10, 12}, -- Legault	hm
-{14, 00, 00, 12, 05, 04, 10, 01}, -- Ninian/Nils	
-{28, 13, 12, 16, 08, 06, 10, 01}, -- Isadora	
-{28, 11, 08, 07, 10, 01, 07, 07}, -- Heath	hm
-{27, 09, 10, 11, 08, 02, 05, 09}, -- Rath	
-{50, 18, 14, 11, 14, 10, 13, 04}, -- Hawkeye	
-{40, 17, 12, 13, 11, 03, 10, 03}, -- Geitz	hm
-{34, 16, 09, 08, 19, 05, 10, 01}, -- Wallace	
-{24, 10, 13, 14, 10, 12, 10, 12}, -- Farina	
-{33, 18, 21, 17, 11, 16, 14, 06}, -- Pent	
-{28, 12, 14, 17, 09, 12, 16, 04}, -- Louise	
-{31, 16, 23, 20, 13, 12, 15, 08}, -- Karel	
-{38, 21, 20, 17, 15, 10, 12, 08}, -- Harken	hm
-{19, 07, 08, 11, 04, 07, 10, 05}, -- Nino	
-{34, 19, 25, 24, 15, 11, 10, 13}, -- Jaffar	
-{43, 20, 19, 13, 21, 06, 11, 09}, -- Vaida	hm	
-{29, 14, 21, 18, 11, 12, 16, 05}, -- Karla	
-{43, 12, 22, 20, 15, 18, 10, 16}, -- Renault	
-{40, 30, 24, 20, 20, 28, 25, 20} -- Athos
 }
 CLASSES[7] = {
 classes.M.LORD,			-- Eliwood
@@ -519,8 +469,6 @@ NAMES[8] = {
 "Knoll", "Myrrh", "Syrene", "Caellach", "Orson",
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
 "Valter", "Fado", "Lyon"}
-INDEX_OF_NAME[8] = {}
-for k,v in pairs(NAMES[8]) do INDEX_OF_NAME[v] = k end
 GROWTHS[8] = {
 {70, 40, 60, 60, 30, 30, 60}, --Eirika
 {90, 50, 45, 45, 40, 30, 25}, --Seth
@@ -704,29 +652,51 @@ classes.M.NECROMANCER		--Lyon
 
 
 for v = 6, 8 do
+	for index,name in pairs(NAMES[v]) do INDEX_OF_NAME[name] = index end
 	DEPLOYED[v] = {}
 	GROWTH_WEIGHTS[v] = {}
 	BOOSTERS[v] = {}
 	PROMOTED_AT[v] = {}
 	for unit_i = 1, #NAMES[v] do
-		GROWTH_WEIGHTS[v][unit_i] = {20, 40, 20, 50, 30, 10, 10}
-		-- speed>str>def>skl=hp>res=luck
-		BOOSTERS[v][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0}
-		PROMOTED_AT[v] = 0
+		GROWTH_WEIGHTS[v][unit_i] = {20, 40, 20, 50, 30, 10, 10} -- speed>str>def>skl=hp>res=luck		
+		BOOSTERS[v][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0} -- needs 8 to add to base stats (base level)
+		PROMOTED_AT[v][unit_i] = 0
 	end
 end
 
 DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
-DEPLOYED[6][INDEX_OF_NAME["Marcus"]] = true
+DEPLOYED[6][INDEX_OF_NAME["Marcus6"]] = true
 GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
 GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 20, 20, 10, 10}
 
 DEPLOYED[7][INDEX_OF_NAME["Eliwood"]] = true
-GROWTH_WEIGHTS[7][INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+GROWTH_WEIGHTS[7][INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 20, 20, 10, 10}
 
 DEPLOYED[8][INDEX_OF_NAME["Eirika"]] = true
-GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
+GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 20, 20, 10, 10}
 
+-- expected hard mode stats, actually stats are rng dependent
+if hardMode then
+	BASE_STATS[6][INDEX_OF_NAME["Rutger"]]   = {26, 09, 14, 15, 06, 01, 04, 04}
+	BASE_STATS[6][INDEX_OF_NAME["Fir"]]      = {25, 09, 12, 13, 04, 02, 05, 01}
+	BASE_STATS[6][INDEX_OF_NAME["Shin"]]     = {29, 09, 11, 14, 08, 01, 08, 05}
+	BASE_STATS[6][INDEX_OF_NAME["Gonzales"]] = {43, 16, 07, 11, 06, 07, 01, 05} -- level depends on route
+	BASE_STATS[6][INDEX_OF_NAME["Klein"]]    = {33, 16, 16, 13, 09, 07, 13, 01} -- depends on route
+	BASE_STATS[6][INDEX_OF_NAME["Tate"]]     = {28, 09, 12, 15, 08, 08, 06, 08} -- depends on route
+	BASE_STATS[6][INDEX_OF_NAME["Cath"]]     = {20, 03, 11, 15, 02, 03, 12, 05} -- more stats if recruited later
+	BASE_STATS[6][INDEX_OF_NAME["Milady"]]   = {38, 17, 15, 13, 16, 04, 08, 10}
+	BASE_STATS[6][INDEX_OF_NAME["Percival"]] = {51, 20, 16, 20, 15, 13, 15, 05}
+	BASE_STATS[6][INDEX_OF_NAME["Garret"]]   = {55, 21, 16, 11, 10, 05, 14, 05}
+	BASE_STATS[6][INDEX_OF_NAME["Zeis"]]     = {37, 19, 13, 11, 15, 03, 09, 07}
+	
+	BASE_STATS[7][INDEX_OF_NAME["Guy"]]      = {21, 06, 11, 11, 05, 00, 05, 03}
+	BASE_STATS[7][INDEX_OF_NAME["Raven"]]    = {25, 08, 11, 13, 05, 01, 02, 05}
+	BASE_STATS[7][INDEX_OF_NAME["Legault"]]  = {26, 08, 11, 15, 08, 03, 10, 12}
+	BASE_STATS[7][INDEX_OF_NAME["Heath"]]    = {28, 11, 08, 07, 10, 01, 07, 07}
+	BASE_STATS[7][INDEX_OF_NAME["Geitz"]]    = {40, 17, 12, 13, 11, 03, 10, 03}
+	BASE_STATS[7][INDEX_OF_NAME["Harken"]]   = {38, 21, 20, 17, 15, 10, 12, 08}
+	BASE_STATS[7][INDEX_OF_NAME["Vaida"]]    = {43, 20, 19, 13, 21, 06, 11, 09}
+end
 
 
 P.sel_Unit_i = 1
@@ -762,9 +732,8 @@ function P.growths(unit_i)
 	end
 	
 	local afasGrowths = {}
-	for stat_i = 1, 7 do
-		afasGrowths[stat_i] = 
-			GROWTHS[version][unit_i][stat_i] + 5
+	for stat_i, growth in ipairs(GROWTHS[version][unit_i]) do
+		afasGrowths[stat_i] = growth + 5
 	end
 	return afasGrowths
 end
@@ -805,16 +774,16 @@ function P.bases(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
 	local ret = {}
-	for stat_i = 1, 8 do
-		ret[stat_i] = BASE_STATS[version][unit_i][stat_i] + BOOSTERS[version][unit_i][stat_i]
+	for stat_i, base_stat in ipairs(BASE_STATS[version][unit_i]) do
+		ret[stat_i] = base_stat + BOOSTERS[version][unit_i][stat_i]
 	end
 	
 	if not P.hasPromoted(unit_i) then
 		return ret
 	end
 	
-	for stat_i = 1, 7 do
-		ret[stat_i] = ret[stat_i] + classes.PROMO_GAINS[P.class(unit_i)][stat_i]
+	for stat_i, gain in ipairs(classes.PROMO_GAINS[P.class(unit_i)]) do
+		ret[stat_i] = ret[stat_i] + gain
 	end
 	ret[P.LEVEL_I] = 1 - P.levelsPrePromotion(unit_i)
 	return ret
@@ -839,31 +808,17 @@ function P.willLevelStat(HP_RN_i, unit_i, charStats)
 	charStats = charStats or savedStats
 	
 	ret = {}	
-	
-	if unit_i ~= Afas then
-		for stat_i = 1, 7 do
-			if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
-				ret[stat_i] = -1 -- stat capped
-			elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i] then
-				ret[stat_i] = 1 -- stat grows
-			else
-				ret[stat_i] = 0 -- stat doesn't grow
-			end
-		end
-	else
-		for stat_i = 1, 7 do
-			if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
-				ret[stat_i] = -1 -- stat capped
-			elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i] - 5 then
-				ret[stat_i] = 1 -- stat grows without afa's
-			elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < P.growths(unit_i)[stat_i] then
-				ret[stat_i] = 2 -- stat grows because of afa's
-			else
-				ret[stat_i] = 0 -- stat doesn't grow
-			end
+	for stat_i, growth in ipairs(GROWTHS[version][unit_i]) do
+		if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
+			ret[stat_i] = -1 -- stat capped
+		elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < growth then
+			ret[stat_i] = 1 -- stat grows without afa's
+		elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < growth + 5 and unit_i == Afas then
+			ret[stat_i] = 2 -- stat grows because of afa's
+		else
+			ret[stat_i] = 0 -- stat doesn't grow
 		end
 	end
-	
 	return ret
 end
 
@@ -872,27 +827,26 @@ function P.levelUpProcs_string(HP_RN_i, unit_i, charStats)
 	charStats = charStats or savedStats
 	
 	local seq = ""
-	local statRaised = false
-	local statCapped = false
+	local statWillRise = false
+	local statIsCapped = false
 	
 	local procs = P.willLevelStat(HP_RN_i, unit_i, charStats)
 	
-	for stat_i = 1, 7 do
-		
+	for stat_i = 1, 7 do		
 		if procs[stat_i] == 1 then
 			seq = seq .. "+" -- grows this stat
-			statRaised = true
+			statWillRise = true
 		elseif procs[stat_i] == 2 then
 			seq = seq .. "!" -- grows this stat because of Afa's
-			statRaised = true
+			statWillRise = true
 		elseif procs[stat_i] == -1 then
 			seq = seq .. "_" -- can't grow stat
-			statCapped = true
+			statIsCapped = true
 		else
 			seq = seq .. "."
 		end
 	end
-	if (not statRaised) and (not statCapped) then
+	if (not statWillRise) and (not statIsCapped) then
 		seq = seq .. " EMPTY, may proc more RNs!" 
 		-- todo how does this work?
 		-- continue rolling, one rn at a time, until a stat grows?
@@ -979,8 +933,7 @@ local function cumulativeBinDistrib(numSuccesses, numTrials, p)
 	return ret
 end
 
--- adjusts preset stat value weights downward when 
--- natural growth rates are likely to hit the cap
+-- adjusts preset stat weights downward when stat is likely to cap
 local function dynamicStatWeights(unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	

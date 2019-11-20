@@ -827,26 +827,24 @@ function P.levelUpProcs_string(HP_RN_i, unit_i, charStats)
 	charStats = charStats or savedStats
 	
 	local seq = ""
-	local statWillRise = false
-	local statIsCapped = false
-	
-	local procs = P.willLevelStat(HP_RN_i, unit_i, charStats)
-	
-	for stat_i = 1, 7 do		
-		if procs[stat_i] == 1 then
+	local noStatWillRise = true
+	local noStatIsCapped = true
+
+	for _, proc in ipairs(P.willLevelStat(HP_RN_i, unit_i, charStats)) do		
+		if proc == 1 then
 			seq = seq .. "+" -- grows this stat
-			statWillRise = true
-		elseif procs[stat_i] == 2 then
+			noStatWillRise = false
+		elseif proc == 2 then
 			seq = seq .. "!" -- grows this stat because of Afa's
-			statWillRise = true
-		elseif procs[stat_i] == -1 then
+			noStatWillRise = false
+		elseif proc == -1 then
 			seq = seq .. "_" -- can't grow stat
-			statIsCapped = true
+			noStatIsCapped = false
 		else
 			seq = seq .. "."
 		end
 	end
-	if (not statWillRise) and (not statIsCapped) then
+	if noStatWillRise and noStatIsCapped then
 		seq = seq .. " EMPTY, may proc more RNs!" 
 		-- todo how does this work?
 		-- continue rolling, one rn at a time, until a stat grows?
@@ -864,47 +862,6 @@ local function statsGained(stat_i, unit_i, stat)
 	end
 	
 	return stat - P.bases(unit_i)[stat_i]
-end
-
--- scored from 1 (procing every level will not exceed the cap) to 0 (at cap or lvl 20)
--- 3/4 means level 16, 3 stats away from cap (or level 12, 6 stats away etc)
--- once used in P.expValueFactor(unit_i, charStats)
-local function procRatioNeededForCap(unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
-	charStats = charStats or savedStats
-	
-	local ret = {}
-	
-	local levelsTil20 = 20 - charStats[P.LEVEL_I]
-	for stat_i = 1, 7 do
-		if levelsTil20 <= 0 then
-			ret[stat_i] = 0
-		else
-			local procsTilStatCap = classes.CAPS[P.class(unit_i)][stat_i] - charStats[stat_i]
-			ret[stat_i] = math.min(1, procsTilStatCap/levelsTil20)
-		end
-	end
-
-	return ret
-end
-
-local function growthRateNeededToCap(unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
-	charStats = charStats or savedStats
-	
-	local ret = {}
-	
-	local levelsTil20 = 20 - charStats[P.LEVEL_I]
-	for stat_i = 1, 7 do
-		if levelsTil20 <= 0 then
-			ret[stat_i] = 0
-		else
-			local procsTilStatCap = classes.CAPS[P.class(unit_i)][stat_i] - charStats[stat_i]
-			ret[stat_i] = procsTilStatCap/levelsTil20
-		end
-	end
-	
-	return ret
 end
 
 local function factorial(x)

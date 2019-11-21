@@ -60,10 +60,10 @@ function P.combatObj:new()
 	self.__index = self
 	
 	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0}
-	o.attacker.class = classes.F.LORD
+	o.attacker.class = classes.LORD
 	o.attacker.weapon = P.enum_NORMAL
 	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0}
-	o.defender.class = classes.F.LORD
+	o.defender.class = classes.LORD
 	o.defender.weapon = P.enum_NORMAL
 	
 	o.unit_ID  = 1

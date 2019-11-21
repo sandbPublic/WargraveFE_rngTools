@@ -408,7 +408,7 @@ function rnbeObj:headerString(RNBE_i)
 			.. combat.WEAPON_TYPE_STRINGS[weapon]
 	end
 	
-	if self.batParams:data(combat.enum_ENEMY).class ~= classes.F.LORD then
+	if self.batParams:data(combat.enum_ENEMY).class ~= classes.LORD then
 		specialStringEvents = specialStringEvents .. " class " .. tostring(self.batParams:data(combat.enum_ENEMY).class)
 	end
 	

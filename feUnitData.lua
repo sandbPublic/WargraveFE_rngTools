@@ -153,116 +153,116 @@ BASE_STATS[6] = {
 {44, 20, 28, 23, 15, 13, 18, 19}  -- Karel
 }
 CLASSES[6] = {
-classes.M.LORD, 			-- Roy
-classes.M.PALADIN, 			-- Marcus
-classes.M.CAVALIER, 		-- Allen
-classes.M.CAVALIER, 		-- Lance
-classes.M.ARCHER, 			-- Wolt 
-classes.M.ARMOR_KNIGHT, 	-- Bors 
-classes.M.TRANSPORTER, 		-- Merlinus
-classes.F.CLERIC, 			-- Ellen
-classes.M.MERCENARY, 		-- Dieck
-classes.M.FIGHTER, 			-- Wade
-classes.M.FIGHTER, 			-- Lott
-classes.F.PEGASUS_KNIGHT, 	-- Thany
-classes.M.THIEF, 			-- Chad
-classes.M.MAGE, 			-- Lugh
-classes.F.TROUBADOUR, 		-- Clarine 
-classes.M.MYRMIDON, 		-- Rutger 
-classes.M.CLERIC, 			-- Saul
-classes.F.ARCHER, 			-- Dorothy 
-classes.F.NOMAD, 			-- Sue 
-classes.M.PALADIN, 			-- Zealot
-classes.M.CAVALIER, 		-- Treck
-classes.M.CAVALIER, 		-- Noah
-classes.M.THIEF, 			-- Astohl
-classes.F.MAGE, 			-- Lilina
-classes.F.ARMOR_KNIGHT, 	-- Wendy
-classes.M.ARMOR_KNIGHT, 	-- Barth
-classes.M.MERCENARY, 		-- Oujay
-classes.F.MYRMIDON, 		-- Fir
-classes.M.NOMAD, 			-- Shin
-classes.M.BRIGAND, 			-- Gonzales
-classes.M.PIRATE, 			-- Geese
-classes.M.SNIPER, 			-- Klein
-classes.F.PEGASUS_KNIGHT, 	-- Tate
-classes.F.DANCER, 			-- Lalum
-classes.F.HERO, 			-- Echidna
-classes.M.BARD, 			-- Elphin
-classes.M.WARRIOR, 			-- Bartre
-classes.M.SHAMAN, 			-- Ray
-classes.F.THIEF, 			-- Cath
-classes.F.WYVERN_RIDER, 	-- Miredy 
-classes.M.PALADIN, 			-- Percival
-classes.F.VALKYRIE, 		-- Cecilia
-classes.F.SHAMAN, 			-- Sofiya
-classes.F.SNIPER, 			-- Igrene
-classes.M.BERSERKER, 		-- Garret
-classes.F.MANAKETE, 		-- Fa
-classes.M.MAGE, 			-- Hugh
-classes.M.WYVERN_RIDER, 	-- Zeis
-classes.M.GENERAL, 			-- Douglas
-classes.F.DRUID, 			-- Niime
-classes.M.RANGER, 			-- Dayan
-classes.F.FALCO_KNIGHT, 	-- Juno
-classes.M.BISHOP, 			-- Yodel
-classes.M.SWORDMASTER 		-- Karel
+classes.LORD, 			-- Roy
+classes.PALADIN_M, 		-- Marcus
+classes.CAVALIER, 		-- Allen
+classes.CAVALIER, 		-- Lance
+classes.ARCHER, 		-- Wolt 
+classes.ARMOR_KNIGHT, 	-- Bors 
+classes.TRANSPORTER, 	-- Merlinus
+classes.CLERIC, 		-- Ellen
+classes.MERCENARY, 		-- Dieck
+classes.FIGHTER, 		-- Wade
+classes.FIGHTER, 		-- Lott
+classes.PEGASUS_KNIGHT, -- Thany
+classes.THIEF, 			-- Chad
+classes.MAGE, 			-- Lugh
+classes.TROUBADOUR, 	-- Clarine 
+classes.MYRMIDON, 		-- Rutger 
+classes.PRIEST, 		-- Saul
+classes.ARCHER, 		-- Dorothy 
+classes.NOMAD, 			-- Sue 
+classes.PALADIN_M, 		-- Zealot
+classes.CAVALIER, 		-- Treck
+classes.CAVALIER, 		-- Noah
+classes.THIEF, 			-- Astohl
+classes.MAGE, 			-- Lilina
+classes.ARMOR_KNIGHT, 	-- Wendy
+classes.ARMOR_KNIGHT, 	-- Barth
+classes.MERCENARY, 		-- Oujay
+classes.MYRMIDON, 		-- Fir
+classes.NOMAD, 			-- Shin
+classes.BRIGAND, 		-- Gonzales
+classes.PIRATE, 		-- Geese
+classes.SNIPER_M, 		-- Klein
+classes.PEGASUS_KNIGHT, -- Tate
+classes.DANCER, 		-- Lalum
+classes.HERO_F, 		-- Echidna
+classes.BARD, 			-- Elphin
+classes.WARRIOR, 		-- Bartre
+classes.SHAMAN, 		-- Ray
+classes.THIEF, 			-- Cath
+classes.WYVERN_RIDER, 	-- Miredy 
+classes.PALADIN_M, 		-- Percival
+classes.VALKYRIE, 		-- Cecilia
+classes.SHAMAN, 		-- Sofiya
+classes.SNIPER_F, 		-- Igrene
+classes.BERSERKER, 		-- Garret
+classes.MANAKETE, 		-- Fa
+classes.MAGE, 			-- Hugh
+classes.WYVERN_RIDER, 	-- Zeis
+classes.GENERAL_M, 		-- Douglas
+classes.DRUID_F, 		-- Niime
+classes.TROOPER_M, 		-- Dayan
+classes.FALCO_KNIGHT, 	-- Juno
+classes.BISHOP_M, 		-- Yodel
+classes.SWORDMASTER_M 	-- Karel
 }
 PROMOTIONS[6] = {
-classes.M.MASTER_LORD, 		-- Roy
-classes.M.PALADIN, 			-- Marcus
-classes.M.PALADIN, 			-- Allen
-classes.M.PALADIN, 			-- Lance
-classes.M.SNIPER, 			-- Wolt
-classes.M.GENERAL, 			-- Bors
-classes.M.TRANSPORTER, 		-- Merlinus
-classes.F.BISHOP, 			-- Ellen
-classes.M.HERO, 			-- Dieck
-classes.M.WARRIOR, 			-- Wade
-classes.M.WARRIOR, 			-- Lott
-classes.F.FALCO_KNIGHT, 	-- Thany
-classes.M.THIEF, 			-- Chad
-classes.M.SAGE, 			-- Lugh
-classes.F.VALKYRIE, 		-- Clarine
-classes.M.SWORDMASTER, 		-- Rutger
-classes.M.BISHOP, 			-- Saul
-classes.F.SNIPER, 			-- Dorothy
-classes.F.RANGER, 			-- Sue
-classes.M.PALADIN, 			-- Zealot
-classes.M.PALADIN, 			-- Treck
-classes.M.PALADIN, 			-- Noah
-classes.M.THIEF, 			-- Astohl
-classes.F.SAGE, 			-- Lilina
-classes.F.GENERAL, 			-- Wendy
-classes.M.GENERAL, 			-- Barth
-classes.M.HERO, 			-- Oujay
-classes.F.SWORDMASTER, 		-- Fir
-classes.M.RANGER, 			-- Shin 
-classes.M.BERSERKER, 		-- Gonzales
-classes.M.BERSERKER, 		-- Geese
-classes.M.SNIPER, 			-- Klein
-classes.F.FALCO_KNIGHT, 	-- Tate
-classes.F.DANCER, 			-- Lalum
-classes.F.HERO, 			-- Echidna
-classes.M.BARD, 			-- Elphin
-classes.M.WARRIOR, 			-- Bartre
-classes.M.DRUID, 			-- Ray
-classes.F.THIEF, 			-- Cath
-classes.F.WYVERN_LORD, 		-- Miredy
-classes.M.PALADIN, 			-- Percival
-classes.F.VALKYRIE, 		-- Cecilia
-classes.F.DRUID, 			-- Sofiya
-classes.F.SNIPER, 			-- Igrene
-classes.M.BERSERKER, 		-- Garret
-classes.F.MANAKETE, 		-- Fa
-classes.M.SAGE, 			-- Hugh
-classes.M.WYVERN_LORD, 		-- Zeis
-classes.M.GENERAL, 			-- Douglas
-classes.F.DRUID, 			-- Niime
-classes.M.RANGER, 			-- Dayan
-classes.F.FALCO_KNIGHT, 	-- Juno
-classes.M.BISHOP, 			-- Yodel
-classes.M.SWORDMASTER 		-- Karel
+classes.MASTER_LORD, 	-- Roy
+classes.PALADIN_M, 		-- Marcus
+classes.PALADIN_M, 		-- Allen
+classes.PALADIN_M, 		-- Lance
+classes.SNIPER_M, 		-- Wolt
+classes.GENERAL_M, 		-- Bors
+classes.TRANSPORTER, 	-- Merlinus
+classes.BISHOP_F, 		-- Ellen
+classes.HERO_M, 		-- Dieck
+classes.WARRIOR, 		-- Wade
+classes.WARRIOR, 		-- Lott
+classes.FALCO_KNIGHT, 	-- Thany
+classes.THIEF, 			-- Chad
+classes.SAGE_M, 		-- Lugh
+classes.VALKYRIE, 		-- Clarine
+classes.SWORDMASTER_M, 	-- Rutger
+classes.BISHOP_M, 		-- Saul
+classes.SNIPER_F, 		-- Dorothy
+classes.TROOPER_F, 		-- Sue
+classes.PALADIN_M, 		-- Zealot
+classes.PALADIN_M, 		-- Treck
+classes.PALADIN_M, 		-- Noah
+classes.THIEF, 			-- Astohl
+classes.SAGE_F, 		-- Lilina
+classes.GENERAL_F, 		-- Wendy
+classes.GENERAL_M, 		-- Barth
+classes.HERO_M, 		-- Oujay
+classes.SWORDMASTER_F, 	-- Fir
+classes.TROOPER_M, 		-- Shin 
+classes.BERSERKER, 		-- Gonzales
+classes.BERSERKER, 		-- Geese
+classes.SNIPER_M, 		-- Klein
+classes.FALCO_KNIGHT, 	-- Tate
+classes.DANCER, 		-- Lalum
+classes.HERO_F, 		-- Echidna
+classes.BARD, 			-- Elphin
+classes.WARRIOR, 		-- Bartre
+classes.DRUID_M, 		-- Ray
+classes.THIEF, 			-- Cath
+classes.WYVERN_LORD_F, 	-- Miredy
+classes.PALADIN_M, 		-- Percival
+classes.VALKYRIE, 		-- Cecilia
+classes.DRUID_F, 		-- Sofiya
+classes.SNIPER_F, 		-- Igrene
+classes.BERSERKER, 		-- Garret
+classes.MANAKETE, 		-- Fa
+classes.SAGE_M, 		-- Hugh
+classes.WYVERN_LORD_M, 	-- Zeis
+classes.GENERAL_M, 		-- Douglas
+classes.DRUID_F, 		-- Niime
+classes.TROOPER_M, 		-- Dayan
+classes.FALCO_KNIGHT, 	-- Juno
+classes.BISHOP_M, 		-- Yodel
+classes.SWORDMASTER_M 	-- Karel
 }
 
 
@@ -368,94 +368,94 @@ BASE_STATS[7] = {
 {40, 30, 24, 20, 20, 28, 25, 20}, -- Athos
 }
 CLASSES[7] = {
-classes.M.LORD,			-- Eliwood
-classes.M.CAVALIER,		-- Lowen
-classes.M.PALADIN,		-- Marcus
-classes.F.ARCHER,		-- Rebecca
-classes.M.FIGHTER,		-- Dorcas
-classes.M.FIGHTER,		-- Bartre
-classes.M.LORD,			-- Hector
-classes.M.ARMOR_KNIGHT,	-- Oswin
-classes.F.CLERIC,		-- Serra
-classes.M.THIEF,		-- Matthew
-classes.M.MYRMIDON,		-- Guy
-classes.M.TRANSPORTER,	-- Merlinus
-classes.M.MAGE,			-- Erk
-classes.F.TROUBADOUR,	-- Priscilla
-classes.F.LORD,			-- Lyn
-classes.M.ARCHER,		-- Wil
-classes.M.CAVALIER,		-- Kent
-classes.M.CAVALIER,		-- Sain
-classes.F.PEGASUS_KNIGHT, -- Florina
-classes.M.MERCENARY,	-- Raven
-classes.M.MONK,			-- Lucius
-classes.M.SHAMAN,		-- Canas
-classes.M.PIRATE,		-- Dart
-classes.F.PEGASUS_KNIGHT, -- Fiora
-classes.M.THIEF,		-- Legault
-classes.F.DANCER,		-- Ninian/Nils
-classes.F.PALADIN,		-- Isadora
-classes.M.WYVERN_RIDER,	-- Heath
-classes.M.NOMAD,		-- Rath
-classes.M.BERSERKER,	-- Hawkeye
-classes.M.WARRIOR,		-- Geitz
-classes.M.GENERAL,		-- Wallace
-classes.F.PEGASUS_KNIGHT, -- Farina
-classes.M.SAGE,			-- Pent
-classes.F.SNIPER,		-- Louise
-classes.M.SWORDMASTER,	-- Karel
-classes.M.HERO,			-- Harken
-classes.F.MAGE,			-- Nino
-classes.M.ASSASSIN,		-- Jaffar
-classes.F.WYVERN_LORD,	-- Vaida
-classes.F.SWORDMASTER,	-- Karla
-classes.M.BISHOP,		-- Renault
-classes.M.ARCHSAGE		-- Athos
+classes.LORD,			-- Eliwood
+classes.CAVALIER,		-- Lowen
+classes.PALADIN_M,		-- Marcus
+classes.ARCHER,			-- Rebecca
+classes.FIGHTER,		-- Dorcas
+classes.FIGHTER,		-- Bartre
+classes.LORD,			-- Hector
+classes.ARMOR_KNIGHT,	-- Oswin
+classes.CLERIC,			-- Serra
+classes.THIEF,			-- Matthew
+classes.MYRMIDON,		-- Guy
+classes.TRANSPORTER,	-- Merlinus
+classes.MAGE,			-- Erk
+classes.TROUBADOUR,		-- Priscilla
+classes.LORD,			-- Lyn
+classes.ARCHER,			-- Wil
+classes.CAVALIER,		-- Kent
+classes.CAVALIER,		-- Sain
+classes.PEGASUS_KNIGHT, -- Florina
+classes.MERCENARY,		-- Raven
+classes.MONK,			-- Lucius
+classes.SHAMAN,			-- Canas
+classes.PIRATE,			-- Dart
+classes.PEGASUS_KNIGHT, -- Fiora
+classes.THIEF,			-- Legault
+classes.DANCER,			-- Ninian/Nils
+classes.PALADIN_F,		-- Isadora
+classes.WYVERN_RIDER,	-- Heath
+classes.NOMAD,			-- Rath
+classes.BERSERKER,		-- Hawkeye
+classes.WARRIOR,		-- Geitz
+classes.GENERAL_M,		-- Wallace
+classes.PEGASUS_KNIGHT, -- Farina
+classes.SAGE_M,			-- Pent
+classes.SNIPER_F,		-- Louise
+classes.SWORDMASTER_M,	-- Karel
+classes.HERO_M,			-- Harken
+classes.MAGE,			-- Nino
+classes.ASSASSIN_M,		-- Jaffar
+classes.WYVERN_LORD_F,	-- Vaida
+classes.SWORDMASTER_F,	-- Karla
+classes.BISHOP_M,		-- Renault
+classes.ARCHSAGE		-- Athos
 }
 PROMOTIONS[7] = {
-classes.M.KNIGHT_LORD,	-- Eliwood
-classes.M.PALADIN,		-- Lowen
-classes.M.PALADIN,		-- Marcus
-classes.F.SNIPER,		-- Rebecca
-classes.M.WARRIOR,		-- Dorcas
-classes.M.WARRIOR,		-- Bartre
-classes.M.GREAT_LORD7,	-- Hector
-classes.M.GENERAL,		-- Oswin
-classes.F.BISHOP,		-- Serra
-classes.M.ASSASSIN,		-- Matthew
-classes.M.SWORDMASTER,	-- Guy
-classes.M.TRANSPORTER,	-- Merlinus
-classes.M.SAGE,			-- Erk
-classes.F.VALKYRIE,		-- Priscilla
-classes.F.BLADE_LORD,	-- Lyn
-classes.M.SNIPER,		-- Wil
-classes.M.PALADIN,		-- Kent
-classes.M.PALADIN,		-- Sain
-classes.F.FALCO_KNIGHT, -- Florina
-classes.M.HERO,			-- Raven
-classes.M.BISHOP,		-- Lucius
-classes.M.DRUID,		-- Canas
-classes.M.BERSERKER,	-- Dart
-classes.F.FALCO_KNIGHT, -- Fiora
-classes.M.ASSASSIN,		-- Legault
-classes.F.DANCER,		-- Ninian/Nils
-classes.F.PALADIN,		-- Isadora
-classes.M.WYVERN_LORD,	-- Heath
-classes.M.RANGER,		-- Rath
-classes.M.BERSERKER,	-- Hawkeye
-classes.M.WARRIOR,		-- Geitz
-classes.M.GENERAL,		-- Wallace
-classes.F.FALCO_KNIGHT, -- Farina
-classes.M.SAGE,			-- Pent
-classes.F.SNIPER,		-- Louise
-classes.M.SWORDMASTER,	-- Karel
-classes.M.HERO,			-- Harken
-classes.F.SAGE,			-- Nino
-classes.M.ASSASSIN,		-- Jaffar
-classes.F.WYVERN_LORD,	-- Vaida
-classes.F.SWORDMASTER,	-- Karla
-classes.M.BISHOP,		-- Renault
-classes.M.ARCHSAGE		-- Athos
+classes.KNIGHT_LORD,	-- Eliwood
+classes.PALADIN_M,		-- Lowen
+classes.PALADIN_M,		-- Marcus
+classes.SNIPER_F,		-- Rebecca
+classes.WARRIOR,		-- Dorcas
+classes.WARRIOR,		-- Bartre
+classes.GREAT_LORD_7,	-- Hector
+classes.GENERAL_M,		-- Oswin
+classes.BISHOP_F,		-- Serra
+classes.ASSASSIN_M,		-- Matthew
+classes.SWORDMASTER_M,	-- Guy
+classes.TRANSPORTER,	-- Merlinus
+classes.SAGE_M,			-- Erk
+classes.VALKYRIE,		-- Priscilla
+classes.BLADE_LORD,		-- Lyn
+classes.SNIPER_M,		-- Wil
+classes.PALADIN_M,		-- Kent
+classes.PALADIN_M,		-- Sain
+classes.FALCO_KNIGHT, 	-- Florina
+classes.HERO_M,			-- Raven
+classes.BISHOP_M,		-- Lucius
+classes.DRUID_M,		-- Canas
+classes.BERSERKER,		-- Dart
+classes.FALCO_KNIGHT, 	-- Fiora
+classes.ASSASSIN_M,		-- Legault
+classes.DANCER,			-- Ninian/Nils
+classes.PALADIN_F,		-- Isadora
+classes.WYVERN_LORD_M,	-- Heath
+classes.TROOPER_M,		-- Rath
+classes.BERSERKER,		-- Hawkeye
+classes.WARRIOR,		-- Geitz
+classes.GENERAL_M,		-- Wallace
+classes.FALCO_KNIGHT, 	-- Farina
+classes.SAGE_M,			-- Pent
+classes.SNIPER_F,		-- Louise
+classes.SWORDMASTER_M,	-- Karel
+classes.HERO_M,			-- Harken
+classes.SAGE_F,			-- Nino
+classes.ASSASSIN_M,		-- Jaffar
+classes.WYVERN_LORD_F,	-- Vaida
+classes.SWORDMASTER_F,	-- Karla
+classes.BISHOP_M,		-- Renault
+classes.ARCHSAGE		-- Athos
 }
 
 
@@ -560,94 +560,94 @@ BASE_STATS[8] = {
 {44, 22, 13, 11, 17, 19, 04, 14}, --Lyon
 }
 CLASSES[8] = {
-classes.F.LORD,				--Eirika
-classes.M.PALADIN,			--Seth
-classes.M.CAVALIER,			--Franz
-classes.M.ARMOR_KNIGHT,		--Gilliam
-classes.M.CLERIC,			--Moulder
-classes.F.PEGASUS_KNIGHT,	--Vanessa
-classes.M.JOURNEYMAN,		--Ross
-classes.M.FIGHTER,			--Garcia
-classes.F.ARCHER,			--Neimi
-classes.M.THIEF,			--Colm
-classes.M.MONK,				--Artur
-classes.F.MAGE,				--Lute
-classes.F.CLERIC,			--Natasha
-classes.M.MYRMIDON,			--Joshua
-classes.M.LORD,				--Ephraim
-classes.M.CAVALIER,			--Forde
-classes.M.CAVALIER,			--Kyle
-classes.F.PEGASUS_KNIGHT,	--Tana
-classes.F.RECRUIT,			--Amelia
-classes.M.SNIPER,			--Innes
-classes.M.MERCENARY,		--Gerik
-classes.F.DANCER,			--Tethys
-classes.F.MYRMIDON,			--Marisa
-classes.F.TROUBADOUR,		--L’Arachel
-classes.M.BERSERKER,		--Dozla
-classes.M.SAGE,				--Saleh
-classes.M.PUPIL,			--Ewan
-classes.M.WYVERN_RIDER,		--Cormag
-classes.M.ROGUE,			--Rennac
-classes.M.GREAT_KNIGHT,		--Duessel 
-classes.M.SHAMAN,			--Knoll
-classes.F.MANAKETE,			--Myrrh
-classes.F.FALCO_KNIGHT,		--Syrene
-classes.M.HERO,				--Caellach
-classes.M.PALADIN,			--Orson
-classes.M.BISHOP,			--Riev
-classes.F.SWORDMASTER,		--Ismaire
-classes.F.MAGE_KNIGHT,		--Selena
-classes.M.WYVERN_LORD,		--Glen
-classes.M.RANGER,			--Hayden
-classes.M.WYVERN_KNIGHT,	--Valter
-classes.M.GENERAL,			--Fado
-classes.M.NECROMANCER		--Lyon
+classes.LORD,				--Eirika
+classes.PALADIN_M,			--Seth
+classes.CAVALIER,			--Franz
+classes.ARMOR_KNIGHT,		--Gilliam
+classes.PRIEST,				--Moulder
+classes.PEGASUS_KNIGHT,		--Vanessa
+classes.JOURNEYMAN,			--Ross
+classes.FIGHTER,			--Garcia
+classes.ARCHER,				--Neimi
+classes.THIEF,				--Colm
+classes.MONK,				--Artur
+classes.MAGE,				--Lute
+classes.CLERIC,				--Natasha
+classes.MYRMIDON,			--Joshua
+classes.LORD,				--Ephraim
+classes.CAVALIER,			--Forde
+classes.CAVALIER,			--Kyle
+classes.PEGASUS_KNIGHT,		--Tana
+classes.RECRUIT,			--Amelia
+classes.SNIPER_M,			--Innes
+classes.MERCENARY,			--Gerik
+classes.DANCER,				--Tethys
+classes.MYRMIDON,			--Marisa
+classes.TROUBADOUR,			--L’Arachel
+classes.BERSERKER,			--Dozla
+classes.SAGE_M,				--Saleh
+classes.PUPIL,				--Ewan
+classes.WYVERN_RIDER,		--Cormag
+classes.ROGUE,				--Rennac
+classes.GREAT_KNIGHT_M,		--Duessel 
+classes.SHAMAN,				--Knoll
+classes.MANAKETE,			--Myrrh
+classes.FALCO_KNIGHT,		--Syrene
+classes.HERO_M,				--Caellach
+classes.PALADIN_M,			--Orson
+classes.BISHOP_M,			--Riev
+classes.SWORDMASTER_F,		--Ismaire
+classes.MAGE_KNIGHT_F,		--Selena
+classes.WYVERN_LORD_M,		--Glen
+classes.TROOPER_M,			--Hayden
+classes.WYVERN_KNIGHT_M,	--Valter
+classes.GENERAL_M,			--Fado
+classes.NECROMANCER			--Lyon
 }
 PROMOTIONS[8] = {
-classes.F.GREAT_LORD8,		--Eirika
-classes.M.PALADIN,			--Seth
-classes.M.PALADIN,			--Franz
-classes.M.GREAT_KNIGHT,		--Gilliam
-classes.M.BISHOP,			--Moulder SAGE
-classes.F.WYVERN_KNIGHT,	--Vanessa
-classes.M.BERSERKER,		--Ross
-classes.M.WARRIOR,			--Garcia HERO
-classes.F.RANGER, 			--Neimi
-classes.M.ASSASSIN,			--Colm
-classes.M.BISHOP, 			--Artur SAGE
-classes.F.MAGE_KNIGHT, 		--Lute
-classes.F.VALKYRIE,			--Natasha
-classes.M.SWORDMASTER,		--Joshua
-classes.M.GREAT_LORD8,		--Ephraim
-classes.M.PALADIN,			--Forde
-classes.M.PALADIN,			--Kyle
-classes.F.WYVERN_KNIGHT, 	--Tana
-classes.F.PALADIN,			--Amelia
-classes.M.SNIPER,			--Innes
-classes.M.RANGER,			--Gerik HERO
-classes.F.DANCER,			--Tethys
-classes.F.SWORDMASTER,		--Marisa
-classes.F.MAGE_KNIGHT,		--L’Arachel
-classes.M.BERSERKER,		--Dozla
-classes.M.SAGE,				--Saleh
-classes.M.MAGE_KNIGHT,		--Ewan
-classes.M.WYVERN_KNIGHT,	--Cormag
-classes.M.ROGUE,			--Rennac
-classes.M.GREAT_KNIGHT,		--Duessel 
-classes.M.SUMMONER,			--Knoll
-classes.F.MANAKETE,			--Myrrh
-classes.F.FALCO_KNIGHT,		--Syrene
-classes.M.HERO,				--Caellach
-classes.M.PALADIN,			--Orson
-classes.M.BISHOP,			--Riev
-classes.F.SWORDMASTER,		--Ismaire
-classes.F.MAGE_KNIGHT,		--Selena
-classes.M.WYVERN_LORD,		--Glen
-classes.M.RANGER,			--Hayden
-classes.M.WYVERN_KNIGHT,	--Valter
-classes.M.GENERAL,			--Fado
-classes.M.NECROMANCER		--Lyon
+classes.GREAT_LORD_8_F,		--Eirika
+classes.PALADIN_M,			--Seth
+classes.PALADIN_M,			--Franz
+classes.GREAT_KNIGHT_M,		--Gilliam
+classes.BISHOP_M,			--Moulder SAGE
+classes.WYVERN_KNIGHT_F,	--Vanessa
+classes.BERSERKER,			--Ross
+classes.WARRIOR,			--Garcia HERO
+classes.TROOPER_F, 			--Neimi
+classes.ASSASSIN_M,			--Colm
+classes.BISHOP_M, 			--Artur SAGE
+classes.MAGE_KNIGHT_F, 		--Lute
+classes.VALKYRIE,			--Natasha
+classes.SWORDMASTER_M,		--Joshua
+classes.GREAT_LORD_8_M,		--Ephraim
+classes.PALADIN_M,			--Forde
+classes.PALADIN_M,			--Kyle
+classes.WYVERN_KNIGHT_F, 	--Tana
+classes.PALADIN_F,			--Amelia
+classes.SNIPER_M,			--Innes
+classes.TROOPER_M,			--Gerik HERO
+classes.DANCER,				--Tethys
+classes.SWORDMASTER_F,		--Marisa
+classes.MAGE_KNIGHT_F,		--L’Arachel
+classes.BERSERKER,			--Dozla
+classes.SAGE_M,				--Saleh
+classes.MAGE_KNIGHT_M,		--Ewan
+classes.WYVERN_KNIGHT_M,	--Cormag
+classes.ROGUE,				--Rennac
+classes.GREAT_KNIGHT_M,		--Duessel 
+classes.SUMMONER,			--Knoll
+classes.MANAKETE,			--Myrrh
+classes.FALCO_KNIGHT,		--Syrene
+classes.HERO_M,				--Caellach
+classes.PALADIN_M,			--Orson
+classes.BISHOP_M,			--Riev
+classes.SWORDMASTER_F,		--Ismaire
+classes.MAGE_KNIGHT_F,		--Selena
+classes.WYVERN_LORD_M,		--Glen
+classes.TROOPER_M,			--Hayden
+classes.WYVERN_KNIGHT_M,	--Valter
+classes.GENERAL_M,			--Fado
+classes.NECROMANCER			--Lyon
 }
 
 
@@ -882,11 +882,9 @@ local function cumulativeBinDistrib(numSuccesses, numTrials, p)
 	if numSuccesses >= numTrials then return 1 end
 
 	local ret = 0
-	
 	for i = 0, numSuccesses do
 		ret = ret + binomialDistrib(i, numTrials, p)
-	end
-	
+	end	
 	return ret
 end
 
@@ -894,7 +892,7 @@ end
 local function dynamicStatWeights(unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	
-	if P.class(unit_i) == classes.F.DANCER or P.class(unit_i) == classes.M.BARD then
+	if P.class(unit_i) == classes.DANCER or P.class(unit_i) == classes.BARD then
 		return P.growthWeights(unit_i)
 	end
 	
@@ -902,41 +900,41 @@ local function dynamicStatWeights(unit_i, charStats)
 	local ret = {}
 	
 	local levelsTil20 = 20 - charStats[P.LEVEL_I]
+	if levelsTil20 <= 0 then
+		return {0, 0, 0, 0, 0, 0, 0}
+	end
+	
 	for stat_i = 1, 7 do
-		if levelsTil20 <= 0 then
-			ret[stat_i] = 0
-		else
-			local procsTilStatCap = classes.CAPS[P.class(unit_i)][stat_i] - charStats[stat_i]
+		local procsTilStatCap = classes.CAPS[P.class(unit_i)][stat_i] - charStats[stat_i]
 			
-			-- multiply by 1 - P(reaching/exceeding cap even if not gaining stat this level)
-			-- if no chance to reach cap if not leveling, full weight
-			-- if 100% chance (ie at cap), no weight
+		-- multiply by 1 - P(reaching/exceeding cap even if not gaining stat this level)
+		-- if no chance to reach cap if not leveling, full weight
+		-- if 100% chance (ie at cap), no weight
+		
+		-- 1 - P(reaching/exceeding cap | not gaining stat this level) =
+		-- 1 - (1 - P(less than cap | gained levelsTil20 - 1 levels)) =
+		-- P(less than cap | gained levelsTil20 - 1 levels)
+		
+		local probCapUnreachableIfNotProcing = 
+			cumulativeBinDistrib(procsTilStatCap-1, levelsTil20-1, P.growths(unit_i)[stat_i]/100)
+		
+		-- if more likely to hit promoted class cap than unpromoted, use that probability
+		if P.canPromote(unit_i) then
+			local procsTilStatCap_P = classes.CAPS[P.promotion(unit_i)][stat_i] 
+				- charStats[stat_i] - classes.PROMO_GAINS[P.promotion(unit_i)][stat_i]
 			
-			-- 1 - P(reaching/exceeding cap | not gaining stat this level) =
-			-- 1 - (1 - P(less than cap | gained levelsTil20 - 1 levels)) =
-			-- P(less than cap | gained levelsTil20 - 1 levels)
+			-- may need levels to even reach promotion
+			local levelsTil20_P = 19 + math.max(10 - charStats[P.LEVEL_I], 0)
 			
-			local probCapUnreachableIfNotProcing = 
-				cumulativeBinDistrib(procsTilStatCap-1, levelsTil20-1, P.growths(unit_i)[stat_i]/100)
-			
-			-- if more likely to hit promoted class cap than unpromoted, use that probability
-			if P.canPromote(unit_i) then
-				local procsTilStatCap_P = classes.CAPS[P.promotion(unit_i)][stat_i] 
-					- charStats[stat_i] - classes.PROMO_GAINS[P.promotion(unit_i)][stat_i]
+			probCapUnreachableIfNotProcing_P = 
+				cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, P.growths(unit_i)[stat_i]/100)
 				
-				-- may need levels to even reach promotion
-				local levelsTil20_P = 19 + math.max(10 - charStats[P.LEVEL_I], 0)
-				
-				probCapUnreachableIfNotProcing_P = 
-					cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, P.growths(unit_i)[stat_i]/100)
-					
-				if probCapUnreachableIfNotProcing > probCapUnreachableIfNotProcing_P then
-					probCapUnreachableIfNotProcing = probCapUnreachableIfNotProcing_P
-				end
+			if probCapUnreachableIfNotProcing > probCapUnreachableIfNotProcing_P then
+				probCapUnreachableIfNotProcing = probCapUnreachableIfNotProcing_P
 			end
-			
-			ret[stat_i] = P.growthWeights(unit_i)[stat_i]*probCapUnreachableIfNotProcing
 		end
+		
+		ret[stat_i] = P.growthWeights(unit_i)[stat_i]*probCapUnreachableIfNotProcing
 	end
 	
 	return ret

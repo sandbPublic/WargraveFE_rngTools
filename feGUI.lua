@@ -2,7 +2,7 @@ local P = {}
 feGUI = P
 
 P.rects = {}
-P.RNBE_I 			= 1
+P.rnEvent_i 			= 1
 P.RN_STREAM_I		= 2 
 P.BATTLE_PARAMS_I 	= 3
 P.STAT_DATA_I		= 4
@@ -19,7 +19,7 @@ local RECT_COLORS = {
 	"red"
 }
 local RECT_STRINGS = {
-	"RNBE",
+	"rnEvent",
 	"rn stream",
 	"battle parameters", 
 	"stat data", 
@@ -28,7 +28,7 @@ local RECT_STRINGS = {
 	"burn notifier"
 }
 
-P.selRect_i = P.RNBE_I
+P.selRect_i = P.rnEvent_i
 function P.advanceDisplay()
 	P.selRect_i = rotInc(P.selRect_i, #P.rects)
 	print("selecting display: " .. RECT_STRINGS[P.selRect_i])
@@ -36,10 +36,10 @@ end
 
 P.rectShiftMode = false
 
-function P.canAlterRNBE()
+function P.canAlter_rnEvent()
 	return (not P.rectShiftMode) 
-		and (P.selRect_i == P.RNBE_I) 
-		and (P.rects[P.RNBE_I].opacity > 0)
+		and (P.selRect_i == P.rnEvent_i) 
+		and (P.rects[P.rnEvent_i].opacity > 0)
 end
 
 local CHAR_PIXELS = 4
@@ -67,9 +67,6 @@ function rectObj:linePixels()
 	return 10
 end
 
--- for the rnStream rect's colorized rns
-local rnsPerLine = 15
-local rnsLines = 7
 function rectObj:width()
 	local width = 0
 	-- set to max line length
@@ -78,8 +75,8 @@ function rectObj:width()
 		
 		-- add colorized string length
 		-- don't need to do this for rnStream because it's padded with spaces
-		if (self.ID == P.RNBE_I) and (line_i % 2 == 1) then
-			stringLen = stringLen + rnbe.SPrnbes()[(line_i+1)/2].length * 3
+		if (self.ID == P.rnEvent_i) and (line_i % 2 == 1) then
+			stringLen = stringLen + rnEvent.SPrnEvents()[(line_i+1)/2].length * 3
 		end
 		
 		if stringLen > width then
@@ -243,6 +240,10 @@ function rectObj:drawBox(line_i, char_i, length, color)
 	gui.box(x1, y1, x2, y2, 0, color)
 end
 
+-- for the rnStream rect's colorized rns
+local rnsPerLine = 15
+local rnsLines = 7
+
 function rectObj:draw()
 	if self.opacity <= 0 then return end
 	
@@ -254,11 +255,11 @@ function rectObj:draw()
 	end
 	
 	-- color highlighted RN strings, draw boxes
-	if self.ID == P.RNBE_I then
-		for RNBE_i = 1, rnbe.SPrnbes().count do
-			self:drawColorizedRNString(2*RNBE_i-1, 6, -- 5 digits, space
-				rnbe.SPrnbes()[RNBE_i].startRN_i, rnbe.SPrnbes()[RNBE_i].length)
-			rnbe.SPrnbes()[RNBE_i]:drawMyBoxes(self, RNBE_i)
+	if self.ID == P.rnEvent_i then
+		for rnEvent_i = 1, rnEvent.SPrnEvents().count do
+			self:drawColorizedRNString(2*rnEvent_i-1, 6, -- 5 digits, space
+				rnEvent.SPrnEvents()[rnEvent_i].startRN_i, rnEvent.SPrnEvents()[rnEvent_i].length)
+			rnEvent.SPrnEvents()[rnEvent_i]:drawMyBoxes(self, rnEvent_i)
 		end
 		
 	elseif self.ID == P.RN_STREAM_I then
@@ -305,7 +306,7 @@ function P.drawRects()
 		P.rects[P.COMPACT_BPS_I].strings = combat.currBattleParams:toCompactStrings()
 	end
 	
-	P.rects[P.RNBE_I].strings = rnbe.toStrings()
+	P.rects[P.rnEvent_i].strings = rnEvent.toStrings()
 
 	for rect_i = 1, #P.rects do
 		P.rects[rect_i]:draw()

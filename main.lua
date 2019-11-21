@@ -11,7 +11,7 @@ require("feRandomNumbers")
 require("feClass")
 require("feUnitData")
 require("feCombat")
-require("feRNBE")
+require("fe_rnEvent")
 require("feGUI")
 
 local function printStringArray(array, size)
@@ -110,7 +110,7 @@ while true do
 	local reprintLvlUps = false
 	
 	if rns.rng1:update() then
-		rnbe.updateRNBEs(1)
+		rnEvent.update_rnEvents(1)
 	end
 	
 	if update2ndary then
@@ -129,37 +129,37 @@ while true do
 		if gameCtrl.thisFrame.R 	then feGUI.selRect():shift(0, 0,  0.04) end
 	end
 	
-	if feGUI.canAlterRNBE() then -- alter burns, selected, swap, toggle swapping
+	if feGUI.canAlter_rnEvent() then -- alter burns, selected, swap, toggle swapping
 		-- change burns
 		if pressed("left", gameCtrl) then
-			rnbe.decBurns()
+			rnEvent.decBurns()
 		end		
 		if pressed("right", gameCtrl) then
-			rnbe.incBurns()
+			rnEvent.incBurns()
 		end
 		
 		if pressed("L", gameCtrl) then
-			rnbe.changeEnemyID(-1)
+			rnEvent.changeEnemyID(-1)
 		end		
 		if pressed("R", gameCtrl) then
-			rnbe.changeEnemyID(1)
+			rnEvent.changeEnemyID(1)
 		end
 		
 		-- change selection
 		if pressed("up", gameCtrl) then
-			rnbe.decSel()
+			rnEvent.decSel()
 		end
 		if pressed("down", gameCtrl) then
-			rnbe.incSel()
+			rnEvent.incSel()
 		end
 		
 		-- swap with next
 		if pressed("select", gameCtrl) then
-			rnbe.swap() -- updates self
+			rnEvent.swap() -- updates self
 		end
 		
 		if pressed("start", gameCtrl) then
-			rnbe.toggleDependency()
+			rnEvent.toggleDependency()
 		end
 	end
 	
@@ -169,27 +169,27 @@ while true do
 	end
 	
 	if primaryFunctions then
-		if pressed(1) then rnbe.removeLastObj() end	
+		if pressed(1) then rnEvent.removeLastObj() end	
 		
 		if pressed(2) then
 			unitData.saveStats()
-			rnbe.addObj()
-			rnbe.get().batParams:set()
-			rnbe.updateRNBEs()
+			rnEvent.addObj()
+			rnEvent.get().batParams:set()
+			rnEvent.update_rnEvents()
 			
-			printStringArray(rnbe.get().batParams:toStrings(), 3)
+			printStringArray(rnEvent.get().batParams:toStrings(), 3)
 		end
 		
-		if pressed(3) then rnbe.toggleCombat() end
+		if pressed(3) then rnEvent.toggleCombat() end
 		
 		if pressed(4) then
-			rnbe.toggleBatParam(combat.combatObj.togglePromo)
+			rnEvent.toggleBatParam(combat.combatObj.togglePromo)
 			
-			printStringArray(rnbe.get().batParams:toStrings(), 3)
+			printStringArray(rnEvent.get().batParams:toStrings(), 3)
 		end	
 		
 		if pressed(5) then
-			rnbe.toggleBatParam(combat.combatObj.toggleBonusExp)
+			rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp)
 		end
 		
 		if pressed(7) then -- advance to next deployed
@@ -209,11 +209,11 @@ while true do
 		if pressed(9) then feGUI.advanceDisplay() end
 		
 		if pressed(10) then 
-			rnbe.suggestedPermutation("fast")
+			rnEvent.suggestedPermutation("fast")
 		end
 		
 		if pressed(11) then
-			rnbe.toggleBatParam(combat.combatObj.cycleEnemyClass)
+			rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass)
 		end
 		
 		if pressed(12) then -- save battle params & stats
@@ -222,21 +222,21 @@ while true do
 			
 			reprintStats = true
 			unitData.saveStats()
-			rnbe.updateStats()
+			rnEvent.updateStats()
 		end
 		
 		if pressed(13) then unitData.setAfas() end
 	else
-		if pressed(1) then rnbe.undoDelete() end
+		if pressed(1) then rnEvent.undoDelete() end
 		if pressed(2) then
 			if gameCtrl.thisFrame.B then
-				rnbe.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_ENEMY)
+				rnEvent.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_ENEMY)
 			else
-				rnbe.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_PLAYER)
+				rnEvent.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_PLAYER)
 			end
 		end
-		if pressed(3) then rnbe.toggleLevel() end
-		if pressed(4) then rnbe.toggleDig() end
+		if pressed(3) then rnEvent.toggleLevel() end
+		if pressed(4) then rnEvent.toggleDig() end
 		
 		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
 			local currFogRange = memory.readbyte(fogAddr[version])
@@ -254,10 +254,10 @@ while true do
 		
 		if keybCtrl.thisFrame[hotkeys[7].key] then
 			if pressed("L", gameCtrl) then
-				rnbe.adjustCombatWeight(-0.5)
+				rnEvent.adjustCombatWeight(-0.5)
 			end		
 			if pressed("R", gameCtrl) then
-				rnbe.adjustCombatWeight(0.5)
+				rnEvent.adjustCombatWeight(0.5)
 			end
 		end
 		
@@ -277,17 +277,17 @@ while true do
 			end
 		end	
 		
-		if pressed(9) then rnbe.toggleBurnAmount() end
-		if pressed(10) then rnbe.searchFutureOutcomes() end
+		if pressed(9) then rnEvent.toggleBurnAmount() end
+		if pressed(10) then rnEvent.searchFutureOutcomes() end
 		
 		if pressed(11) then
 			update2ndary = not update2ndary
 			print("update2ndary = " .. tostring(update2ndary))
 		end
 		
-		if pressed(12) then rnbe.diagnostic() end
+		if pressed(12) then rnEvent.diagnostic() end
 		
-		if pressed(13) then rnbe.togglePhase() end
+		if pressed(13) then rnEvent.togglePhase() end
 	end
 	
 	if reprintRNs then

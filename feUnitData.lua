@@ -799,7 +799,7 @@ function P.nextDeployed()
 end
 
 local savedStats = {0, 0, 0, 0, 0, 0, 0, 0, 0} -- last two are level, exp
-function P.getSavedStats() -- needed for RNBE construction
+function P.getSavedStats() -- needed for rnEvent construction
 	return savedStats
 end
 

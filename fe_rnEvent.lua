@@ -1,9 +1,12 @@
+-- consists of combat, level-up, and/or dig preceded by burns
+-- rnEvents are registered and manipulated (+/-burns and swapping) to seek outcomes
+
 require("feUnitData")
 require("feCombat")
 require("feGUI")
 
 local P = {}
-rnEvent = P -- random number block event
+rnEvent = P
 
 local PPrnEvents = {} -- Player Phase rnEvents
 local EPrnEvents = {} -- Enemy Phase rnEvents
@@ -61,8 +64,7 @@ local LEVEL_UP_COLORS = {
 	0xFF00FFFF  -- hue 300 magenta
 }
 
--- consists of combat, level-up, and/or dig preceded by burns
--- registered and manipulated (+/-burns and swapping) to seek outcomes
+
 local rnEventObj = {}
 
 function rnEventObj:setStats(stats)

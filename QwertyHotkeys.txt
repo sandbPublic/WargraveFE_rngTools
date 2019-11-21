@@ -1,15 +1,15 @@
 T
-delete last RNBE
-undo RNBE deletion
+delete last rnEvent
+undo rnEvent deletion
 Y
-register new RNBE
+register new rnEvent
 cycle weapon type (hold B for enemy)
 U
-toggle RNBE.combat
-toggle RNBE.lvlUp
+toggle rnEvent.combat
+toggle rnEvent.lvlUp
 I
 toggle enemy promo
-toggle RNBE dig
+toggle rnEvent dig
 O
 toggle bonus exp
 hold, L/R change fog
@@ -26,14 +26,14 @@ L
 next display mode
 toggle burn amount
 P
-suggest RNBE permutation
-search future outcomes of RNBE[1]
+suggest rnEvent permutation
+search future outcomes of rnEvent[1]
 B
 cycle enemy class
 toggle 2ndary rng updates
 N
 save stats
-print rnbe diagnostic
+print rnEvent diagnostic
 M
 change afa/metis
 toggle phase

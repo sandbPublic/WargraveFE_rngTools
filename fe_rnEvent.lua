@@ -8,50 +8,44 @@ require("feGUI")
 local P = {}
 rnEvent = P
 
-local PPrnEvents = {} -- Player Phase rnEvents
-local EPrnEvents = {} -- Enemy Phase rnEvents
+local playerEvents = {}
+local enemyEvents = {} -- Enemy Phase rnEvents
+local deletedEventsStack = {} -- recover deleted rnEvents (except dependencies) in order of deletion
 
--- deletions are merely decrementing this number, allowing for undoing deletion
-PPrnEvents.count = 0
-EPrnEvents.count = 0
-P.playerPhase = true
+P.isPlayerPhase = true
 
 local perms = {}
 local permsNeedUpdate = false
 
-local function getLast(list)
-	return list[list.count]
-end
-
 -- selected phase
 function P.SPrnEvents()
-	if P.playerPhase then return PPrnEvents end
-	return EPrnEvents
+	if P.isPlayerPhase then return playerEvents end
+	return enemyEvents
 end
 
 -- return one or the other phase
-function P.TPrnEvents(playerPhase)
-	if playerPhase then return PPrnEvents end
-	return EPrnEvents
+function P.TPrnEvents(isPlayerPhase)
+	if isPlayerPhase then return playerEvents end
+	return enemyEvents
 end
 
 local sel_rnEvent_i = 1
 local function limitSel_rnEvent_i()
-	if sel_rnEvent_i > P.SPrnEvents().count then sel_rnEvent_i = P.SPrnEvents().count end
+	if sel_rnEvent_i > #P.SPrnEvents() then sel_rnEvent_i = #P.SPrnEvents() end
 	if sel_rnEvent_i < 1 then sel_rnEvent_i = 1 end 
 end
 
 function P.togglePhase()
-	P.playerPhase = not P.playerPhase
+	P.isPlayerPhase = not P.isPlayerPhase
 	limitSel_rnEvent_i()
 	
-	if P.playerPhase then
+	if P.isPlayerPhase then
 		feGUI.rects[feGUI.rnEvent_i].color = "blue"
 	else
 		feGUI.rects[feGUI.rnEvent_i].color = "red"
 	end
 	
-	print("playerPhase = " .. tostring(P.playerPhase))
+	print("isPlayerPhase = " .. tostring(P.isPlayerPhase))
 end
 
 local LEVEL_UP_COLORS = {
@@ -85,9 +79,9 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	setmetatable(o, self)
 	self.__index = self
 	 
-	o.ID = P.SPrnEvents().count -- order in which rnEvents were registered
+	o.ID = #P.SPrnEvents()+1 -- order in which rnEvents were registered
 	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
-	o.isPP = P.playerPhase
+	o.isPP = P.isPlayerPhase
 	
 	o.unit_i = sel_Unit_i	
 	o:setStats(stats) -- todo do we get enemy stats on EP?
@@ -125,9 +119,9 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 end
 
 function P.diagnostic()
-	if P.SPrnEvents().count <= 0 then return end
-	
-	P.get():diagnostic()
+	if #P.SPrnEvents() > 0 then
+		P.get():diagnostic()
+	end
 end
 
 function rnEventObj:diagnostic()
@@ -178,7 +172,7 @@ end
 function rnEventObj:clearCache()
 	self.cache = {}
 	self.cache.count = 0
-	self.cache.min_i = 9999
+	self.cache.min_i = 999999
 	self.cache.max_i = 0
 end
 
@@ -234,10 +228,10 @@ end
 
 function rnEventObj:setStart(rnEvent_i)
 	if rnEvent_i == 1 then 
-		if self.isPP or (PPrnEvents.count == 0) then
+		if self.isPP or (#playerEvents == 0) then
 			self.startRN_i = rns.rng1.pos
 		else
-			self.startRN_i = getLast(PPrnEvents).nextRN_i
+			self.startRN_i = playerEvents[#playerEvents].nextRN_i
 		end
 	else
 		self.startRN_i = P.TPrnEvents(self.isPP)[rnEvent_i-1].nextRN_i
@@ -264,9 +258,9 @@ function rnEventObj:setEnemyHP(rnEvent_i)
 		end
 		
 		if not self.isPP then
-			for prevCombat_i = PPrnEvents.count, 1, -1 do
-				if PPrnEvents[prevCombat_i].enemyID == self.enemyID then
-					self.enemyHP = PPrnEvents[prevCombat_i].enemyHPend
+			for prevCombat_i = #playerEvents, 1, -1 do
+				if playerEvents[prevCombat_i].enemyID == self.enemyID then
+					self.enemyHP = playerEvents[prevCombat_i].enemyHPend
 					return
 				end
 			end
@@ -329,19 +323,19 @@ function rnEventObj:update(rnEvent_i, fast)
 	end
 end
 
-function P.update_rnEvents(start_i, fast, playerPhase)
+function P.update_rnEvents(start_i, fast, isPlayerPhase)
 	start_i = start_i or sel_rnEvent_i
-	playerPhase = playerPhase or P.playerPhase
+	isPlayerPhase = isPlayerPhase or P.isPlayerPhase
 	
-	if playerPhase then
-		for rnEvent_i = start_i, PPrnEvents.count do
-			PPrnEvents[rnEvent_i]:update(rnEvent_i, fast)
+	if isPlayerPhase then
+		for rnEvent_i = start_i, #playerEvents do
+			playerEvents[rnEvent_i]:update(rnEvent_i, fast)
 		end
-		start_i = 1 -- start from beginning of EPrnEvents afterwards
+		start_i = 1 -- start from beginning of enemyEvents afterwards
 	end
 	
-	for rnEvent_i = start_i, EPrnEvents.count do
-		EPrnEvents[rnEvent_i]:update(rnEvent_i, fast)
+	for rnEvent_i = start_i, #enemyEvents do
+		enemyEvents[rnEvent_i]:update(rnEvent_i, fast)
 	end
 end
 
@@ -488,24 +482,24 @@ end
 -- quickly find how many burns needed to improve result of the first rnEvent
 -- for rn burning gameplay
 function P.searchFutureOutcomes()
-	if PPrnEvents.count < 1 then return end
+	if #playerEvents < 1 then return end
 	
-	PPrnEvents[1].burns = 0
+	playerEvents[1].burns = 0
 	local record
 	
 	local function newRecord()
-		record = PPrnEvents[1]:evaluation_fn()
-		print(string.format("%4d %3d %3d %s", rns.rng1.pos + PPrnEvents[1].burns, PPrnEvents[1].burns, record, PPrnEvents[1]:resultString()))
+		record = playerEvents[1]:evaluation_fn()
+		print(string.format("%4d %3d %3d %s", rns.rng1.pos + playerEvents[1].burns, playerEvents[1].burns, record, playerEvents[1]:resultString()))
 	end
 	
-	print("Searching for " .. PPrnEvents[1]:headerString())
+	print("Searching for " .. playerEvents[1]:headerString())
 	newRecord()
 	
 	local improveAttempts = 0
 	while improveAttempts < 1000 do
-		PPrnEvents[1].burns = PPrnEvents[1].burns + 1
-		PPrnEvents[1]:update()
-		if record < PPrnEvents[1]:evaluation_fn() then
+		playerEvents[1].burns = playerEvents[1].burns + 1
+		playerEvents[1]:update()
+		if record < playerEvents[1]:evaluation_fn() then
 			newRecord()
 			improveAttempts = 0
 		else 
@@ -513,8 +507,8 @@ function P.searchFutureOutcomes()
 		end
 	end
 	
-	PPrnEvents[1].burns = 0
-	PPrnEvents[1]:update()
+	playerEvents[1].burns = 0
+	playerEvents[1]:update()
 end
 
 function rnEventObj:drawMyBoxes(rect, rnEvent_i)		
@@ -550,43 +544,40 @@ function rnEventObj:drawMyBoxes(rect, rnEvent_i)
 	end
 end
 
-function P.addObj()
-	P.SPrnEvents().count = P.SPrnEvents().count+1
+function P.addEvent(event)
+	event = event or rnEventObj:new()
 
-	P.SPrnEvents()[P.SPrnEvents().count] = rnEventObj:new()
-	sel_rnEvent_i = P.SPrnEvents().count
+	table.insert(P.SPrnEvents(), event)
+	sel_rnEvent_i = #P.SPrnEvents()
 	permsNeedUpdate = true
 	P.update_rnEvents()
 end
 
 -- decrements length of selected phase 
 -- and adjusts IDs, including dependencies
-function P.removeLastObj()
-	if P.SPrnEvents().count > 0 then
-		local IDremoved = getLast(P.SPrnEvents()).ID		
-		for rnEvent_i = 1, P.SPrnEvents().count do
-			if P.SPrnEvents()[rnEvent_i].ID > IDremoved then
-				P.SPrnEvents()[rnEvent_i].ID = P.SPrnEvents()[rnEvent_i].ID - 1 -- dec own ID
-				for rnEvent_j = IDremoved, P.SPrnEvents().count do -- dec dependency table after IDremoved
-					P.SPrnEvents()[rnEvent_i].comesAfter[rnEvent_j] = P.SPrnEvents()[rnEvent_i].comesAfter[rnEvent_j+1]
+function P.deleteLastEvent()
+	if #P.SPrnEvents() > 0 then
+		local IDremoved = P.SPrnEvents()[#P.SPrnEvents()].ID		
+		for _, event in ipairs(P.SPrnEvents()) do
+			if event.ID > IDremoved then
+				event.ID = event.ID - 1 -- dec own ID
+				for rnEvent_j = IDremoved, #P.SPrnEvents() do -- dec dependency table after IDremoved
+					event.comesAfter[rnEvent_j] = event.comesAfter[rnEvent_j+1]
 				end
 			end
 		end
 		
-		P.SPrnEvents().count = P.SPrnEvents().count - 1
+		table.insert(deletedEventsStack, table.remove(P.SPrnEvents()))
 		permsNeedUpdate = true
 		limitSel_rnEvent_i()
 	end
 end
 
--- simply increments length of selected phase
--- and sets ID to new highest value
--- doesn't restore dependencies
+-- sets a new ID at end of table, doesn't restore dependencies
 function P.undoDelete()
-	if P.SPrnEvents()[P.SPrnEvents().count + 1] then
-		P.SPrnEvents().count = P.SPrnEvents().count + 1	
-		getLast(P.SPrnEvents()).ID = P.SPrnEvents().count
-		permsNeedUpdate = true
+	if #deletedEventsStack > 0 then
+		P.addEvent(table.remove(deletedEventsStack))
+		P.SPrnEvents()[#P.SPrnEvents()].ID = #P.SPrnEvents()
 	else
 		print("No deletion to undo.")
 	end
@@ -596,14 +587,14 @@ end
 function P.toStrings()
 	local ret = {}
 	
-	if P.SPrnEvents().count <= 0 then
+	if #P.SPrnEvents() <= 0 then
 		ret[0] = "rnEvents empty"	
 		return ret
 	end
 	
-	for rnEvent_i = 1, P.SPrnEvents().count do
-		ret[2*rnEvent_i-2] = P.SPrnEvents()[rnEvent_i]:headerString(rnEvent_i)
-		ret[2*rnEvent_i-1] = string.format("%5d ", P.SPrnEvents()[rnEvent_i].startRN_i % 100000)
+	for rnEvent_i, event in ipairs(P.SPrnEvents()) do
+		ret[2*rnEvent_i-2] = event:headerString(rnEvent_i)
+		ret[2*rnEvent_i-1] = string.format("%5d ", event.startRN_i % 100000)
 	end
 	return ret
 end
@@ -613,9 +604,9 @@ function P.get(index)
 	return P.SPrnEvents()[index]
 end
 function P.getByID(vID)
-	for i = 1, P.SPrnEvents().count do
-		if P.SPrnEvents()[i].ID == vID then
-			return P.SPrnEvents()[i]
+	for _, event in ipairs(P.SPrnEvents()) do
+		if event.ID == vID then
+			return event
 		end
 	end
 	print("ID not found: " .. tostring(vID))
@@ -631,21 +622,21 @@ function P.toggleBurnAmount()
 	print("Burn amount now " .. P.burnAmount)
 end
 function P.incBurns(amount)
-	if P.SPrnEvents().count <= 0 then return end
-
-	amount = amount or P.burnAmount
-	P.get().burns = P.get().burns + amount
-	P.update_rnEvents()
+	if #P.SPrnEvents() > 0 then
+		amount = amount or P.burnAmount
+		P.get().burns = P.get().burns + amount
+		P.update_rnEvents()
+	end
 end
 function P.decBurns(amount)
-	if P.SPrnEvents().count <= 0 then return end
-	
-	amount = amount or P.burnAmount
-	P.get().burns = P.get().burns - amount
-	if P.get().burns < 0 then
-		P.get().burns = 0
+	if #P.SPrnEvents() > 0 then	
+		amount = amount or P.burnAmount
+		P.get().burns = P.get().burns - amount
+		if P.get().burns < 0 then
+			P.get().burns = 0
+		end
+		P.update_rnEvents()
 	end
-	P.update_rnEvents()
 end
 function P.incSel()
 	sel_rnEvent_i = sel_rnEvent_i + 1
@@ -656,7 +647,7 @@ function P.decSel()
 	limitSel_rnEvent_i()
 end
 function P.swap()
-	if sel_rnEvent_i < P.SPrnEvents().count then
+	if sel_rnEvent_i < #P.SPrnEvents() then
 		if P.SPrnEvents()[sel_rnEvent_i+1].comesAfter[P.get().ID] then
 			print(string.format("CAN'T SWAP, %d DEPENDS ON %d, TOGGLE WITH START", 
 				P.SPrnEvents()[sel_rnEvent_i+1].ID, P.get().ID))
@@ -668,7 +659,7 @@ function P.swap()
 	end
 end
 function P.toggleDependency()
-	if sel_rnEvent_i < P.SPrnEvents().count then
+	if sel_rnEvent_i < #P.SPrnEvents() then
 		P.SPrnEvents()[sel_rnEvent_i+1].comesAfter[P.get().ID] = 
 			not P.SPrnEvents()[sel_rnEvent_i+1].comesAfter[P.get().ID]
 		
@@ -683,63 +674,63 @@ function P.toggleDependency()
 	end
 end
 function P.adjustCombatWeight(amount)
-	if P.SPrnEvents().count <= 0 then return end
-
-	P.get().combatWeight = P.get().combatWeight + amount
-	print("combatWeight: x" .. P.get().combatWeight)
+	if #P.SPrnEvents() > 0 then
+		P.get().combatWeight = P.get().combatWeight + amount
+		print("combatWeight: x" .. P.get().combatWeight)
+	end
 end
 
 -- functions that invalidate cache
 function P.toggleBatParam(func, var)
-	if P.SPrnEvents().count > 0 then
+	if #P.SPrnEvents() > 0 then
 		func(P.get().batParams, var) -- :func() syntatic for func(self)
 		P.get():clearCache()
 		P.update_rnEvents()
 	end
 end
 function P.updateStats()
-	if P.SPrnEvents().count <= 0 then return end
-	
-	P.get():setStats()
+	if #P.SPrnEvents() > 0 then
+		P.get():setStats()
+	end
 end
 
 function P.changeEnemyID(amount)
-	if P.SPrnEvents().count <= 0 then return end
-
-	P.get().enemyID = P.get().enemyID + amount
-	P.get():clearCache()
-	P.update_rnEvents()
+	if #P.SPrnEvents() > 0 then
+		P.get().enemyID = P.get().enemyID + amount
+		P.get():clearCache()
+		P.update_rnEvents()
+	end
 end
 function P.toggleCombat()
-	if P.SPrnEvents().count <= 0 then return end
-	
-	P.get().hasCombat = not P.get().hasCombat
-	P.get():clearCache()
-	P.get().enemyID = 0 -- don't want to cause enemyHP to carry
-	P.update_rnEvents()
+	if #P.SPrnEvents() > 0 then	
+		P.get().hasCombat = not P.get().hasCombat
+		P.get():clearCache()
+		P.get().enemyID = 0 -- don't want to cause enemyHP to carry
+		P.update_rnEvents()
+	end
 end
 function P.toggleLevel()
-	if P.SPrnEvents().count <= 0 then return end
-	
-	P.get().lvlUp = not P.get().lvlUp
-	P.get():clearCache()
-	P.update_rnEvents()
+	if #P.SPrnEvents() > 0 then	
+		P.get().lvlUp = not P.get().lvlUp
+		P.get():clearCache()
+		P.update_rnEvents()
+	end
 end
 function P.toggleDig()
-	if P.SPrnEvents().count <= 0 then return end
-	
-	P.get().dig = not P.get().dig
-	P.get():clearCache()
-	P.update_rnEvents()
+	if #P.SPrnEvents() > 0 then	
+		P.get().dig = not P.get().dig
+		P.get():clearCache()
+		P.update_rnEvents()
+	end
 end
 
 function P.totalEvaluation()
 	local score = 0	
-	for rnEvent_i = 1, PPrnEvents.count do
-		score = score + PPrnEvents[rnEvent_i].eval
+	for _, event in ipairs(playerEvents) do
+		score = score + event.eval
 	end
-	for rnEvent_i = 1, EPrnEvents.count do
-		score = score + EPrnEvents[rnEvent_i].eval
+	for _, event in ipairs(enemyEvents) do
+		score = score + event.eval
 	end
 	return score
 end
@@ -750,8 +741,10 @@ local MEM_LIMIT = 500000
 local function recursivePerm(usedNums, currPerm, currSize)
 	if #perms >= MEM_LIMIT then return end
 
+	local count = #P.SPrnEvents()
+	
 	-- base case
-	if currSize == P.SPrnEvents().count then
+	if currSize == count then
 		perms[#perms+1] = currPerm
 		
 		if #perms >= MEM_LIMIT then
@@ -762,11 +755,11 @@ local function recursivePerm(usedNums, currPerm, currSize)
 		return
 	end
 	
-	for next_i = 1, P.SPrnEvents().count do
+	for next_i = 1, count do
 		if not usedNums[next_i] then
 			-- if depends on unused rnEvent, don't use yet
 			local afterAllDependencies = true
-			for check_j = 1, P.SPrnEvents().count do
+			for check_j = 1, count do
 				if P.getByID(next_i).comesAfter[check_j] and not usedNums[check_j] then
 					afterAllDependencies = false
 				end
@@ -775,7 +768,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 			if afterAllDependencies then
 				local newUsedNums = {}
 				local newCurrPerm = {}
-				for copy_j = 1, P.SPrnEvents().count do
+				for copy_j = 1, count do
 					newUsedNums[copy_j] = usedNums[copy_j]
 					newCurrPerm[copy_j] = currPerm[copy_j]
 				end
@@ -786,7 +779,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 			end
 		end
 		if currSize == 0 then
-			print(string.format("%d/%d %7d permutations", next_i, P.SPrnEvents().count, #perms))
+			print(string.format("%d/%d %7d permutations", next_i, count, #perms))
 			emu.frameadvance() -- prevent unresponsiveness
 		end
 	end
@@ -800,7 +793,7 @@ function P.permutations()
 	-- using nil as false doesn't fill table properly, explicitly fill
 	local usedNums = {}
 	local currPerm = {}
-	for i = 1, P.SPrnEvents().count do
+	for i = 1, #P.SPrnEvents() do
 		usedNums[i] = false
 		currPerm[i] = 0
 	end
@@ -816,15 +809,17 @@ end
 
 function P.setToPerm(p_index, fast)
 	local currPerm = perms[p_index]
-	local lowestSwap = P.SPrnEvents().count+1 -- don't need to update from 1 to lSwap-1
+	local count = #P.SPrnEvents()
+	
+	local lowestSwap = count+1 -- don't need to update from 1 to lSwap-1
 	-- saves a lot of time because usually only the higher rnEvent are swapped
 	
-	for swapInto_i = 1, P.SPrnEvents().count do
+	for swapInto_i = 1, count do
 		local perm_ID = currPerm[swapInto_i]
 				
 		-- find rnEvent with ID, previous should be in position
 		-- if current (swapInto_i) is in position, doing nothing is OK
-		for swapOutOf_j = swapInto_i+1, P.SPrnEvents().count do
+		for swapOutOf_j = swapInto_i+1, count do
 			if P.SPrnEvents()[swapOutOf_j].ID == perm_ID then
 				-- swap into place
 				P.SPrnEvents()[swapOutOf_j], P.SPrnEvents()[swapInto_i] = P.SPrnEvents()[swapInto_i], P.SPrnEvents()[swapOutOf_j]
@@ -842,7 +837,7 @@ end
 -- attempt every valid arrangement and score it
 -- return top three options, first is auto-set
 function P.suggestedPermutation(fast)
-	if not P.playerPhase then
+	if not P.isPlayerPhase then
 		print("enemy phase cannot be permuted")
 		return
 	end
@@ -897,12 +892,12 @@ function P.suggestedPermutation(fast)
 	P.update_rnEvents(1)
 	
 	print()
-	for rnEvent_i = 1, PPrnEvents.count do
-		PPrnEvents[rnEvent_i]:evaluation_fn(true)
+	for rnEvent_i = 1, #playerEvents do
+		playerEvents[rnEvent_i]:evaluation_fn(true)
 	end
 	print()
-	for rnEvent_i = 1, EPrnEvents.count do
-		EPrnEvents[rnEvent_i]:evaluation_fn(true)
+	for rnEvent_i = 1, #enemyEvents do
+		enemyEvents[rnEvent_i]:evaluation_fn(true)
 	end
 	
 	print()

@@ -169,11 +169,11 @@ while true do
 	end
 	
 	if primaryFunctions then
-		if pressed(1) then rnEvent.removeLastObj() end	
+		if pressed(1) then rnEvent.deleteLastEvent() end	
 		
 		if pressed(2) then
 			unitData.saveStats()
-			rnEvent.addObj()
+			rnEvent.addEvent()
 			rnEvent.get().batParams:set()
 			rnEvent.update_rnEvents()
 			

@@ -256,10 +256,10 @@ function rectObj:draw()
 	
 	-- color highlighted RN strings, draw boxes
 	if self.ID == P.rnEvent_i then
-		for rnEvent_i = 1, rnEvent.SPrnEvents().count do
-			self:drawColorizedRNString(2*rnEvent_i-1, 6, -- 5 digits, space
-				rnEvent.SPrnEvents()[rnEvent_i].startRN_i, rnEvent.SPrnEvents()[rnEvent_i].length)
-			rnEvent.SPrnEvents()[rnEvent_i]:drawMyBoxes(self, rnEvent_i)
+		for i, event in ipairs(rnEvent.SPrnEvents()) do
+			self:drawColorizedRNString(2*i-1, 6, -- 5 digits, space
+				event.startRN_i, event.length)
+			event:drawMyBoxes(self, i)
 		end
 		
 	elseif self.ID == P.RN_STREAM_I then

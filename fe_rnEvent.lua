@@ -561,32 +561,17 @@ function P.getByID(vID)
 	print("ID not found: " .. tostring(vID))
 end
 
-P.burnAmount = 1 -- toggle to 12 for reinforcements, longer burns, etc
-function P.toggleBurnAmount()
-	if P.burnAmount == 1 then
-		P.burnAmount = 12
-	else
-		P.burnAmount = 1
-	end
-	print("Burn amount now " .. P.burnAmount)
-end
-function P.incBurns(amount)
+function P.changeBurns(amount)
 	if #eventList > 0 then
 		amount = amount or P.burnAmount
 		P.get().burns = P.get().burns + amount
-		P.update_rnEvents()
-	end
-end
-function P.decBurns(amount)
-	if #eventList > 0 then	
-		amount = amount or P.burnAmount
-		P.get().burns = P.get().burns - amount
 		if P.get().burns < 0 then
 			P.get().burns = 0
 		end
 		P.update_rnEvents()
 	end
 end
+
 function P.incSel()
 	sel_rnEvent_i = sel_rnEvent_i + 1
 	limitSel_rnEvent_i()

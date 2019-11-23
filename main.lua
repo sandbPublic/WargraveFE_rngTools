@@ -97,24 +97,21 @@ local function pressed(key, ctrl)
 	return ctrl.thisFrame[key] and not ctrl.lastFrame[key]
 end
 
-local update2ndary = false
-local fogAddr = {}
+local currentRNG = rns.rng1
+local rnJumpAmount = 1 -- distance to move rng position or how many burns to add to an event
+local FOG_ADDR = {}
 
-fogAddr[6] = 0x202AA55
-fogAddr[7] = 0x202BC05
-fogAddr[8] = 0x202BCFD
+FOG_ADDR[6] = 0x202AA55
+FOG_ADDR[7] = 0x202BC05
+FOG_ADDR[8] = 0x202BCFD
 
 while true do
 	local reprintRNs = false
 	local reprintStats = false
 	local reprintLvlUps = false
 	
-	if rns.rng1:update() then
+	if currentRNG:update() then
 		rnEvent.update_rnEvents(1)
-	end
-	
-	if update2ndary then
-		rns.rng2:update()
 	end
 	
 	updateCtrl(keybCtrl, input.get())
@@ -132,10 +129,10 @@ while true do
 	if feGUI.canAlter_rnEvent() then -- alter burns, selected, swap, toggle swapping
 		-- change burns
 		if pressed("left", gameCtrl) then
-			rnEvent.decBurns()
+			rnEvent.changeBurns(-rnJumpAmount)
 		end		
 		if pressed("right", gameCtrl) then
-			rnEvent.incBurns()
+			rnEvent.changeBurns(rnJumpAmount)
 		end
 		
 		if pressed("L", gameCtrl) then
@@ -225,7 +222,16 @@ while true do
 			rnEvent.updateStats()
 		end
 		
-		if pressed(13) then unitData.setAfas() end
+		if keybCtrl.thisFrame[hotkeys[13].key] then -- hold down, then press left/right
+			if pressed("L", gameCtrl) then
+				currentRNG:moveRNpos(-rnJumpAmount)
+				rnEvent.update_rnEvents(1)
+			end
+			if pressed("R", gameCtrl) then
+				currentRNG:moveRNpos(rnJumpAmount)
+				rnEvent.update_rnEvents(1)
+			end
+		end
 	else
 		if pressed(1) then rnEvent.undoDelete() end
 		if pressed(2) then
@@ -239,20 +245,20 @@ while true do
 		if pressed(4) then rnEvent.toggleDig() end
 		
 		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
-			local currFogRange = memory.readbyte(fogAddr[version])
+			local currFogRange = memory.readbyte(FOG_ADDR[version])
 			if pressed("L", gameCtrl) then
 				currFogRange = currFogRange - 1
-				memory.writebyte(fogAddr[version], currFogRange)
+				memory.writebyte(FOG_ADDR[version], currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
 			if pressed("R", gameCtrl) then
 				currFogRange = currFogRange + 1
-				memory.writebyte(fogAddr[version], currFogRange)
+				memory.writebyte(FOG_ADDR[version], currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
 		end	
 		
-		if keybCtrl.thisFrame[hotkeys[7].key] then
+		if keybCtrl.thisFrame[hotkeys[7].key] then -- hold down, then press L/R
 			if pressed("L", gameCtrl) then
 				rnEvent.adjustCombatWeight(-0.5)
 			end		
@@ -277,19 +283,30 @@ while true do
 			end
 		end	
 		
-		if pressed(9) then rnEvent.toggleBurnAmount() end
+		if pressed(9) then 
+			if rnJumpAmount == 1 then
+				rnJumpAmount = 12 -- 12 because enemy reinforcements often consume rns in multiples of 12
+			else
+				rnJumpAmount = 1
+			end
+			print("rnJumpAmount now " .. rnJumpAmount)
+		end
+		
 		if pressed(10) then rnEvent.searchFutureOutcomes() end
 		
 		if pressed(11) then
-			update2ndary = not update2ndary
-			print("update2ndary = " .. tostring(update2ndary))
+			if currentRNG.isPrimary then
+				currentRNG = rns.rng2
+				print("Switching to 2ndary rng")
+			else
+				currentRNG = rns.rng1
+				print("Switching to primary rng")
+			end
 		end
 		
 		if pressed(12) then rnEvent.diagnostic() end
 		
-		if pressed(13) then
-			--todo
-		end
+		if pressed(13) then unitData.setAfas() end
 	end
 	
 	if reprintRNs then

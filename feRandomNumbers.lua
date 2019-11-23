@@ -89,6 +89,24 @@ function rnStreamObj:getRN(pos_i)
 	return self[pos_i]
 end
 
+function rnStreamObj:moveRNpos(delta)	
+	local destination = self.pos + delta
+	if destination < 0 then destination = 0 end
+	
+	generator = self:getRN(destination-1)
+	
+	if self.isPrimary then
+		memory.writeword(self.rngAddr, generator)
+		memory.writeword(self.rngAddr+2, self[destination-2])
+		memory.writeword(self.rngAddr+4, self[destination-3])
+	else
+		memory.writeword(self.rngAddr, AND(generator, 0x0000FFFF))
+		memory.writeword(self.rngAddr+2, AND(generator, 0xFFFF0000)/0x10000)
+	end
+	
+	self:update()
+end
+
 function rnStreamObj:getRNasCent(index)
 	return byteToPercent(self:getRN(index))
 end

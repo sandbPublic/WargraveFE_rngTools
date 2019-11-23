@@ -12,28 +12,28 @@ toggle enemy promo
 toggle rnEvent dig
 O
 toggle bonus exp
-hold, L/R change fog
+(hold) L/R change fog
 H
 switch to 2ndary functions
 switch to primary functions
 J
 unit_i to next deployed
-hold, L/R to change combat weight
+(hold) L/R change combat weight
 K
 toggle window visibility
 toggle window adjustments
 L
 next display mode
-toggle burn amount
+toggle rnJumpAmount (1<->12)
 P
 suggest rnEvent permutation
 search future outcomes of rnEvent[1]
 B
 cycle enemy class
-toggle 2ndary rng updates
+switch RNG to 2ndary
 N
 save stats
 print rnEvent diagnostic
 M
+(hold) L/R move rn position
 change afa/metis
-TODO

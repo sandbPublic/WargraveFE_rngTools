@@ -2,7 +2,7 @@ local P = {}
 feGUI = P
 
 P.rects = {}
-P.rnEvent_i 			= 1
+P.RN_EVENT_I 		= 1
 P.RN_STREAM_I		= 2 
 P.BATTLE_PARAMS_I 	= 3
 P.STAT_DATA_I		= 4
@@ -28,7 +28,7 @@ local RECT_STRINGS = {
 	"burn notifier"
 }
 
-P.selRect_i = P.rnEvent_i
+P.selRect_i = P.RN_EVENT_I
 function P.advanceDisplay()
 	P.selRect_i = rotInc(P.selRect_i, #P.rects)
 	print("selecting display: " .. RECT_STRINGS[P.selRect_i])
@@ -38,8 +38,8 @@ P.rectShiftMode = false
 
 function P.canAlter_rnEvent()
 	return (not P.rectShiftMode) 
-		and (P.selRect_i == P.rnEvent_i) 
-		and (P.rects[P.rnEvent_i].opacity > 0)
+		and (P.selRect_i == P.RN_EVENT_I) 
+		and (P.rects[P.RN_EVENT_I].opacity > 0)
 end
 
 local CHAR_PIXELS = 4
@@ -75,8 +75,8 @@ function rectObj:width()
 		
 		-- add colorized string length
 		-- don't need to do this for rnStream because it's padded with spaces
-		if (self.ID == P.rnEvent_i) and (line_i % 2 == 1) then
-			stringLen = stringLen + rnEvent.SPrnEvents()[(line_i+1)/2].length * 3
+		if (self.ID == P.RN_EVENT_I) and (line_i % 2 == 1) then
+			stringLen = stringLen + rnEvent.getEventList()[(line_i+1)/2].length * 3
 		end
 		
 		if stringLen > width then
@@ -255,8 +255,8 @@ function rectObj:draw()
 	end
 	
 	-- color highlighted RN strings, draw boxes
-	if self.ID == P.rnEvent_i then
-		for i, event in ipairs(rnEvent.SPrnEvents()) do
+	if self.ID == P.RN_EVENT_I then
+		for i, event in ipairs(rnEvent.getEventList()) do
 			self:drawColorizedRNString(2*i-1, 6, -- 5 digits, space
 				event.startRN_i, event.length)
 			event:drawMyBoxes(self, i)
@@ -306,7 +306,7 @@ function P.drawRects()
 		P.rects[P.COMPACT_BPS_I].strings = combat.currBattleParams:toCompactStrings()
 	end
 	
-	P.rects[P.rnEvent_i].strings = rnEvent.toStrings()
+	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings()
 
 	for rect_i = 1, #P.rects do
 		P.rects[rect_i]:draw()

@@ -287,7 +287,9 @@ while true do
 		
 		if pressed(12) then rnEvent.diagnostic() end
 		
-		if pressed(13) then rnEvent.togglePhase() end
+		if pressed(13) then
+			--todo
+		end
 	end
 	
 	if reprintRNs then

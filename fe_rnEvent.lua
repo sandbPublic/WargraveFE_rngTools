@@ -113,7 +113,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	-- use this for optimized fast updates when searching outcomes
 	-- cache indexed by *postBurnsRN_i* rn_i, not startRN_i
 	-- 2nd index is enemyHP at start so eHP passing will work
-	o:clearCache()
+	o.cache = nil
 	
 	return o
 end
@@ -167,13 +167,6 @@ function rnEventObj:diagnostic()
 	
 	print("stats")
 	print(self.stats)
-end
-
-function rnEventObj:clearCache()
-	self.cache = {}
-	self.cache.count = 0
-	self.cache.min_i = 999999
-	self.cache.max_i = 0
 end
 
 -- assumes first index returns a table
@@ -295,7 +288,7 @@ end
 
 -- uses cache if valid
 -- skip reconstructing combat, eval, etc
-function rnEventObj:update(rnEvent_i, fast)
+function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
 	if rnEvent_i then -- if no ordering given, do not update startRN_i, used for searchFutureOutcomes
 		self:setStart(rnEvent_i)
 	else 
@@ -305,7 +298,7 @@ function rnEventObj:update(rnEvent_i, fast)
 	self.postBurnsRN_i = self.startRN_i + self.burns
 	self:setEnemyHP(rnEvent_i)
 
-	if fast then
+	if cacheUpdateOnly then
 		if self.cache[self.postBurnsRN_i] then
 			if self.cache[self.postBurnsRN_i][self.enemyHP] then
 				self:readFromCache()
@@ -323,19 +316,19 @@ function rnEventObj:update(rnEvent_i, fast)
 	end
 end
 
-function P.update_rnEvents(start_i, fast, isPlayerPhase)
+function P.update_rnEvents(start_i, cacheUpdateOnly, isPlayerPhase)
 	start_i = start_i or sel_rnEvent_i
 	isPlayerPhase = isPlayerPhase or P.isPlayerPhase
 	
 	if isPlayerPhase then
 		for rnEvent_i = start_i, #playerEvents do
-			playerEvents[rnEvent_i]:update(rnEvent_i, fast)
+			playerEvents[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
 		end
 		start_i = 1 -- start from beginning of enemyEvents afterwards
 	end
 	
 	for rnEvent_i = start_i, #enemyEvents do
-		enemyEvents[rnEvent_i]:update(rnEvent_i, fast)
+		enemyEvents[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
 	end
 end
 
@@ -684,27 +677,28 @@ end
 function P.toggleBatParam(func, var)
 	if #P.SPrnEvents() > 0 then
 		func(P.get().batParams, var) -- :func() syntactic for func(self)
-		P.get():clearCache()
+		P.get().cache = nil
 		P.update_rnEvents()
 	end
 end
 function P.updateStats()
 	if #P.SPrnEvents() > 0 then
 		P.get():setStats()
+		P.get().cache = nil
 	end
 end
 
 function P.changeEnemyID(amount)
 	if #P.SPrnEvents() > 0 then
 		P.get().enemyID = P.get().enemyID + amount
-		P.get():clearCache()
+		P.get().cache = nil
 		P.update_rnEvents()
 	end
 end
 function P.toggleCombat()
 	if #P.SPrnEvents() > 0 then	
 		P.get().hasCombat = not P.get().hasCombat
-		P.get():clearCache()
+		P.get().cache = nil
 		P.get().enemyID = 0 -- don't want to cause enemyHP to carry
 		P.update_rnEvents()
 	end
@@ -712,14 +706,14 @@ end
 function P.toggleLevel()
 	if #P.SPrnEvents() > 0 then	
 		P.get().lvlUp = not P.get().lvlUp
-		P.get():clearCache()
+		P.get().cache = nil
 		P.update_rnEvents()
 	end
 end
 function P.toggleDig()
 	if #P.SPrnEvents() > 0 then	
 		P.get().dig = not P.get().dig
-		P.get():clearCache()
+		P.get().cache = nil
 		P.update_rnEvents()
 	end
 end
@@ -807,7 +801,7 @@ function P.permutations()
 	end
 end
 
-function P.setToPerm(p_index, fast)
+function P.setToPerm(p_index)
 	local currPerm = perms[p_index]
 	local count = #P.SPrnEvents()
 	
@@ -831,7 +825,7 @@ function P.setToPerm(p_index, fast)
 		end
 	end
 	
-	P.update_rnEvents(lowestSwap, fast)
+	P.update_rnEvents(lowestSwap, "cacheUpdateOnly")
 end
 
 -- attempt every valid arrangement and score it
@@ -862,6 +856,15 @@ function P.suggestedPermutation()
 		topScores[top_i] = -999
 	end
 	
+	for _, event in ipairs(P.SPrnEvents()) do
+		if not event.cache then
+			event.cache = {}
+			event.cache.count = 0
+			event.cache.min_i = 999999
+			event.cache.max_i = 0
+		end
+	end
+	
 	for perm_i = 1, #perms do
 		if perm_i % 5000 == 0 then
 			print(string.format("%7d/%d", perm_i, #perms))
@@ -869,7 +872,7 @@ function P.suggestedPermutation()
 		end
 	
 		-- swap each rnEvent into position based on ID and perm, and update
-		P.setToPerm(perm_i, "fast")
+		P.setToPerm(perm_i)
 		
 		local score = P.totalEvaluation()
 		

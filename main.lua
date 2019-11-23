@@ -24,7 +24,7 @@ end
 function rotInc(num, maxVal, inc, minVal)
 	minVal = minVal or 1
 	inc = inc or 1
-	if (num + inc > maxVal) then
+	if num + inc > maxVal then
 		return minVal
 	end
 	return num + inc
@@ -209,7 +209,7 @@ while true do
 		if pressed(9) then feGUI.advanceDisplay() end
 		
 		if pressed(10) then 
-			rnEvent.suggestedPermutation("fast")
+			rnEvent.suggestedPermutation()
 		end
 		
 		if pressed(11) then

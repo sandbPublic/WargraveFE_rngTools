@@ -792,7 +792,7 @@ end
 function P.nextDeployed()
 	local canditate_i = P.sel_Unit_i
 	canditate_i = rotInc(canditate_i, #NAMES[version])
-	while (canditate_i ~= P.sel_Unit_i and not P.deployed(canditate_i)) do
+	while (canditate_i ~= P.sel_Unit_i) and (not P.deployed(canditate_i)) do
 		canditate_i = rotInc(canditate_i, #NAMES[version])
 	end
 	return canditate_i

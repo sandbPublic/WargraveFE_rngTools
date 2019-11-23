@@ -394,7 +394,7 @@ function P.combatObj:hitEvent(index, who)
 		if willHit then
 			retHitEv.action = "X"
 			
-			--confirmed gShield, Pierce, crit, Silencer order
+			-- confirmed gShield, Pierce, crit, Silencer order
 			-- then Devil?
 			
 			if classes.hasGreatShield(self:data(P.opponent(who)).class) then
@@ -468,10 +468,6 @@ function P.combatObj:staffHitEvent(index)
 	end
 	
 	return retStvHitEv
-end
-
-function P.isStaffHit(event)
-	return event.action == "STF-X"
 end
 
 -- variable number of events, 1 to 6

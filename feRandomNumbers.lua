@@ -144,7 +144,7 @@ function rnStreamObj:update()
 		-- print what was consumed if not a large jump
 		if rnPosDelta == 1 and self.isPrimary then -- print single rns on same line
 			print(str .. ": " .. self:getRNasCent(self.pos-1))
-		elseif (rnPosDelta > 0 and rnPosDelta <= 24) then
+		elseif rnPosDelta > 0 and rnPosDelta <= 24 then
 			print(str)
 		
 			if self.isPrimary then

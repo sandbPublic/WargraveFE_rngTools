@@ -269,7 +269,7 @@ function rnEventObj:setEnemyHP(rnEvent_i)
 end
 
 -- assumes previous rnEvents have updates for optimization
-function rnEventObj:updateFull(rnEvent_i)	
+function rnEventObj:updateFull()	
 	if self.hasCombat then
 		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHP)
 		
@@ -310,16 +310,16 @@ function rnEventObj:update(rnEvent_i, fast)
 			if self.cache[self.postBurnsRN_i][self.enemyHP] then
 				self:readFromCache()
 			else
-				self:updateFull(rnEvent_i)
+				self:updateFull()
 				self:writeToCache()
 			end
 		else
-			self:updateFull(rnEvent_i)
+			self:updateFull()
 			self.cache[self.postBurnsRN_i] = {}
 			self:writeToCache()
 		end
 	else
-		self:updateFull(rnEvent_i)
+		self:updateFull()
 	end
 end
 
@@ -683,7 +683,7 @@ end
 -- functions that invalidate cache
 function P.toggleBatParam(func, var)
 	if #P.SPrnEvents() > 0 then
-		func(P.get().batParams, var) -- :func() syntatic for func(self)
+		func(P.get().batParams, var) -- :func() syntactic for func(self)
 		P.get():clearCache()
 		P.update_rnEvents()
 	end
@@ -836,7 +836,7 @@ end
 
 -- attempt every valid arrangement and score it
 -- return top three options, first is auto-set
-function P.suggestedPermutation(fast)
+function P.suggestedPermutation()
 	if not P.isPlayerPhase then
 		print("enemy phase cannot be permuted")
 		return
@@ -863,13 +863,13 @@ function P.suggestedPermutation(fast)
 	end
 	
 	for perm_i = 1, #perms do
-		if ((perm_i % 1000 == 0 and (not fast)) or (perm_i % 5000 == 0)) then
+		if perm_i % 5000 == 0 then
 			print(string.format("%7d/%d", perm_i, #perms))
 			emu.frameadvance() -- prevent unresponsiveness
 		end
 	
 		-- swap each rnEvent into position based on ID and perm, and update
-		P.setToPerm(perm_i, fast)
+		P.setToPerm(perm_i, "fast")
 		
 		local score = P.totalEvaluation()
 		

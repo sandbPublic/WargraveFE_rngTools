@@ -102,7 +102,7 @@ P.enum_ENEMY 	= 3
 P.enum_NO_ONE	= 4
 
 function P.opponent(who)
-	if (who % 2 == 0) then return who + 1 end
+	if who % 2 == 0 then return who + 1 end
 	return who - 1
 end
 
@@ -124,13 +124,6 @@ function P.combatObj:isPlayer(who)
 	return (who == P.enum_PLAYER) or
 	(who == P.enum_ATTACKER and self:playerPhase()) or 
 	(who == P.enum_DEFENDER and not self:playerPhase())
-end
-
--- todo
--- level does not update, might is given as 0xFF for any non-attacker
-function P.combatObj:defenderIsWall()
-	return false 
-	-- self.defender[P.LEVEL_I] < 20 and self.defender[P.EXP_I] > 99
 end
 
 function P.combatObj:data(who)
@@ -294,7 +287,7 @@ function P.combatObj:willLevel(XPgained)
 end
 
 function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
-	if (not self:canLevel() or self:defenderIsWall()) then return 0 end
+	if not self:canLevel() then return 0 end
 	
 	if self:data(P.enum_PLAYER)[P.LEVEL_I] % 20 == 0 then
 		return 0
@@ -373,11 +366,7 @@ function P.combatObj:hitEvent(index, who)
 		--retHitEv.dmg = 999
 	end
 	
-	retHitEv.expWasGained = true -- assume true and falsify
-	
-	if (not self:isPlayer(who)) or self:defenderIsWall() then
-		retHitEv.expWasGained = false
-	end
+	retHitEv.expWasGained = self:isPlayer(who) -- assume true and falsify
 	retHitEv.assassinated = false
 	
 	local hit = self:data(who)[P.HIT_I]

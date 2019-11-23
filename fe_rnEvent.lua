@@ -745,7 +745,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 	
 	-- base case
 	if currSize == count then
-		perms[#perms+1] = currPerm
+		table.insert(perms, currPerm)
 		
 		if #perms >= MEM_LIMIT then
 			print()

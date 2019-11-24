@@ -76,7 +76,7 @@ function rectObj:width()
 		-- add colorized string length
 		-- don't need to do this for rnStream because it's padded with spaces
 		if (self.ID == P.RN_EVENT_I) and (line_i % 2 == 1) then
-			stringLen = stringLen + rnEvent.getEventList()[(line_i+1)/2].length * 3
+			stringLen = stringLen + rnEvent.get((line_i+1)/2).length * 3
 		end
 		
 		if stringLen > width then
@@ -261,11 +261,11 @@ function rectObj:draw()
 				event.startRN_i, event.length)
 			event:drawMyBoxes(self, i)
 		end
-		
+	
 	elseif self.ID == P.RN_STREAM_I then
 		local firstLineRnPos = math.floor(rns.rng1.pos/rnsPerLine-1)*rnsPerLine
 		if firstLineRnPos < 0 then firstLineRnPos = 0 end
-	
+		
 		for line_i = 0, rnsLines-1 do
 			self:drawColorizedRNString(line_i, 7, -- 5 digits, :, space
 				firstLineRnPos+line_i*rnsPerLine, rnsPerLine)
@@ -277,7 +277,7 @@ end
 
 function rectObj:new(ID_p, color_p)
 	color_p = color_p or RECT_COLORS[ID_p]
-
+	
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
@@ -307,7 +307,7 @@ function P.drawRects()
 	end
 	
 	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings()
-
+	
 	for rect_i = 1, #P.rects do
 		P.rects[rect_i]:draw()
 	end

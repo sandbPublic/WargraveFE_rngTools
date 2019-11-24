@@ -89,7 +89,7 @@ function rnStreamObj:getRN(pos_i)
 	return self[pos_i]
 end
 
-function rnStreamObj:moveRNpos(delta)	
+function rnStreamObj:moveRNpos(delta)
 	local destination = self.pos + delta
 	if destination < 0 then destination = 0 end
 	

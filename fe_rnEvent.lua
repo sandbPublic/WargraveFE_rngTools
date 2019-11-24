@@ -461,7 +461,7 @@ function P.searchFutureOutcomes()
 	eventList[1]:update()
 end
 
-function rnEventObj:drawMyBoxes(rect, rnEvent_i)		
+function rnEventObj:drawMyBoxes(rect, rnEvent_i)
 	local line_i = 2*rnEvent_i-1
 	local INIT_CHARS = 6
 	
@@ -506,7 +506,7 @@ end
 -- adjusts IDs, including dependencies
 function P.deleteLastEvent()
 	if #eventList > 0 then
-		local IDremoved = eventList[#eventList].ID		
+		local IDremoved = eventList[#eventList].ID
 		for _, event in ipairs(eventList) do
 			if event.ID > IDremoved then
 				event.ID = event.ID - 1 -- dec own ID
@@ -768,7 +768,7 @@ end
 
 -- attempt every valid arrangement and score it
 -- return top three options, first is auto-set
-function P.suggestedPermutation()	
+function P.suggestedPermutation()
 	local timeStarted = os.clock()
 
 	if permsNeedUpdate then

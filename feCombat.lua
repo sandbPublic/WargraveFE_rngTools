@@ -461,7 +461,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		ret.expGained = 0
 		return ret
 	end
-		
+	
 	if self:staff() then 
 		ret[1] = self:staffHitEvent(index)
 		isAttackers[1] = true
@@ -473,7 +473,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	local function setNext(isAttacker)
 		maxEvents = maxEvents + 1
 		isAttackers[maxEvents] = isAttacker
-		if self:data(isAttacker).weapon == P.enum_BRAVE then			
+		if self:data(isAttacker).weapon == P.enum_BRAVE then
 			maxEvents = maxEvents + 1
 			isAttackers[maxEvents] = isAttacker
 		end

@@ -30,7 +30,6 @@ function rotInc(num, maxVal, inc, minVal)
 	return num + inc
 end
 
-local savedFogRange = 0
 local primaryFunctions = true
 
 -- GJLUY
@@ -41,15 +40,16 @@ local hotkeys = {}
 local function loadHotkeys(filename)
 	local f = assert(io.open(filename, "r"))
 	
-	hotkeys.count = 0
 	local c = f:read("*line")
 	
 	while c do
-		hotkeys.count = hotkeys.count + 1
-		hotkeys[hotkeys.count] = {}
-		hotkeys[hotkeys.count].key = c
-		hotkeys[hotkeys.count].message1 = c .. ": " .. f:read("*line")
-		hotkeys[hotkeys.count].message2 = string.lower(c) .. ": " ..f:read("*line")
+		hotkey = {}
+		hotkey.key = c
+		hotkey.message1 = c .. ": " .. f:read("*line")
+		hotkey.message2 = string.lower(c) .. ": " ..f:read("*line")
+		
+		table.insert(hotkeys, hotkey)
+		
 		c = f:read("*line")
 	end
 	
@@ -60,11 +60,11 @@ loadHotkeys("QwertyHotkeys.txt")
 local function printHelp()
 	print("")
 
-	for hotkey_i = 1, hotkeys.count do
+	for _, hotkey in ipairs(hotkeys) do
 		if primaryFunctions then
-			print(hotkeys[hotkey_i].message1)
+			print(hotkey.message1)
 		else
-			print(hotkeys[hotkey_i].message2)
+			print(hotkey.message2)
 		end
 	end
 end
@@ -110,7 +110,7 @@ while true do
 	local reprintStats = false
 	local reprintLvlUps = false
 	
-	if currentRNG:update() then
+	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)
 	end
 	
@@ -130,14 +130,14 @@ while true do
 		-- change burns
 		if pressed("left", gameCtrl) then
 			rnEvent.changeBurns(-rnJumpAmount)
-		end		
+		end
 		if pressed("right", gameCtrl) then
 			rnEvent.changeBurns(rnJumpAmount)
 		end
 		
 		if pressed("L", gameCtrl) then
 			rnEvent.changeEnemyID(-1)
-		end		
+		end
 		if pressed("R", gameCtrl) then
 			rnEvent.changeEnemyID(1)
 		end
@@ -166,7 +166,7 @@ while true do
 	end
 	
 	if primaryFunctions then
-		if pressed(1) then rnEvent.deleteLastEvent() end	
+		if pressed(1) then rnEvent.deleteLastEvent() end
 		
 		if pressed(2) then
 			unitData.saveStats()

@@ -53,9 +53,9 @@ end
 
 -- INDEX FROM 1
 function rnEventObj:new(stats, batParams, sel_Unit_i)
-	batParams = batParams or combat.currBattleParams	
+	batParams = batParams or combat.currBattleParams
 	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
-
+	
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
@@ -63,7 +63,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	o.ID = #eventList+1 -- order in which rnEvents were registered
 	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
 	
-	o.unit_i = sel_Unit_i	
+	o.unit_i = sel_Unit_i
 	o:setStats(stats) -- todo do we get enemy stats on EP?
 	o.batParams = batParams:copy()
 	
@@ -107,8 +107,8 @@ end
 function rnEventObj:diagnostic()
 	print()
 	print(string.format("Diagnosis of rnEvent %d", self.ID))
-
-	if self.hasCombat then	
+	
+	if self.hasCombat then
 		batParamStrings = self.batParams:toStrings()
 		print(batParamStrings[0])
 		print(batParamStrings[1])
@@ -139,7 +139,7 @@ function rnEventObj:diagnostic()
 	
 	for c_i = self.cache.min_i, self.cache.max_i do
 		if self.cache[c_i] and self.cache[c_i][self.enemyHP] then
-			--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHP].eval))		
+			--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHP].eval))
 		end
 	end
 	
@@ -229,7 +229,7 @@ function rnEventObj:setEnemyHP(rnEvent_i)
 end
 
 -- assumes previous rnEvents have updates for optimization
-function rnEventObj:updateFull()	
+function rnEventObj:updateFull()
 	if self.hasCombat then
 		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHP)
 		
@@ -239,15 +239,16 @@ function rnEventObj:updateFull()
 	else
 		self.postCombatRN_i = self.postBurnsRN_i
 	end
-
 	self.length = self.postCombatRN_i - self.startRN_i
+	
 	if self:levelDetected() then
 		self.length = self.length + 7 -- IF EMPTY LEVEL REROLLS, MORE THAN 7!!
 	end
+	
 	if self.dig then
 		self.length = self.length + 1 -- FE8, 6&7 use secondary rn
 	end
-		
+	
 	self.nextRN_i = self.startRN_i + self.length
 	
 	self.eval = self:evaluation_fn()
@@ -264,7 +265,7 @@ function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
 	
 	self.postBurnsRN_i = self.startRN_i + self.burns
 	self:setEnemyHP(rnEvent_i)
-
+	
 	if cacheUpdateOnly then
 		if self.cache[self.postBurnsRN_i] then
 			if self.cache[self.postBurnsRN_i][self.enemyHP] then
@@ -461,28 +462,29 @@ function P.searchFutureOutcomes()
 	eventList[1]:update()
 end
 
+-- draw boxes around rns on second line
 function rnEventObj:drawMyBoxes(rect, rnEvent_i)
-	local line_i = 2*rnEvent_i-1
+	local line_i = 2*rnEvent_i
 	local INIT_CHARS = 6
 	
 	rect:drawBox(line_i, INIT_CHARS, self.burns * 3, "red")
-		
+	
 	if self.hasCombat then
 		hitStart = self.burns
-
+		
 		for _, hitEvent in ipairs(self.mHitSeq) do
 			rect:drawBox(line_i, INIT_CHARS + hitStart * 3, hitEvent.RNsConsumed * 3, "yellow")
-				
+			
 			hitStart = hitStart + hitEvent.RNsConsumed
 		end
-	end	
-	if self:levelDetected() then
-		local procs = unitData.willLevelStat(
-				self.postCombatRN_i, self.unit_i, self.stats)
+	end
 	
+	if self:levelDetected() then
+		local procs = unitData.willLevelStat(self.postCombatRN_i, self.unit_i, self.stats)
+		
 		for stat_i = 1, 7 do
 			local char_start = INIT_CHARS + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3
-		
+			
 			if procs[stat_i] == 1 then
 				rect:drawBox(line_i, char_start, 3, LEVEL_UP_COLORS[stat_i]) 
 			elseif procs[stat_i] == 2 then -- Afa's provided stat
@@ -496,7 +498,7 @@ end
 
 function P.addEvent(event)
 	event = event or rnEventObj:new()
-
+	
 	table.insert(eventList, event)
 	sel_rnEvent_i = #eventList
 	permsNeedUpdate = true
@@ -532,18 +534,23 @@ function P.undoDelete()
 	end
 end
 
--- index from 0, rns blank to be colorized
-function P.toStrings()
+-- rns blank to be colorized
+function P.toStrings(isColored)
 	local ret = {}
 	
 	if #eventList <= 0 then
-		ret[0] = "rnEvents empty"	
+		ret[1] = "rnEvents empty"
 		return ret
 	end
 	
 	for rnEvent_i, event in ipairs(eventList) do
-		ret[2*rnEvent_i-2] = event:headerString(rnEvent_i)
-		ret[2*rnEvent_i-1] = string.format("%5d ", event.startRN_i % 100000)
+		table.insert(ret, event:headerString(rnEvent_i))
+		local prefix = string.format("%5d ", event.startRN_i % 100000)
+		if isColored then
+			table.insert(ret, prefix)
+		else
+			table.insert(ret, prefix .. rns.rng1:rnSeqString(event.startRN_i, event.length))
+		end
 	end
 	return ret
 end

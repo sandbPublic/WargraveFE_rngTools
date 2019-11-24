@@ -195,22 +195,21 @@ end
  -- string, append space after each rn
 function rnStreamObj:rnSeqString(index, length)
 	local seq = ""
-	for i = 0, length - 1 do
-		seq = seq .. string.format("%02d ", self:getRNasCent(index+i))
+	for offset = 0, length - 1 do
+		seq = seq .. string.format("%02d ", self:getRNasCent(index+offset))
 	end
 	return seq
 end
 
--- index from 0
--- isColorized for gui leaves the numbers blank so they can be drawn colored later
-function rnStreamObj:RNstream_strings(isColorized, numLines, rnsPerLine)
+-- isColored for gui leaves the numbers blank so they can be drawn colored later
+function rnStreamObj:RNstream_strings(isColored, numLines, rnsPerLine)
 	local ret = {}
 	
 	-- put the prior line before the current position for context
 	local currLineRnPos = math.floor(self.pos/rnsPerLine-1)*rnsPerLine
 	if currLineRnPos < 0 then currLineRnPos = 0 end
 	
-	for line_i = 0, numLines-1 do
+	for line_i = 1, numLines do
 		local lineString = string.format("%05d:", (currLineRnPos)%100000)
 		for rnPos = currLineRnPos, currLineRnPos + rnsPerLine - 1 do
 			if rnPos == self.pos then
@@ -219,15 +218,15 @@ function rnStreamObj:RNstream_strings(isColorized, numLines, rnsPerLine)
 				lineString = lineString .. " "
 			end
 			
-			if isColorized then
+			if isColored then
 				lineString = lineString .. "  "
 			else
 				lineString = lineString .. string.format("%02d", self:getRNasCent(rnPos))
 			end
 		end
 		
-		currLineRnPos = currLineRnPos + rnsPerLine		
-		ret[line_i] = lineString
+		currLineRnPos = currLineRnPos + rnsPerLine
+		table.insert(ret, lineString)
 	end
 	return ret
 end

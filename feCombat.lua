@@ -51,6 +51,11 @@ P.enum_POISON = 7
 
 P.WEAPON_TYPE_STRINGS = {"normal", "devil", "drain", "brave", "halve", "stone", "poison"}
 
+local ATTACKER = true
+local DEFENDER = false
+local PLAYER = true
+local ENEMY = false
+
 local function battleAddrs(isAttacker, index)
 	if isAttacker then
 		return battleSimBase[version] + relativeBattleAddrs[version][index]		
@@ -147,7 +152,7 @@ function P.combatObj:set()
 	self.player.class = unitData.class(self.unit_ID)
 	
 	if classes.PROMOTED[self.player.class] then
-		self:togglePromo(true)
+		self:togglePromo(PLAYER)
 	end
 	
 	self.bonusExp = 0
@@ -175,14 +180,14 @@ local function hitToString(hit)
 end
 
 function P.combatObj:toStrings()
-	local ret = {}	
-	ret[0] = "          LV.XP Hit Crt HP Dmg"
+	local ret = {}
+	ret[1] = "          LV.XP Hit Crt HP Dmg"
 	if self:staff() then 
-		ret[0] = "STAFF     LV.XP Hit Crt HP Dmg" 
+		ret[1] = "STAFF     LV.XP Hit Crt HP Dmg" 
 	end
-
+	
 	local function line(isAttacker)
-		local name = unitData.names(self.unit_ID)		
+		local name = unitData.names(self.unit_ID)
 		local experStr = string.format("%02d", self:data(isAttacker)[P.EXP_I])
 		if not isAttacker then
 			name = "Enemy"
@@ -206,53 +211,54 @@ function P.combatObj:toStrings()
 		return ret
 	end
 	
-	ret[1] = line(true)
-	ret[2] = line(false)
+	ret[2] = line(ATTACKER)
+	ret[3] = line(DEFENDER)
 	
 	return ret
 end
 
-function P.trueHit(hit)
+local function trueHit(hit)
 	if hit <= 50 then
 		return hit*(2*hit+1)/100
 	end
-	return 100 - P.trueHit(100 - hit)
+	return 100 - trueHit(100 - hit)
 end
 
 -- for compact display during EP, just display attacker then defender
 -- hp and xp show up on screen even with animations off
 function P.combatObj:toCompactStrings()
 	local ret = {}	
-	ret[0] = "Dmg  trHit Cr"
+	ret[1] = "Dmg  trHit Cr"
 	
 	local function line(isAttacker)
-		local ret = ""
+		local rLine = ""
 		
 		local dmg = self:dmg(isAttacker)
 		if dmg >= 100 then 
-			ret = ret .. "--   "
+			rLine = rLine .. "--   "
 		else
-			ret = ret .. string.format("%2d",self:dmg(isAttacker))
-			if self:doubles(isAttacker) then ret = ret .. "x2 " 
-			else ret = ret .. "   " end
+			rLine = rLine .. string.format("%2d",self:dmg(isAttacker))
+			if self:doubles(isAttacker) then rLine = rLine .. "x2 " 
+			else rLine = rLine .. "   " end
 		end
 		
-		local hit = self:data(isAttacker)[P.HIT_I]		
-		if hit > 100 then ret = ret .. " --- "
-		elseif hit == 100 then ret = ret .. "100.0"
-		else ret = ret .. string.format("%05.2f", P.trueHit(hit))
+		local hit = self:data(isAttacker)[P.HIT_I]
+		if hit > 100 then rLine = rLine .. " --- "
+		elseif hit == 100 then rLine = rLine .. "100.0"
+		else rLine = rLine .. string.format("%05.2f", trueHit(hit))
 		end
 		
 		local crit = self:data(isAttacker)[P.CRIT_I]
-		if crit > 100 then ret = ret .. " --"
-		else ret = ret .. string.format(" %2d", crit)
+		if crit > 100 then rLine = rLine .. " --"
+		else rLine = rLine .. string.format(" %2d", crit)
 		end
-
-		return ret
+		
+		return rLine
 	end
 	
-	ret[1] = line(true)
-	ret[2] = line(false)
+	ret[2] = line(ATTACKER)
+	ret[3] = line(DEFENDER)
+	
 	return ret
 end
 
@@ -364,7 +370,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 				willHit = true
 			end
 		end
-	
+		
 		if willHit then
 			retHitEv.action = "X"
 			
@@ -416,7 +422,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 				if ((31 - self:data(isAttacker)[P.LUCK_I] > devilRN) and (version >= 7)) or 
 					((21 - self:data(isAttacker)[P.LEVEL_I] > devilRN) and (version == 6)) then
 					retHitEv.action = "DEV"
-					retHitEv.expWasGained = false -- untested	
+					retHitEv.expWasGained = false -- untested
 				end
 			end
 		else
@@ -469,28 +475,26 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		return ret
 	end
 	
-	local maxEvents = 0 -- combat can end early in death
 	local function setNext(isAttacker)
-		maxEvents = maxEvents + 1
-		isAttackers[maxEvents] = isAttacker
+		table.insert(isAttackers, isAttacker)
 		if self:data(isAttacker).weapon == P.enum_BRAVE then
-			maxEvents = maxEvents + 1
-			isAttackers[maxEvents] = isAttacker
+			table.insert(isAttackers, isAttacker)
 		end
 	end
 	
-	setNext(true)
+	setNext(ATTACKER)
 	defenderCounters = (self.defender[P.HIT_I] ~= 255)
 	
 	if defenderCounters then
-		setNext(false)
+		setNext(DEFENDER)
 	end
-	if self:doubles(true) and self.attacker.weapon ~= P.enum_HALVE then
-		setNext(true)
-	elseif self:doubles(false) and defenderCounters then
-		setNext(false)
+	
+	if self:doubles(ATTACKER) and self.attacker.weapon ~= P.enum_HALVE then
+		setNext(ATTACKER)
+	elseif self:doubles(DEFENDER) and defenderCounters then
+		setNext(DEFENDER)
 	end
-
+	
 	for ev_i, isAttacker in ipairs(isAttackers) do
 		local hE = self:hitEvent(index, isAttacker)
 	
@@ -539,7 +543,7 @@ function P.hitSeq_string(argHitSeq)
 	end
 	
 	hitString = hitString .. argHitSeq.expGained .. "xp"
-	if argHitSeq.lvlUp then hitString = hitString .. " Lvl" end	
+	if argHitSeq.lvlUp then hitString = hitString .. " Lvl" end
 	return hitString
 end
 

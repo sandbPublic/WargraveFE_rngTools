@@ -962,7 +962,6 @@ end
 -- gets score for level up starting at rns index HP_RN_i
 -- scored such that average level is 0, empty level is -100
 -- in units of exp: empty level wipes out value of exp used to level up
-
 function P.statProcScore(HP_RN_i, unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	charStats = charStats or savedStats
@@ -1014,7 +1013,7 @@ function P.statStdDev(stat_i, unit_i, charStat)
 	
 	local stdDev = (levelsGained*P.growths(unit_i)[stat_i]*
 		(100-P.growths(unit_i)[stat_i])/10000)^0.5
-
+	
 	return P.statDeviation(stat_i, unit_i, charStat)/stdDev
 end
 
@@ -1035,14 +1034,14 @@ function P.percentile(unit_i, charStats)
 	unit_i = unit_i or P.sel_Unit_i
 	charStats = charStats or savedStats
 	local numOfTrials = 1000
-
+	
 	local levelsGained = statsGained(P.LEVEL_I, unit_i)
 	local charStatsScore = 0
 	for stat_i = 1, 7 do
 		charStatsScore = charStatsScore + 
 			charStats[stat_i]*P.growthWeights(unit_i)[stat_i]
 	end
-
+	
 	local worseTrials = 0
 	for trial_i = 1, numOfTrials do
 		local trialScore = 0
@@ -1102,7 +1101,7 @@ function P.statData_strings() -- index from 0
 	
 	local showPromo = P.canPromote() and feGUI.pulse(480)
 	
-	local indexer = -1
+	local indexer = 0
 	local function nextInd()
 		indexer = indexer+1
 		return indexer
@@ -1175,15 +1174,12 @@ end
 
 -- variable rather than function because don't want to recalc each frame
 P.levelUp_strings = {}
-P.levelUp_stringsSize = 0
--- index from 0
 function P.setLevelUpStrings()
 	P.levelUp_strings = {}
 	
-	P.levelUp_strings[0] = string.format(" =Level Ups: %s=", unitData.names())
-	P.levelUp_stringsSize = 1
+	table.insert(P.levelUp_strings, string.format(" =Level Ups: %s=", unitData.names()))
 	
-	-- detect upcoming good levels		
+	-- detect upcoming good levels
 	local recordScore = 0 -- average
 	
 	for relLevelUp_pos = 0, 90 do
@@ -1191,7 +1187,7 @@ function P.setLevelUpStrings()
 		
 		levelUpScore = unitData.statProcScore(levelUp_pos)
 		
-		if levelUpScore > recordScore then	
+		if levelUpScore > recordScore then
 			-- find valid prior combat simulations if they exist
 			local maxCombat = 24 -- 2 brave weapons, all crits
 			if relLevelUp_pos < maxCombat then
@@ -1215,14 +1211,13 @@ function P.setLevelUpStrings()
 			end
 			
 			if sequenceFound then
-				P.levelUp_strings[P.levelUp_stringsSize] = seqString
+				table.insert(P.levelUp_strings, seqString)
 				recordScore = levelUpScore
-				P.levelUp_stringsSize = P.levelUp_stringsSize + 1
 			end
 		end
 		
 		recordScore = recordScore + 0.01 -- require at least 1 point improvement per rn
-	end		
+	end
 end
 
 P.setLevelUpStrings()

@@ -49,20 +49,13 @@ rectObj.Xratio = 0 -- 0 to 1, determine position within the gba window
 rectObj.Yratio = 0
 rectObj.opacity = 0
 rectObj.color = 0
-rectObj.strings = {} -- index from 0
+rectObj.strings = {}
 
-function rectObj:numOfStrings()
-	local ret = 0
-	while self.strings[ret] do
-		ret = ret + 1
-	end
-	return ret
-end
 
 -- height of a line
 function rectObj:linePixels()
-	if self:numOfStrings() > 16 then
-		return math.floor(162/self:numOfStrings())
+	if #self.strings > 16 then
+		return math.floor(162/#self.strings)
 	end
 	return 10
 end
@@ -70,30 +63,30 @@ end
 function rectObj:width()
 	local width = 0
 	-- set to max line length
-	for line_i = 0, self:numOfStrings()-1 do
-		local stringLen = string.len(self.strings[line_i])
+	for line_i, string_ in ipairs(self.strings) do
+		local stringLen = string.len(string_)
 		
 		-- add colorized string length
 		-- don't need to do this for rnStream because it's padded with spaces
-		if (self.ID == P.RN_EVENT_I) and (line_i % 2 == 1) then
-			stringLen = stringLen + rnEvent.get((line_i+1)/2).length * 3
+		if (self.ID == P.RN_EVENT_I) and (line_i % 2 == 0) then
+			stringLen = stringLen + rnEvent.get(line_i/2).length * 3
 		end
 		
-		if stringLen > width then
+		if width < stringLen then
 			width = stringLen
 		end
 	end
-	return width*CHAR_PIXELS+6
+	return width * CHAR_PIXELS + 6
 end
 
 function rectObj:height()
-	return self:numOfStrings()*self:linePixels()+2
+	return #self.strings*self:linePixels()+2
 end
 
 function rectObj:left()
 	local ret = self.Xratio * (239 - self:width())
 	if ret < 0 then
-		ret = 0
+		return 0
 	end
 	return ret
 end
@@ -101,7 +94,7 @@ end
 function rectObj:top()
 	local ret = self.Yratio * (159 - self:height())
 	if ret < 0 then
-		ret = 0
+		return 0
 	end
 	return ret
 end
@@ -125,7 +118,7 @@ end
 -- cursor has 32 == 8 * 4 frame cycle
 function P.pulse(cycle)
 	cycle = cycle or 48
-
+	
 	return (vba.framecount() % cycle) < (cycle/2)
 end
 
@@ -149,10 +142,10 @@ function P.flashcolor(color, color2)
 	end
 end
 
--- drawing functions are opacity agnostic, set gui.opacity before calling
+-- drawing functions are opacity agnostic; set gui.opacity before calling
 function rectObj:drawBackgroundBox()
 	local outlineColor = self.color
-	if (self.ID == P.selRect_i) and P.rectShiftMode then 	
+	if (self.ID == P.selRect_i) and P.rectShiftMode then
 		outlineColor = P.flashcolor(outlineColor) -- selected and visible, flash outline
 	end
 	
@@ -169,12 +162,12 @@ function rectObj:drawBackgroundBox()
 	gui.box(x1, y1, x1+self:width(), y1+self:height(), darkColor, outlineColor)
 end
 
-function rectObj:drawString(line_i, char_i, str, color, borderColor)
+function rectObj:drawString(line_i, char_offset, str, color, borderColor)
 	color = color or "white"
 	borderColor = borderColor or "black"
-
-	gui.text(self:left()+3+char_i*CHAR_PIXELS, 
-			 self:top() +2+line_i*self:linePixels(), 
+	
+	gui.text(self:left() + 3 + char_offset*CHAR_PIXELS, 
+			 self:top() + 2 + (line_i - 1)*self:linePixels(), 
 			 str, color, borderColor)
 end
 
@@ -185,13 +178,12 @@ end
 -- 75 = yellow
 -- 99 = red
 
-local colorMap = 
-{
-{63,128,255},
-{63,255,128},
-{255,255,255},
-{255,255,0},
-{255,0,0}
+local colorMap = {
+	{63,128,255},
+	{63,255,128},
+	{255,255,255},
+	{255,255,0},
+	{255,0,0}
 }
 
 local rnColors = {}
@@ -222,19 +214,19 @@ for rnCent = 0, 99 do
 	setRNColor(rnCent)
 end
 
-function rectObj:drawColorizedRNString(line_i, char_i, RN_start, length)
-	for rn_i = 0, length-1 do
-		local rn = rns.rng1:getRNasCent(RN_start+rn_i)
+function rectObj:drawColorizedRNString(line_i, char_offset, RN_start, length)
+	for rn_offset = 0, length-1 do
+		local rn = rns.rng1:getRNasCent(RN_start + rn_offset)
 		
-		self:drawString(line_i, char_i+3*rn_i, 
+		self:drawString(line_i, char_offset + 3*rn_offset,
 			string.format("%02d", rn), rnColors[rn], rnBorderColors[rn])
 	end
 end
 
-function rectObj:drawBox(line_i, char_i, length, color)
-	x1 = self:left() + char_i*CHAR_PIXELS
-	y1 = self:top()  + line_i*self:linePixels()
-	x2 = x1 + CHAR_PIXELS * length
+function rectObj:drawBox(line_i, char_offset, length, color)
+	x1 = self:left() + char_offset*CHAR_PIXELS
+	y1 = self:top()  + (line_i - 1)*self:linePixels()
+	x2 = x1 + length*CHAR_PIXELS
 	y2 = y1 + self:linePixels()
 	
 	gui.box(x1, y1, x2, y2, 0, color)
@@ -249,26 +241,27 @@ function rectObj:draw()
 	
 	gui.opacity(self.opacity)
 	self:drawBackgroundBox()
-
-	for line_i = 0, self:numOfStrings()-1 do
-		self:drawString(line_i, 0, self.strings[line_i])
+	
+	for line_i, line in ipairs(self.strings) do
+		self:drawString(line_i, 0, line)
 	end
 	
 	-- color highlighted RN strings, draw boxes
 	if self.ID == P.RN_EVENT_I then
 		for i, event in ipairs(rnEvent.getEventList()) do
-			self:drawColorizedRNString(2*i-1, 6, -- 5 digits, space
+			self:drawColorizedRNString(2*i, 6, -- 5 digits, space
 				event.startRN_i, event.length)
 			event:drawMyBoxes(self, i)
 		end
 	
 	elseif self.ID == P.RN_STREAM_I then
-		local firstLineRnPos = math.floor(rns.rng1.pos/rnsPerLine-1)*rnsPerLine
+		-- draw the previous line for context
+		local firstLineRnPos = (math.floor(rns.rng1.pos/rnsPerLine) - 1)*rnsPerLine
 		if firstLineRnPos < 0 then firstLineRnPos = 0 end
 		
-		for line_i = 0, rnsLines-1 do
+		for line_i = 1, rnsLines do
 			self:drawColorizedRNString(line_i, 7, -- 5 digits, :, space
-				firstLineRnPos+line_i*rnsPerLine, rnsPerLine)
+				firstLineRnPos + (line_i - 1)*rnsPerLine, rnsPerLine)
 		end
 	end
 	
@@ -319,7 +312,7 @@ P.burnNoteRect = rectObj:new(7, "red")
 P.burnNoteRect.Yratio = 1
 function P.setRN_BurnNoteString(str, opac)
 	P.burnNoteRect.opacity = opac
-	P.burnNoteRect.strings[0] = str
+	P.burnNoteRect.strings[1] = str
 end
 
 return feGUI

@@ -14,10 +14,10 @@ require("feCombat")
 require("fe_rnEvent")
 require("feGUI")
 
-local function printStringArray(array, size)
+local function printStringArray(array)
 	print("")
-	for i = 0, size-1 do
-		print(array[i])
+	for _, string_ in ipairs(array) do
+		print(string_)
 	end
 end
 
@@ -32,9 +32,9 @@ end
 
 local primaryFunctions = true
 
--- GJLUY
---  HNEIO
--- BKM
+-- TYUIOP
+--   HJKL
+--  BNM
 
 local hotkeys = {}
 local function loadHotkeys(filename)
@@ -174,7 +174,7 @@ while true do
 			rnEvent.get().batParams:set()
 			rnEvent.update_rnEvents()
 			
-			printStringArray(rnEvent.get().batParams:toStrings(), 3)
+			printStringArray(rnEvent.get().batParams:toStrings())
 		end
 		
 		if pressed(3) then rnEvent.toggleCombat() end
@@ -182,7 +182,7 @@ while true do
 		if pressed(4) then
 			rnEvent.toggleBatParam(combat.combatObj.togglePromo)
 			
-			printStringArray(rnEvent.get().batParams:toStrings(), 3)
+			printStringArray(rnEvent.get().batParams:toStrings())
 		end	
 		
 		if pressed(5) then
@@ -215,7 +215,7 @@ while true do
 		
 		if pressed(12) then -- save battle params & stats
 			combat.currBattleParams:set()
-			printStringArray(combat.currBattleParams:toStrings(), 3)
+			printStringArray(combat.currBattleParams:toStrings())
 			
 			reprintStats = true
 			unitData.saveStats()
@@ -234,14 +234,17 @@ while true do
 		end
 	else
 		if pressed(1) then rnEvent.undoDelete() end
+		
 		if pressed(2) then
-			if gameCtrl.thisFrame.B then
-				rnEvent.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_ENEMY)
+			if gameCtrl.thisFrame.B then -- enemy's weapon
+				rnEvent.toggleBatParam(combat.combatObj.cycleWeapon, false)
 			else
-				rnEvent.toggleBatParam(combat.combatObj.cycleWeapon, combat.enum_PLAYER)
+				rnEvent.toggleBatParam(combat.combatObj.cycleWeapon, true)
 			end
 		end
+		
 		if pressed(3) then rnEvent.toggleLevel() end
+		
 		if pressed(4) then rnEvent.toggleDig() end
 		
 		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
@@ -310,17 +313,17 @@ while true do
 	end
 	
 	if reprintRNs then
-		printStringArray(rns.rng1:RNstream_strings(false, 5, 10), 5)
+		printStringArray(rns.rng1:RNstream_strings(false, 5, 10))
 	end
 
 	if reprintStats then
-		printStringArray(unitData.statData_strings(), 2) -- up to 9 lines
+		printStringArray(unitData.statData_strings()) -- up to 9 lines
 		--print(string.format("percentile: %.1f", 100*unitData.percentile())) 
 	end
 	
 	if reprintLvlUps then
 		unitData.setLevelUpStrings()
-		printStringArray(unitData.levelUp_strings, unitData.levelUp_stringsSize)
+		printStringArray(unitData.levelUp_strings)
 	end
 	
 	feGUI.drawRects()

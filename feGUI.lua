@@ -4,28 +4,23 @@ feGUI = P
 P.rects = {}
 P.RN_EVENT_I 		= 1
 P.RN_STREAM_I		= 2 
-P.BATTLE_PARAMS_I 	= 3
-P.STAT_DATA_I		= 4
-P.LEVEL_UPS_I		= 5
-P.COMPACT_BPS_I		= 6
+P.STAT_DATA_I		= 3
+P.BATTLE_PARAMS_I 	= 4
+P.COMPACT_BPS_I		= 5
 
 local RECT_COLORS = {
 	"blue", 
 	"white", 
-	"red", 
-	"yellow", 
-	"magenta", 
 	"green",
-	"red"
+	"red", 
+	"yellow",
 }
 local RECT_STRINGS = {
-	"rnEvent",
+	"rnEvents",
 	"rn stream",
-	"battle parameters", 
 	"stat data", 
-	"level ups", 
+	"battle parameters", 
 	"compact btl params",
-	"burn notifier"
 }
 
 P.selRect_i = P.RN_EVENT_I
@@ -286,8 +281,8 @@ function rectObj:new(ID_p, color_p)
 	return o
 end
 
-for rect_i = 1, 6 do
-	P.rects[rect_i] = rectObj:new(rect_i)
+for rect_i = 1, #RECT_COLORS do
+	table.insert(P.rects, rectObj:new(rect_i))
 end
 
 function P.selRect()
@@ -297,7 +292,6 @@ end
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
 	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings()
-	P.rects[P.LEVEL_UPS_I].strings = unitData.levelUp_strings
 	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
 	-- don't want to overwrite currBattleParams generally
 	
@@ -306,20 +300,11 @@ function P.drawRects()
 		P.rects[P.COMPACT_BPS_I].strings = combat.currBattleParams:toCompactStrings()
 	end
 	
-	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings()
+	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings("isColored")
 	
 	for rect_i = 1, #P.rects do
 		P.rects[rect_i]:draw()
 	end
-	P.burnNoteRect:draw()
-end
-
--- put burn notifier at bottom left
-P.burnNoteRect = rectObj:new(7, "red")
-P.burnNoteRect.Yratio = 1
-function P.setRN_BurnNoteString(str, opac)
-	P.burnNoteRect.opacity = opac
-	P.burnNoteRect.strings[1] = str
 end
 
 return feGUI

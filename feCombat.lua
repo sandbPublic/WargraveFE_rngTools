@@ -180,10 +180,10 @@ local function hitToString(hit)
 end
 
 function P.combatObj:toStrings()
-	local ret = {}
-	ret[1] = "          LV.XP Hit Crt HP Dmg"
+	local rStrings = {}
+	rStrings[1] = "          LV.XP Hit Crt HP Dmg"
 	if self:staff() then 
-		ret[1] = "STAFF     LV.XP Hit Crt HP Dmg" 
+		rStrings[1] = "STAFF     LV.XP Hit Crt HP Dmg" 
 	end
 	
 	local function line(isAttacker)
@@ -196,25 +196,25 @@ function P.combatObj:toStrings()
 			experStr = string.format("%02X", self:data(isAttacker)[P.EXP_I])
 		end
 		
-		local ret = string.format("%-10.10s%2d.%s %3s %3s %2d %2d",
+		local rLine = string.format("%-10.10s%2d.%s %3s %3s %2d %2d",
 			name, self:data(isAttacker)[P.LEVEL_I], experStr, 
 			hitToString(self:data(isAttacker)[P.HIT_I]), 
 			hitToString(self:data(isAttacker)[P.CRIT_I]), 
 			self:data(isAttacker)[P.HP_I], self:dmg(isAttacker))
 		
-		if self:doubles(isAttacker) then ret = ret .. "x2" 
-		else ret = ret .. "  " end	
+		if self:doubles(isAttacker) then rLine = rLine .. "x2" 
+		else rLine = rLine .. "  " end	
 		
 		if self:data(isAttacker).weapon ~= P.enum_NORMAL then
-			ret = ret .. " " .. P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weapon]
+			rLine = rLine .. " " .. P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weapon]
 		end
-		return ret
+		return rLine
 	end
 	
-	ret[2] = line(ATTACKER)
-	ret[3] = line(DEFENDER)
+	rStrings[2] = line(ATTACKER)
+	rStrings[3] = line(DEFENDER)
 	
-	return ret
+	return rStrings
 end
 
 local function trueHit(hit)
@@ -227,8 +227,8 @@ end
 -- for compact display during EP, just display attacker then defender
 -- hp and xp show up on screen even with animations off
 function P.combatObj:toCompactStrings()
-	local ret = {}	
-	ret[1] = "Dmg  trHit Cr"
+	local rStrings = {}	
+	rStrings[1] = "Dmg  trHit Cr"
 	
 	local function line(isAttacker)
 		local rLine = ""
@@ -256,10 +256,10 @@ function P.combatObj:toCompactStrings()
 		return rLine
 	end
 	
-	ret[2] = line(ATTACKER)
-	ret[3] = line(DEFENDER)
+	rStrings[2] = line(ATTACKER)
+	rStrings[3] = line(DEFENDER)
 	
-	return ret
+	return rStrings
 end
 
 function P.combatObj:canLevel()
@@ -278,7 +278,7 @@ function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-
 	local expFromDmg = math.max(1,
 		(31+self.enemy[P.LEVEL_I]-self.player[P.LEVEL_I])/playerClassPower)
 	
-	local ret = expFromDmg
+	local rExpFrom = expFromDmg
 	
 	if kill then
 		-- todo: load enemy class from RAM?
@@ -319,15 +319,15 @@ function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-
 		
 		-- eggs always yield 50xp
 		
-		ret = math.min(100, math.floor(expFromDmg+assassinateMult*math.max(0, 
+		rExpFrom = math.min(100, math.floor(expFromDmg+assassinateMult*math.max(0, 
 			enemyValue-playerValue + 20 + self.bonusExp)))
 	end
 	
 	if self.player[P.LEVEL_I] % 20 == 19 then
-		return math.min(math.floor(ret), 100 - self.player[P.EXP_I])
+		return math.min(math.floor(rExpFrom), 100 - self.player[P.EXP_I])
 	end
 	
-	return math.floor(ret)
+	return math.floor(rExpFrom)
 end
 
 -- string action type, int dmg, int rnsConsumed, bool expWasGained, bool assassinated
@@ -454,25 +454,25 @@ end
 -- X hit events, expGained, lvlUp, totalRNsConsumed, pHP, eHP
 -- can carry enemies hp from previous combat
 function P.combatObj:hitSeq(index, carriedEnemyHP)
-	local ret = {} -- numeric keys are hit events
+	local rHitSeq = {} -- numeric keys are hit events
 	local isAttackers = {} -- unnecessary to return with current functionality
-	ret.expGained = 1
-	ret.lvlUp = false
-	ret.totalRNsConsumed = 0
-	ret.pHP = self.player[P.HP_I]
+	rHitSeq.expGained = 1
+	rHitSeq.lvlUp = false
+	rHitSeq.totalRNsConsumed = 0
+	rHitSeq.pHP = self.player[P.HP_I]
 	
 	-- pass enemy HP from previous combats this phase if applicable
-	ret.eHP = carriedEnemyHP or self.enemy[P.HP_I]
-	if ret.eHP == 0 then
-		ret.expGained = 0
-		return ret
+	rHitSeq.eHP = carriedEnemyHP or self.enemy[P.HP_I]
+	if rHitSeq.eHP == 0 then
+		rHitSeq.expGained = 0
+		return rHitSeq
 	end
 	
 	if self:staff() then 
-		ret[1] = self:staffHitEvent(index)
+		rHitSeq[1] = self:staffHitEvent(index)
 		isAttackers[1] = true
-		ret.totalRNsConsumed = 1
-		return ret
+		rHitSeq.totalRNsConsumed = 1
+		return rHitSeq
 	end
 	
 	local function setNext(isAttacker)
@@ -498,41 +498,41 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	for ev_i, isAttacker in ipairs(isAttackers) do
 		local hE = self:hitEvent(index, isAttacker)
 	
-		ret[ev_i] = hE
+		rHitSeq[ev_i] = hE
 		index = index + hE.RNsConsumed
-		ret.totalRNsConsumed = ret.totalRNsConsumed + hE.RNsConsumed
+		rHitSeq.totalRNsConsumed = rHitSeq.totalRNsConsumed + hE.RNsConsumed
 		
 		if (isAttacker and hE.action ~= "DEV") or 
 			(not isAttacker and hE.action == "DEV") then 
-			ret.eHP = ret.eHP - hE.dmg -- player or enemy-devil damage
+			rHitSeq.eHP = rHitSeq.eHP - hE.dmg -- player or enemy-devil damage
 		else
-			ret.pHP = ret.pHP - hE.dmg -- enemy or self-devil damage
+			rHitSeq.pHP = rHitSeq.pHP - hE.dmg -- enemy or self-devil damage
 		end
 		
 		if hE.expWasGained then
-			ret.expGained = self:expFrom()
-			ret.lvlUp = self:willLevel(ret.expGained)
+			rHitSeq.expGained = self:expFrom()
+			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
 		end
 		
 		if not isAttacker then
-			ret[ev_i].action = string.lower(hE.action)
+			rHitSeq[ev_i].action = string.lower(hE.action)
 		end
 		
-		if ret.pHP <= 0 then  -- player died, combat over
-			ret.pHP = 0
-			ret.expGained = 0
-			ret.lvlUp = false
-			return ret
+		if rHitSeq.pHP <= 0 then  -- player died, combat over
+			rHitSeq.pHP = 0
+			rHitSeq.expGained = 0
+			rHitSeq.lvlUp = false
+			return rHitSeq
 		end
 		
-		if ret.eHP <= 0 then  -- enemy died, combat over
-			ret.eHP = 0
-			ret.expGained = self:expFrom(true, hE.assassinated)
-			ret.lvlUp = self:willLevel(ret.expGained)
-			return ret
+		if rHitSeq.eHP <= 0 then  -- enemy died, combat over
+			rHitSeq.eHP = 0
+			rHitSeq.expGained = self:expFrom(true, hE.assassinated)
+			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
+			return rHitSeq
 		end
 	end
-	return ret
+	return rHitSeq
 end
 
 function P.hitSeq_string(argHitSeq)
@@ -542,7 +542,7 @@ function P.hitSeq_string(argHitSeq)
 		hitString = hitString .. hitEvent.action .. " "
 	end
 	
-	hitString = hitString .. argHitSeq.expGained .. "xp"
+	hitString = hitString .. string.format("%2dxp", argHitSeq.expGained)
 	if argHitSeq.lvlUp then hitString = hitString .. " Lvl" end
 	return hitString
 end

@@ -80,7 +80,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	o.enemyHPend = 0 -- HP at end of this rnEvent
 	-- TODO player HP (from multi combat due to dance, or EP)
 	
-	o.burns = 0 -- TODO AI burns? post burns for reinforcements?
+	o.burns = 0
 	o.startRN_i = 0
 	o.postBurnsRN_i = 0
 	o.mHitSeq = {} -- avoid confusion between member variable and function in combatObj
@@ -137,9 +137,11 @@ function rnEventObj:diagnostic()
 	
 	print(string.format("Eval %5.2f", self.eval))
 	
-	for c_i = self.cache.min_i, self.cache.max_i do
-		if self.cache[c_i] and self.cache[c_i][self.enemyHP] then
-			--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHP].eval))
+	if self.cache then
+		for c_i = self.cache.min_i, self.cache.max_i do
+			if self.cache[c_i] and self.cache[c_i][self.enemyHP] then
+				--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHP].eval))
+			end
 		end
 	end
 	
@@ -306,30 +308,31 @@ function rnEventObj:digSucceed()
 end
 
 function rnEventObj:resultString()
-	local ret = ""
+	local rString = ""
 	if self.hasCombat then
-		ret = ret .. " " .. combat.hitSeq_string(self.mHitSeq) 
+		rString = rString .. " " .. combat.hitSeq_string(self.mHitSeq) 
 	end
 	if self:levelDetected() then
-		ret = ret .. string.format(" %+d %s", self:levelScore(),
-			unitData.levelUpProcs_string(self.postCombatRN_i, self.unit_i, self.stats))
+		rString = rString .. string.format(" %s %3d",
+			unitData.levelUpProcs_string(self.postCombatRN_i, self.unit_i, self.stats),
+			self:levelScore())
 	end
 	if self.dig then
 		if self:digSucceed() then -- luck > rn
-			ret = ret .. " dig success!"
+			rString = rString .. " dig success!"
 		else 
-			ret = ret .. " dig fail"
+			rString = rString .. " dig fail"
 		end
 	end
-	return ret
+	return rString
 end
 function rnEventObj:headerString(rnEvent_i)
-	local ret = "  "
+	local hString = "  "
 	if rnEvent_i == sel_rnEvent_i and feGUI.canAlter_rnEvent() then 
 		if feGUI.pulse() then 
-			ret = "<>" 
+			hString = "<>" 
 		else
-			ret = "--"
+			hString = "--"
 		end
 	end
 	
@@ -363,7 +366,7 @@ function rnEventObj:headerString(rnEvent_i)
 		specialStringEvents = specialStringEvents .. " cmb x" .. tostring(self.combatWeight)
 	end
 	
-	return ret .. string.format("%2d %s%s%s",
+	return hString .. string.format("%2d %s%s%s",
 		self.ID, unitData.names(self.unit_i), self:resultString(), specialStringEvents)
 end
 
@@ -430,36 +433,43 @@ function rnEventObj:evaluation_fn(printV)
 	return score
 end
 
--- quickly find how many burns needed to improve result of the first rnEvent
+-- quickly find how many burns needed to improve result of selected rnEvent
 -- for rn burning gameplay
-function P.searchFutureOutcomes()
+function P.searchFutureOutcomes(event_i)
 	if #eventList < 1 then return end
 	
-	eventList[1].burns = 0
-	local record
+	event_i = event_i or sel_rnEvent_i
+	-- swap to first location
+	eventList[event_i], eventList[1] = eventList[1], eventList[event_i]
+	event = eventList[1]
+	event.burns = 0
 	
-	local function newRecord()
-		record = eventList[1]:evaluation_fn()
-		print(string.format("%4d %3d %3d %s", rns.rng1.pos + eventList[1].burns, eventList[1].burns, record, eventList[1]:resultString()))
-	end
+	print()
+	print("Searching for event ID " .. event.ID)
+	print("Position Score Outcome")
 	
-	print("Searching for " .. eventList[1]:headerString())
-	newRecord()
-	
-	local improveAttempts = 0
-	while improveAttempts < 1000 do
-		eventList[1].burns = eventList[1].burns + 1
-		eventList[1]:update()
-		if record < eventList[1]:evaluation_fn() then
-			newRecord()
-			improveAttempts = 0
-		else 
-			improveAttempts = improveAttempts + 1
+	local record = -9999
+	for improveAttempts = 0, 1000 do		
+		event:update()
+		
+		if improveAttempts % 50 == 0 then
+			emu.frameadvance()
 		end
+		
+		if record < event:evaluation_fn() then
+			record = event:evaluation_fn()
+			print(string.format("%8d %5d%s", 
+				rns.rng1.pos + event.burns, 
+				record, 
+				event:resultString()))
+			improveAttempts = 0
+		end
+		
+		event.burns = event.burns + 1
 	end
 	
-	eventList[1].burns = 0
-	eventList[1]:update()
+	event.burns = 0
+	P.update_rnEvents(1)
 end
 
 -- draw boxes around rns on second line
@@ -536,23 +546,23 @@ end
 
 -- rns blank to be colorized
 function P.toStrings(isColored)
-	local ret = {}
+	local rStrings = {}
 	
 	if #eventList <= 0 then
-		ret[1] = "rnEvents empty"
-		return ret
+		rStrings[1] = "rnEvents empty"
+		return rStrings
 	end
 	
 	for rnEvent_i, event in ipairs(eventList) do
-		table.insert(ret, event:headerString(rnEvent_i))
+		table.insert(rStrings, event:headerString(rnEvent_i))
 		local prefix = string.format("%5d ", event.startRN_i % 100000)
 		if isColored then
-			table.insert(ret, prefix)
+			table.insert(rStrings, prefix)
 		else
-			table.insert(ret, prefix .. rns.rng1:rnSeqString(event.startRN_i, event.length))
+			table.insert(rStrings, prefix .. rns.rng1:rnSeqString(event.startRN_i, event.length))
 		end
 	end
-	return ret
+	return rStrings
 end
 
 function P.get(index)

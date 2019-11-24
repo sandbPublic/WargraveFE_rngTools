@@ -18,8 +18,7 @@ local INDEX_OF_NAME = {} -- useful to set values for a specific unit
 local DEPLOYED = {}
 local GROWTHS = {}
 local GROWTH_WEIGHTS = {}
-local BASE_STATS = {} -- store base stats, names, deployed, and classes in one table?
-local BASE_STATS_HM = {} -- hard mode
+local BASE_STATS = {}
 local BOOSTERS = {}
 local CLASSES = {}
 local PROMOTIONS = {}
@@ -665,7 +664,7 @@ for v = 6, 8 do
 end
 
 DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
-DEPLOYED[6][INDEX_OF_NAME["Marcus6"]] = true
+DEPLOYED[6][INDEX_OF_NAME["Zealot"]] = true
 GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
 GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 20, 20, 10, 10}
 
@@ -1096,7 +1095,7 @@ function P.saveStats()
 	savedStats[9] = memory.readbyte(statExpAddr[version])
 end
 
-function P.statData_strings() -- index from 0
+function P.statData_strings()
 	local ret = {}
 	
 	local showPromo = P.canPromote() and feGUI.pulse(480)
@@ -1171,55 +1170,5 @@ function P.statData_strings() -- index from 0
 	
 	return ret
 end
-
--- variable rather than function because don't want to recalc each frame
-P.levelUp_strings = {}
-function P.setLevelUpStrings()
-	P.levelUp_strings = {}
-	
-	table.insert(P.levelUp_strings, string.format(" =Level Ups: %s=", unitData.names()))
-	
-	-- detect upcoming good levels
-	local recordScore = 0 -- average
-	
-	for relLevelUp_pos = 0, 90 do
-		local levelUp_pos = rns.rng1.pos + relLevelUp_pos
-		
-		levelUpScore = unitData.statProcScore(levelUp_pos)
-		
-		if levelUpScore > recordScore then
-			-- find valid prior combat simulations if they exist
-			local maxCombat = 24 -- 2 brave weapons, all crits
-			if relLevelUp_pos < maxCombat then
-				maxCombat = relLevelUp_pos
-			end
-			
-			local sequenceFound = false
-			local seqString = string.format("%0.2f %s", 
-				levelUpScore, unitData.levelUpProcs_string(levelUp_pos))
-			
-			for combatLength = maxCombat, 0, -1 do
-				if combat.currBattleParams:hitSeq(levelUp_pos-combatLength).RNsConsumed
-						== combatLength then -- valid sequence
-						
-					sequenceFound = true
-					seqString = seqString .. 
-						string.format(" @%2d %s", relLevelUp_pos-combatLength, 
-						combat.hitSeq_string(
-							combat.currBattleParams:hitSeq(levelUp_pos-combatLength)))
-				end
-			end
-			
-			if sequenceFound then
-				table.insert(P.levelUp_strings, seqString)
-				recordScore = levelUpScore
-			end
-		end
-		
-		recordScore = recordScore + 0.01 -- require at least 1 point improvement per rn
-	end
-end
-
-P.setLevelUpStrings()
 
 return unitData

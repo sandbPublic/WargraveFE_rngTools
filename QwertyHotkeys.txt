@@ -27,7 +27,7 @@ next display mode
 toggle rnJumpAmount (1<->12)
 P
 suggest rnEvent permutation
-search future outcomes of rnEvent[1]
+search future event outcomes
 B
 cycle enemy class
 switch RNG to 2ndary

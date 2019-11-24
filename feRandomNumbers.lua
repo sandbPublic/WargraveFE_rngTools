@@ -203,7 +203,7 @@ end
 
 -- isColored for gui leaves the numbers blank so they can be drawn colored later
 function rnStreamObj:RNstream_strings(isColored, numLines, rnsPerLine)
-	local ret = {}
+	local rStrings = {}
 	
 	-- put the prior line before the current position for context
 	local currLineRnPos = math.floor(self.pos/rnsPerLine-1)*rnsPerLine
@@ -223,9 +223,9 @@ function rnStreamObj:RNstream_strings(isColored, numLines, rnsPerLine)
 		end
 		
 		currLineRnPos = currLineRnPos + rnsPerLine
-		table.insert(ret, lineString)
+		table.insert(rStrings, lineString)
 	end
-	return ret
+	return rStrings
 end
 
 return rns

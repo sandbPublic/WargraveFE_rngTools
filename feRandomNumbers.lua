@@ -211,17 +211,14 @@ function rnStreamObj:RNstream_strings(isColored, numLines, rnsPerLine)
 	
 	for line_i = 1, numLines do
 		local lineString = string.format("%05d:", (currLineRnPos)%100000)
-		for rnPos = currLineRnPos, currLineRnPos + rnsPerLine - 1 do
-			if rnPos == self.pos then
-				lineString = lineString .. ">"
-			else
-				lineString = lineString .. " "
-			end
-			
-			if isColored then
-				lineString = lineString .. "  "
-			else
-				lineString = lineString .. string.format("%02d", self:getRNasCent(rnPos))
+		
+		if not isColored then
+			for rnPos = currLineRnPos, currLineRnPos + rnsPerLine - 1 do
+				if rnPos == self.pos then
+					lineString = lineString .. string.format("%>02d", self:getRNasCent(rnPos))
+				else
+					lineString = lineString .. string.format("% 02d", self:getRNasCent(rnPos))
+				end
 			end
 		end
 		

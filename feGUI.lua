@@ -43,6 +43,10 @@ function P.canAlter_rnEvent()
 end
 
 local CHAR_PIXELS = 4
+-- for the rnStream rect's colorized rns
+local RNS_PER_LINE = 15
+local NUM_RN_LINES = 10
+
 local rectObj = {}
 rectObj.ID = 0
 rectObj.Xratio = 0 -- 0 to 1, determine position within the gba window
@@ -50,7 +54,6 @@ rectObj.Yratio = 0
 rectObj.opacity = 0
 rectObj.color = 0
 rectObj.strings = {}
-
 
 -- height of a line
 function rectObj:linePixels()
@@ -61,22 +64,25 @@ function rectObj:linePixels()
 end
 
 function rectObj:width()
-	local width = 0
+	local longestStringLength = 0
 	-- set to max line length
 	for line_i, string_ in ipairs(self.strings) do
 		local stringLen = string.len(string_)
 		
 		-- add colorized string length
-		-- don't need to do this for rnStream because it's padded with spaces
 		if (self.ID == P.RN_EVENT_I) and (line_i % 2 == 0) then
 			stringLen = stringLen + rnEvent.get(line_i/2).length * 3
 		end
 		
-		if width < stringLen then
-			width = stringLen
+		if self.ID == P.RN_STREAM_I then
+			stringLen = stringLen + RNS_PER_LINE * 3
+		end
+		
+		if longestStringLength < stringLen then
+			longestStringLength = stringLen
 		end
 	end
-	return width * CHAR_PIXELS + 6
+	return longestStringLength * CHAR_PIXELS + 6
 end
 
 function rectObj:height()
@@ -232,10 +238,6 @@ function rectObj:drawBox(line_i, char_offset, length, color)
 	gui.box(x1, y1, x2, y2, 0, color)
 end
 
--- for the rnStream rect's colorized rns
-local rnsPerLine = 15
-local rnsLines = 7
-
 function rectObj:draw()
 	if self.opacity <= 0 then return end
 	
@@ -252,16 +254,21 @@ function rectObj:draw()
 			self:drawColorizedRNString(2*i, 6, -- 5 digits, space
 				event.startRN_i, event.length)
 			event:drawMyBoxes(self, i)
-		end
-	
+		end	
 	elseif self.ID == P.RN_STREAM_I then
 		-- draw the previous line for context
-		local firstLineRnPos = (math.floor(rns.rng1.pos/rnsPerLine) - 1)*rnsPerLine
+		local firstLineRnPos = (math.floor(rns.rng1.pos/RNS_PER_LINE) - 1)*RNS_PER_LINE
 		if firstLineRnPos < 0 then firstLineRnPos = 0 end
 		
-		for line_i = 1, rnsLines do
+		for line_i = 1, NUM_RN_LINES do
 			self:drawColorizedRNString(line_i, 7, -- 5 digits, :, space
-				firstLineRnPos + (line_i - 1)*rnsPerLine, rnsPerLine)
+				firstLineRnPos + (line_i - 1)*RNS_PER_LINE, RNS_PER_LINE)
+		end
+		
+		if rns.rng1.pos >= RNS_PER_LINE then
+			self:drawBox(2, 7 + (rns.rng1.pos % RNS_PER_LINE)*3, 3, "white")
+		else
+			self:drawBox(1, 7 + rns.rng1.pos*3, 3, "white")
 		end
 	end
 	
@@ -288,7 +295,7 @@ function P.selRect()
 end
 
 function P.drawRects()
-	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, rnsLines, rnsPerLine)
+	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
 	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings()
 	P.rects[P.LEVEL_UPS_I].strings = unitData.levelUp_strings
 	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()

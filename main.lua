@@ -106,10 +106,6 @@ FOG_ADDR[7] = 0x202BC05
 FOG_ADDR[8] = 0x202BCFD
 
 while true do
-	local reprintRNs = false
-	local reprintStats = false
-	local reprintLvlUps = false
-	
 	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)
 	end
@@ -217,9 +213,10 @@ while true do
 			combat.currBattleParams:set()
 			printStringArray(combat.currBattleParams:toStrings())
 			
-			reprintStats = true
 			unitData.saveStats()
 			rnEvent.updateStats()
+			
+			printStringArray(unitData.statData_strings())
 		end
 		
 		if keybCtrl.thisFrame[hotkeys[13].key] then -- hold down, then press left/right
@@ -310,20 +307,6 @@ while true do
 		if pressed(12) then rnEvent.diagnostic() end
 		
 		if pressed(13) then unitData.setAfas() end
-	end
-	
-	if reprintRNs then
-		printStringArray(rns.rng1:RNstream_strings(false, 5, 10))
-	end
-
-	if reprintStats then
-		printStringArray(unitData.statData_strings()) -- up to 9 lines
-		--print(string.format("percentile: %.1f", 100*unitData.percentile())) 
-	end
-	
-	if reprintLvlUps then
-		unitData.setLevelUpStrings()
-		printStringArray(unitData.levelUp_strings)
 	end
 	
 	feGUI.drawRects()

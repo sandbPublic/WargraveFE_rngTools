@@ -32,9 +32,11 @@ end
 P.rectShiftMode = false
 
 function P.canAlter_rnEvent()
-	return (not P.rectShiftMode) 
-		and (P.selRect_i == P.RN_EVENT_I) 
-		and (P.rects[P.RN_EVENT_I].opacity > 0)
+	return (not P.rectShiftMode) and P.lookingAt(P.RN_EVENT_I)
+end
+
+function P.lookingAt(rect_i)
+	return (P.selRect_i == rect_i) and (P.rects[rect_i].opacity > 0)
 end
 
 local CHAR_PIXELS = 4
@@ -291,19 +293,19 @@ end
 
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
-	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings()
+	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings("showPromo")
 	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
 	-- don't want to overwrite currBattleParams generally
 	
-	if (P.selRect_i == P.COMPACT_BPS_I) and (P.rects[P.COMPACT_BPS_I].opacity > 0) then
+	if P.lookingAt(P.COMPACT_BPS_I) then
 		combat.currBattleParams:set() -- auto update
 		P.rects[P.COMPACT_BPS_I].strings = combat.currBattleParams:toCompactStrings()
 	end
 	
 	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings("isColored")
 	
-	for rect_i = 1, #P.rects do
-		P.rects[rect_i]:draw()
+	for _, rect in ipairs(P.rects) do
+		rect:draw()
 	end
 end
 

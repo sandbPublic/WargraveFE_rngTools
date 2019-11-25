@@ -845,8 +845,8 @@ function P.suggestedPermutation()
 	P.update_rnEvents(1)
 	
 	print()
-	for rnEvent_i = 1, #eventList do
-		eventList[rnEvent_i]:evaluation_fn(true)
+	for _, event in ipairs(eventList) do
+		event:evaluation_fn(true)
 	end
 	
 	print()

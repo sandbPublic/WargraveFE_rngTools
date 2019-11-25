@@ -1095,10 +1095,10 @@ function P.saveStats()
 	savedStats[9] = memory.readbyte(statExpAddr[version])
 end
 
-function P.statData_strings()
+function P.statData_strings(showPromo)
 	local ret = {}
 	
-	local showPromo = P.canPromote() and feGUI.pulse(480)
+	showPromo = showPromo and P.canPromote() and feGUI.pulse(480) and feGUI.lookingAt(feGUI.STAT_DATA_I)
 	
 	local indexer = 0
 	local function nextInd()

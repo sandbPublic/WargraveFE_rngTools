@@ -1,3 +1,5 @@
+require("fe_rnEvent")
+
 local P = {}
 feGUI = P
 
@@ -293,7 +295,7 @@ end
 
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
-	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings("showPromo")
+	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings(P.pulse(480) and P.lookingAt(P.STAT_DATA_I))
 	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
 	-- don't want to overwrite currBattleParams generally
 	

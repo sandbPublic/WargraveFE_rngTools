@@ -8,7 +8,7 @@
 
 require("feUnitData")
 require("feCombat")
-require("feGUI")
+--require("feGUI")
 
 local P = {}
 rnEvent = P

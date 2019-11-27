@@ -4,7 +4,6 @@
 -- Instead implement rn advancing to enable fast enemy phase trials.
 -- Therefore attacker is always the player.
 
-require("feVersion")
 require("feRandomNumbers")
 require("feClass")
 

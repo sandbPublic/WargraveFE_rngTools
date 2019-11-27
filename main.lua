@@ -1,17 +1,18 @@
--- use x.count to track array size
--- use ABCD_I to name a constant index
--- use enum_ABCD for enums
-
 -- 07000003 cursor pulse
 -- 0202.. 55E0, 55E2, BCC4, BCC8 cursor x pos
 -- 0202.. 55E1, 55E3, BCC6, BCCA cursor y pos
 -- .. 55C6 = 0
 
-require("feRandomNumbers")
-require("feClass")
-require("feUnitData")
-require("feCombat")
-require("fe_rnEvent")
+-- package dependencies
+-- main
+--     gui
+--         event
+--             unit
+--                 class
+--             combat
+--                 class
+--                 rn
+
 require("feGUI")
 
 local function printStringArray(array)

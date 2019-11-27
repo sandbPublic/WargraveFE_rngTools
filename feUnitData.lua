@@ -1,7 +1,7 @@
 require("feRandomNumbers")
 require("feClass")
-require("feCombat")
-require("feVersion")
+--require("feGUI")
+
 
 local P = {}
 unitData = P
@@ -270,10 +270,12 @@ NAMES[7] = {
 "Bartre", "Hector", "Oswin", "Serra", "Matthew",
 "Guy", "Merlinus", "Erk", "Priscilla", "Lyn",
 "Wil", "Kent", "Sain", "Florina", "Raven",
+
 "Lucius", "Canas", "Dart", "Fiora", "Legault",
 "Ninian/Nils", "Isadora", "Heath", "Rath", "Hawkeye",
 "Geitz", "Wallace", "Farina", "Pent", "Louise",
 "Karel", "Harken", "Nino", "Jaffar", "Vaida",
+
 "Karla", "Renault", "Athos"
 }
 GROWTHS[7] = {
@@ -463,10 +465,12 @@ NAMES[8] = {
 "Vanessa", "Ross", "Garcia", "Neimi", "Colm",
 "Artur", "Lute", "Natasha", "Joshua", "Ephraim",
 "Forde", "Kyle", "Tana", "Amelia", "Innes",
+
 "Gerik", "Tethys", "Marisa", "L\'Arachel", "Dozla",
 "Saleh", "Ewan", "Cormag", "Rennac", "Duessel",
 "Knoll", "Myrrh", "Syrene", "Caellach", "Orson",
 "Riev", "Ismaire", "Selena", "Glen", "Hayden",
+
 "Valter", "Fado", "Lyon"}
 GROWTHS[8] = {
 {70, 40, 60, 60, 30, 30, 60}, --Eirika
@@ -1098,7 +1102,7 @@ end
 function P.statData_strings(showPromo)
 	local ret = {}
 	
-	showPromo = showPromo and P.canPromote() and feGUI.pulse(480) and feGUI.lookingAt(feGUI.STAT_DATA_I)
+	showPromo = showPromo and P.canPromote()
 	
 	local indexer = 0
 	local function nextInd()

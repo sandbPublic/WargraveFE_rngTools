@@ -1,7 +1,7 @@
-require("feVersion")
-
 local P = {}
 classes = P
+
+version = 6
 
 local indexer = 0
 local function nextInd()

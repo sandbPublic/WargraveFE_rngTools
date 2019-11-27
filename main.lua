@@ -99,7 +99,7 @@ local function pressed(key, ctrl)
 end
 
 local currentRNG = rns.rng1
-local rnJumpAmount = 1 -- distance to move rng position or how many burns to add to an event
+local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
 local FOG_ADDR = {}
 
 FOG_ADDR[6] = 0x202AA55
@@ -126,10 +126,10 @@ while true do
 	if feGUI.canAlter_rnEvent() then -- alter burns, selected, swap, toggle swapping
 		-- change burns
 		if pressed("left", gameCtrl) then
-			rnEvent.changeBurns(-rnJumpAmount)
+			rnEvent.changeBurns(-rnStepSize)
 		end
 		if pressed("right", gameCtrl) then
-			rnEvent.changeBurns(rnJumpAmount)
+			rnEvent.changeBurns(rnStepSize)
 		end
 		
 		if pressed("L", gameCtrl) then
@@ -182,9 +182,7 @@ while true do
 			printStringArray(rnEvent.get().batParams:toStrings())
 		end	
 		
-		if pressed(5) then
-			rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp)
-		end
+		if pressed(5) then rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp) end
 		
 		if pressed(7) then -- advance to next deployed
 			unitData.sel_Unit_i = unitData.nextDeployed()
@@ -202,13 +200,9 @@ while true do
 		
 		if pressed(9) then feGUI.advanceDisplay() end
 		
-		if pressed(10) then 
-			rnEvent.suggestedPermutation()
-		end
+		if pressed(10) then rnEvent.suggestedPermutation() end
 		
-		if pressed(11) then
-			rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass)
-		end
+		if pressed(11) then rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass) end
 		
 		if pressed(12) then -- save battle params & stats
 			combat.currBattleParams:set()
@@ -220,14 +214,25 @@ while true do
 			printStringArray(unitData.statData_strings())
 		end
 		
-		if keybCtrl.thisFrame[hotkeys[13].key] then -- hold down, then press left/right
-			if pressed("L", gameCtrl) then
-				currentRNG:moveRNpos(-rnJumpAmount)
+		if keybCtrl.thisFrame[hotkeys[13].key] then -- hold down, then press direction
+			if pressed("left", gameCtrl) then
+				currentRNG:moveRNpos(-rnStepSize)
 				rnEvent.update_rnEvents(1)
 			end
-			if pressed("R", gameCtrl) then
-				currentRNG:moveRNpos(rnJumpAmount)
+			if pressed("right", gameCtrl) then
+				currentRNG:moveRNpos(rnStepSize)
 				rnEvent.update_rnEvents(1)
+			end
+			if pressed("up", gameCtrl) then
+				rnStepSize = rnStepSize * 10
+				print("rnStepSize now " .. rnStepSize)
+			end
+			if pressed("down", gameCtrl) then
+				rnStepSize = rnStepSize / 10
+				if rnStepSize < 1 then
+					rnStepSize = 1
+				end
+				print("rnStepSize now " .. rnStepSize)
 			end
 		end
 	else
@@ -246,15 +251,15 @@ while true do
 		if pressed(4) then rnEvent.toggleDig() end
 		
 		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
-			local currFogRange = memory.readbyte(FOG_ADDR[version])
+			local currFogRange = memory.readbyte(FOG_ADDR[GAME_VERSION])
 			if pressed("L", gameCtrl) then
 				currFogRange = currFogRange - 1
-				memory.writebyte(FOG_ADDR[version], currFogRange)
+				memory.writebyte(FOG_ADDR[GAME_VERSION], currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
 			if pressed("R", gameCtrl) then
 				currFogRange = currFogRange + 1
-				memory.writebyte(FOG_ADDR[version], currFogRange)
+				memory.writebyte(FOG_ADDR[GAME_VERSION], currFogRange)
 				print("fog set to " .. tostring(currFogRange))
 			end
 		end	
@@ -285,12 +290,7 @@ while true do
 		end	
 		
 		if pressed(9) then 
-			if rnJumpAmount == 1 then
-				rnJumpAmount = 12 -- 12 because enemy reinforcements often consume rns in multiples of 12
-			else
-				rnJumpAmount = 1
-			end
-			print("rnJumpAmount now " .. rnJumpAmount)
+			
 		end
 		
 		if pressed(10) then rnEvent.searchFutureOutcomes() end

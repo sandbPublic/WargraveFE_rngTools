@@ -12,19 +12,19 @@ toggle enemy promo
 toggle rnEvent dig
 O
 toggle bonus exp
-(hold) L/R change fog
+hold, L/R change fog
 H
 switch to 2ndary functions
 switch to primary functions
 J
 unit_i to next deployed
-(hold) L/R change combat weight
+hold, L/R change combat weight
 K
 toggle window visibility
-toggle window adjustments
+move window (<^v>LR)
 L
 next display mode
-toggle rnJumpAmount (1<->12)
+--
 P
 suggest rnEvent permutation
 search future event outcomes
@@ -35,5 +35,5 @@ N
 save stats
 print rnEvent diagnostic
 M
-(hold) L/R move rn position
+hold, <> move rn, ^v change step
 change afa/metis

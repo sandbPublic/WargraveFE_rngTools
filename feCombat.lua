@@ -57,9 +57,9 @@ local ENEMY = false
 
 local function battleAddrs(isAttacker, index)
 	if isAttacker then
-		return battleSimBase[version] + relativeBattleAddrs[version][index]		
+		return battleSimBase[GAME_VERSION] + relativeBattleAddrs[GAME_VERSION][index]		
 	end
-	return battleSimBase[version] + relativeBattleAddrs[version][index] + defenderBattleAddrs[version]
+	return battleSimBase[GAME_VERSION] + relativeBattleAddrs[GAME_VERSION][index] + defenderBattleAddrs[GAME_VERSION]
 end
 
 P.combatObj = {}
@@ -310,7 +310,7 @@ function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-
 		-- in same level, Gilliam doesn't get this "mode bonus" when he otherwise would
 		
 		-- hypothesis: only affects promoted (enemy or player?) or boss units? in FE8?
-		if enemyValue - playerValue <= 0 and version ~= 6 
+		if enemyValue - playerValue <= 0 and GAME_VERSION ~= 6 
 			--and self.bonusExp == 40 
 			then
 			playerValue = math.floor(playerValue/2)
@@ -392,7 +392,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 			
 			if crt > nextRn() then
 				local silencerRn = 0
-				if version >= 7 then 
+				if GAME_VERSION >= 7 then 
 					silencerRn = nextRn() -- does not roll against Demon King
 				end
 				
@@ -418,8 +418,8 @@ function P.combatObj:hitEvent(index, isAttacker)
 			if self:data(isAttacker).weapon == P.enum_DEVIL then
 				local devilRN = nextRn()
 			
-				if ((31 - self:data(isAttacker)[P.LUCK_I] > devilRN) and (version >= 7)) or 
-					((21 - self:data(isAttacker)[P.LEVEL_I] > devilRN) and (version == 6)) then
+				if ((31 - self:data(isAttacker)[P.LUCK_I] > devilRN) and (GAME_VERSION >= 7)) or 
+					((21 - self:data(isAttacker)[P.LEVEL_I] > devilRN) and (GAME_VERSION == 6)) then
 					retHitEv.action = "DEV"
 					retHitEv.expWasGained = false -- untested
 				end

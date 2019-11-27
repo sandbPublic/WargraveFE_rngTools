@@ -24,7 +24,7 @@ local CLASSES = {}
 local PROMOTIONS = {}
 local PROMOTED_AT = {}
 
--- disambiguate Marcus, Merlinus, Bartre, and Karel from FE7 versions
+-- disambiguate Marcus, Merlinus, Bartre, and Karel from FE7
 NAMES[6] = {
 "Roy", "Marcus6", "Allen", "Lance", "Wolt", 
 "Bors", "Merlinus6", "Ellen", "Dieck", "Wade", 
@@ -706,12 +706,12 @@ P.sel_Unit_i = 1
 
 function P.names(unit_i) -- default value P.sel_Unit_i
 	unit_i = unit_i or P.sel_Unit_i
-	return NAMES[version][unit_i]
+	return NAMES[GAME_VERSION][unit_i]
 end
 
 function P.deployed(unit_i) 
 	unit_i = unit_i or P.sel_Unit_i
-	return DEPLOYED[version][unit_i]
+	return DEPLOYED[GAME_VERSION][unit_i]
 end
 
 local Afas = 0
@@ -731,11 +731,11 @@ function P.growths(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
 	if unit_i ~= Afas then
-		return GROWTHS[version][unit_i]
+		return GROWTHS[GAME_VERSION][unit_i]
 	end
 	
 	local afasGrowths = {}
-	for stat_i, growth in ipairs(GROWTHS[version][unit_i]) do
+	for stat_i, growth in ipairs(GROWTHS[GAME_VERSION][unit_i]) do
 		afasGrowths[stat_i] = growth + 5
 	end
 	return afasGrowths
@@ -743,11 +743,11 @@ end
 
 function P.growthWeights(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
-	return GROWTH_WEIGHTS[version][unit_i]
+	return GROWTH_WEIGHTS[GAME_VERSION][unit_i]
 end
 
 function P.hasPromoted(unit_i)
-	return PROMOTED_AT[version][unit_i] > 0
+	return PROMOTED_AT[GAME_VERSION][unit_i] > 0
 end
 
 function P.canPromote(unit_i)
@@ -755,7 +755,7 @@ function P.canPromote(unit_i)
 end
 
 function P.levelsPrePromotion(unit_i)
-	return PROMOTED_AT[version][unit_i] - BASE_STATS[version][unit_i][P.LEVEL_I]
+	return PROMOTED_AT[GAME_VERSION][unit_i] - BASE_STATS[GAME_VERSION][unit_i][P.LEVEL_I]
 end
 
 function P.class(unit_i)
@@ -764,21 +764,21 @@ function P.class(unit_i)
 	if P.hasPromoted(unit_i) then
 		return P.promotion(unit_i)
 	end
-	return CLASSES[version][unit_i]
+	return CLASSES[GAME_VERSION][unit_i]
 end
 
 function P.promotion(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
-	return PROMOTIONS[version][unit_i]
+	return PROMOTIONS[GAME_VERSION][unit_i]
 end
 
 function P.bases(unit_i)
 	unit_i = unit_i or P.sel_Unit_i
 	
 	local ret = {}
-	for stat_i, base_stat in ipairs(BASE_STATS[version][unit_i]) do
-		ret[stat_i] = base_stat + BOOSTERS[version][unit_i][stat_i]
+	for stat_i, base_stat in ipairs(BASE_STATS[GAME_VERSION][unit_i]) do
+		ret[stat_i] = base_stat + BOOSTERS[GAME_VERSION][unit_i][stat_i]
 	end
 	
 	if not P.hasPromoted(unit_i) then
@@ -794,9 +794,9 @@ end
 
 function P.nextDeployed()
 	local canditate_i = P.sel_Unit_i
-	canditate_i = rotInc(canditate_i, #NAMES[version])
+	canditate_i = rotInc(canditate_i, #NAMES[GAME_VERSION])
 	while (canditate_i ~= P.sel_Unit_i) and (not P.deployed(canditate_i)) do
-		canditate_i = rotInc(canditate_i, #NAMES[version])
+		canditate_i = rotInc(canditate_i, #NAMES[GAME_VERSION])
 	end
 	return canditate_i
 end
@@ -811,7 +811,7 @@ function P.willLevelStat(HP_RN_i, unit_i, charStats)
 	charStats = charStats or savedStats
 	
 	ret = {}	
-	for stat_i, growth in ipairs(GROWTHS[version][unit_i]) do
+	for stat_i, growth in ipairs(GROWTHS[GAME_VERSION][unit_i]) do
 		if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
 			ret[stat_i] = -1 -- stat capped
 		elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < growth then
@@ -1091,12 +1091,12 @@ statExpAddr[7] = 0x0203A3F9 -- ..461?
 statExpAddr[8] = 0x0203A55D -- ..4F5?
 
 function P.saveStats()
-	savedStats[1] = memory.readbyte(statMaxHpAddr[version])
+	savedStats[1] = memory.readbyte(statMaxHpAddr[GAME_VERSION])
 	for stat_i = 2, 7 do
-		savedStats[stat_i] = memory.readbyte(statScreenBase[version] + stat_i - 2)
+		savedStats[stat_i] = memory.readbyte(statScreenBase[GAME_VERSION] + stat_i - 2)
 	end
-	savedStats[8] = memory.readbyte(statLevelAddr[version])
-	savedStats[9] = memory.readbyte(statExpAddr[version])
+	savedStats[8] = memory.readbyte(statLevelAddr[GAME_VERSION])
+	savedStats[9] = memory.readbyte(statExpAddr[GAME_VERSION])
 end
 
 function P.statData_strings(showPromo)

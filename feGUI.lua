@@ -44,7 +44,7 @@ end
 local CHAR_PIXELS = 4
 -- for the rnStream rect's colorized rns
 local RNS_PER_LINE = 15
-local NUM_RN_LINES = 10
+local NUM_RN_LINES = 15
 
 local rectObj = {}
 rectObj.ID = 0

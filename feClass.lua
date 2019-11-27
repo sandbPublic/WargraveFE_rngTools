@@ -1,7 +1,7 @@
 local P = {}
 classes = P
 
-version = 6
+GAME_VERSION = 6
 
 local indexer = 0
 local function nextInd()
@@ -134,7 +134,7 @@ P.EXP_POWER[P.THIEF] = 2
 
 -- units promoted from staff-only, or thieves
 P.EXP_KILL_MODIFIER[P.BISHOP_F]   = -20
-if version ~= 7 then
+if GAME_VERSION ~= 7 then
 	P.EXP_KILL_MODIFIER[P.BISHOP_M]   = -20 -- not in FE7 due to monk but no priest existing
 end
 P.EXP_KILL_MODIFIER[P.VALKYRIE] = -20
@@ -216,7 +216,7 @@ P.CAPS[P.ROGUE]				= {60, 20, 30, 30, 20, 20, 30} --__8
 
 P.CAPS[P.ARCHSAGE]			= {60, 30, 30, 25, 20, 30, 30}
 P.CAPS[P.NECROMANCER]		= {60, 30, 25, 25, 30, 30, 30}
--- check other versions
+-- check other GAME_VERSIONs
 
 P.PROMO_GAINS[P.MASTER_LORD] 		= {4, 2, 3, 2, 2, 5, 0}
 
@@ -332,11 +332,11 @@ function P.hasPierce(class)
 end
 
 function P.hasSureStrike(class)
-	return (class == P.SNIPER_F or class == P.SNIPER_M) and version == 8
+	return (class == P.SNIPER_F or class == P.SNIPER_M) and GAME_VERSION == 8
 end
 
 function P.hasGreatShield(class)
-	return (class == P.GENERAL_F or class == P.GENERAL_M) and version == 8
+	return (class == P.GENERAL_F or class == P.GENERAL_M) and GAME_VERSION == 8
 end
 
 return classes

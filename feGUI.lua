@@ -280,7 +280,7 @@ function rectObj:drawEventBoxes(event, rnEvent_i)
 	end
 	
 	if event:levelDetected() then
-		local procs = unitData.willLevelStat(event.postCombatRN_i, event.unit_i, event.stats)
+		local procs = unitData[event.unit_i]:willLevelStat(event.postCombatRN_i, event.stats)
 		
 		for stat_i = 1, 7 do
 			local char_start = INIT_CHARS + (event.postCombatRN_i-event.startRN_i + stat_i-1) * 3
@@ -339,7 +339,7 @@ end
 
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
-	P.rects[P.STAT_DATA_I].strings = unitData.statData_strings(P.pulse(480) and P.lookingAt(P.STAT_DATA_I))
+	P.rects[P.STAT_DATA_I].strings = unitData.selectedUnit():statData_strings(P.pulse(480) and P.lookingAt(P.STAT_DATA_I))
 	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
 	-- don't want to overwrite currBattleParams generally
 	

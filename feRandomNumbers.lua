@@ -53,6 +53,12 @@ function rnStreamObj:new(rngMemoryOffset, primary)
 	return o
 end
 
+P.rng1 = rnStreamObj:new(0x03000000, true)
+-- secondary RN located at 0x03000008 in FE7
+-- advanced by desert digs, blinking (suspend menu), 
+-- and most usefully by merely opening a unit's item
+P.rng2 = rnStreamObj:new(0x03000008, false)
+
 function rnStreamObj:name()
 	if self.isPrimary then return "primary" end
 	return "2ndary"
@@ -62,12 +68,6 @@ end
 function rnStreamObj:generator(relative_prior_index)
 	return memory.readword(self.rngAddr + 2*(relative_prior_index - 1))
 end
-
-P.rng1 = rnStreamObj:new(0x03000000, true)
--- secondary RN located at 0x03000008 in FE7
--- advanced by desert digs, blinking (suspend menu), 
--- and most usefully by merely opening a unit's item
-P.rng2 = rnStreamObj:new(0x03000008, false)
 
 -- generates more if needed
 function rnStreamObj:getRN(pos_i, isRaw)

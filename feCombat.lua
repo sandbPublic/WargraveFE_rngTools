@@ -148,7 +148,7 @@ function P.combatObj:set()
 	end
 	
 	self.unit_ID = unitData.sel_Unit_i
-	self.player.class = unitData.class(self.unit_ID)
+	self.player.class = unitData.selectedUnit().class
 	
 	if classes.PROMOTED[self.player.class] then
 		self:togglePromo(PLAYER)
@@ -159,7 +159,6 @@ end
 
 function P.combatObj:cycleWeapon(isAttacker)
 	self:data(isAttacker).weapon = rotInc(self:data(isAttacker).weapon, 5)
-	-- for devil axe, todo enemy devil axe?
 	self:data(isAttacker)[P.LUCK_I] = unitData.getSavedStats()[unitData.LUCK_I]
 	print(P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weapon])
 end
@@ -186,7 +185,7 @@ function P.combatObj:toStrings()
 	end
 	
 	local function line(isAttacker)
-		local name = unitData.names(self.unit_ID)
+		local name = unitData.selectedUnit().name
 		local experStr = string.format("%02d", self:data(isAttacker)[P.EXP_I])
 		if not isAttacker then
 			name = "Enemy"

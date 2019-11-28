@@ -37,6 +37,8 @@ function rnEventObj:setStats(stats)
 	for stat_i = 1, unitData.EXP_I do
 		self.stats[stat_i] = stats[stat_i]
 	end
+	
+	self.expValueFactor = self.unit:expValueFactor(self.stats)
 end
 
 -- INDEX FROM 1
@@ -51,7 +53,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	o.ID = #eventList+1 -- order in which rnEvents were registered
 	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
 	
-	o.unit_i = sel_Unit_i
+	o.unit = unitData[sel_Unit_i]
 	o:setStats(stats) -- todo do we get enemy stats on EP?
 	o.batParams = batParams:copy()
 	
@@ -60,7 +62,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	o.dig = false
 	
 	-- as units ram their caps (or have the potential to), the value of their levels drops
-	o.expValueFactor = unitData.expValueFactor(o.unit_i, o.stats)
+	o.expValueFactor = o.unit:expValueFactor(o.stats)
 	o.combatWeight = 1
 	
 	o.enemyID = 0 -- for units attacking the same enemyID
@@ -288,8 +290,9 @@ function rnEventObj:levelDetected()
 end
 
 function rnEventObj:levelScore()
-	return unitData.statProcScore(self.postCombatRN_i, self.unit_i, self.stats)
+	return self.unit:statProcScore(self.postCombatRN_i, self.stats)
 end
+
 function rnEventObj:digSucceed()
 	return rns.rng1:getRN(self.nextRN_i - 1) <= self.stats[unitData.LUCK_I]
 	-- luck+1% chance, therefore even 0 luck has 1% chance, confirmed luck 8 succeeds with rn = 8
@@ -302,7 +305,7 @@ function rnEventObj:resultString()
 	end
 	if self:levelDetected() then
 		rString = rString .. string.format(" %s %3d",
-			unitData.levelUpProcs_string(self.postCombatRN_i, self.unit_i, self.stats),
+			self.unit:levelUpProcs_string(self.postCombatRN_i, self.stats),
 			self:levelScore())
 	end
 	if self.dig then
@@ -314,6 +317,7 @@ function rnEventObj:resultString()
 	end
 	return rString
 end
+
 function rnEventObj:headerString(rnEvent_i)
 	local hString = "  "
 	if rnEvent_i == sel_rnEvent_i then
@@ -351,7 +355,7 @@ function rnEventObj:headerString(rnEvent_i)
 	end
 	
 	return hString .. string.format("%2d %s%s%s",
-		self.ID, unitData.names(self.unit_i), self:resultString(), specialStringEvents)
+		self.ID, unitData[self.unit_i].name, self:resultString(), specialStringEvents)
 end
 
 function rnEventObj:healable()
@@ -359,7 +363,7 @@ function rnEventObj:healable()
 		return true
 	end
 	return self:levelDetected() 
-		and unitData.willLevelStat(self.postCombatRN_i, self.unit_i, self.stats)[1] >= 1
+		and self.unit:willLevelStat(self.postCombatRN_i, self.stats)[1] >= 1
 end
 
 -- measure in units of exp

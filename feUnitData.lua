@@ -701,121 +701,102 @@ if hardMode then
 end
 
 
-P.sel_Unit_i = 1
 
-function P.names(unit_i) -- default value P.sel_Unit_i
-	unit_i = unit_i or P.sel_Unit_i
-	return NAMES[GAME_VERSION][unit_i]
+local unitObj = {}
+
+function unitObj:new(unit_i)
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
+	
+	o.name = NAMES[GAME_VERSION][unit_i]
+	o.growths = GROWTHS[GAME_VERSION][unit_i]
+	o.growthWeights = GROWTH_WEIGHTS[GAME_VERSION][unit_i]
+	
+	-- units with low growths or growths in bad areas have less value in gaining exp
+	o.baseExpValue = 0
+	for i = 1, 7 do
+		o.baseExpValue = o.baseExpValue + o.growths[i]*o.growthWeights[i]
+	end
+	
+	o.class = CLASSES[GAME_VERSION][unit_i]
+	o.promotion = PROMOTIONS[GAME_VERSION][unit_i]
+	
+	o.hasPromoted = (PROMOTED_AT[GAME_VERSION][unit_i] > 0)
+	o.canPromote = CLASSES[GAME_VERSION][unit_i] ~= PROMOTIONS[GAME_VERSION][unit_i]
+	o.levelsPrePromotion = PROMOTED_AT[GAME_VERSION][unit_i] - BASE_STATS[GAME_VERSION][unit_i][P.LEVEL_I]
+	
+	o.bases = BASE_STATS[GAME_VERSION][unit_i]
+	for i, boost in ipairs(BOOSTERS[GAME_VERSION][unit_i]) do
+		o.bases[i] = o.bases[i] + boost
+	end
+	if o.hasPromoted then
+		o.class = o.promotion
+		for i, gain in ipairs(classes.PROMO_GAINS[o.promotion]) do
+			o.bases[i] = o.bases[i] + gain
+		end
+		o.bases[P.LEVEL_I] = 1 - o.levelsPrePromotion
+	end
+	
+	o.hasAfas = false
+	
+	return o
 end
 
-function P.deployed(unit_i) 
-	unit_i = unit_i or P.sel_Unit_i
-	return DEPLOYED[GAME_VERSION][unit_i]
+local sel_Unit_i = 1
+
+function P.selectedUnit()
+	return P[sel_Unit_i]
 end
 
-local Afas = 0
+function P.nextDeployed_i()
+	return rotInc(sel_Unit_i, #P)
+end
+
+for unit_i = 1, #NAMES[GAME_VERSION] do
+	if DEPLOYED[GAME_VERSION][unit_i] then
+		table.insert(P, unitObj:new(unit_i))
+	end
+end
+
+local Afas_i = 0
 function P.setAfas(unit_i)
-	unit_i = unit_i or P.sel_Unit_i
+	unit_i = unit_i or sel_Unit_i
 	
-	if Afas == P.sel_Unit_i then
-		Afas = 0
-		print("Afa's removed from " .. P.names(unit_i))
-	else
-		Afas = P.sel_Unit_i
-		print("Afa's applied to " .. P.names(unit_i))
-	end
-end
-
-function P.growths(unit_i) 
-	unit_i = unit_i or P.sel_Unit_i
-	
-	if unit_i ~= Afas then
-		return GROWTHS[GAME_VERSION][unit_i]
-	end
-	
-	local afasGrowths = {}
-	for stat_i, growth in ipairs(GROWTHS[GAME_VERSION][unit_i]) do
-		afasGrowths[stat_i] = growth + 5
-	end
-	return afasGrowths
-end
-
-function P.growthWeights(unit_i)
-	unit_i = unit_i or P.sel_Unit_i
-	return GROWTH_WEIGHTS[GAME_VERSION][unit_i]
-end
-
-function P.hasPromoted(unit_i)
-	return PROMOTED_AT[GAME_VERSION][unit_i] > 0
-end
-
-function P.canPromote(unit_i)
-	return P.class(unit_i) ~= P.promotion(unit_i)
-end
-
-function P.levelsPrePromotion(unit_i)
-	return PROMOTED_AT[GAME_VERSION][unit_i] - BASE_STATS[GAME_VERSION][unit_i][P.LEVEL_I]
-end
-
-function P.class(unit_i)
-	unit_i = unit_i or P.sel_Unit_i
+	if Afas_i > 0 then
+		P[Afas_i].hasAfas = false
+		print("Afa's removed from " .. P[Afas_i].name)
 		
-	if P.hasPromoted(unit_i) then
-		return P.promotion(unit_i)
+		if Afas_i ~= unit_i then
+			Afas = unit_i
+			P[Afas_i].hasAfas = true
+			print("Afa's applied to " .. P[Afas_i].name)
+		else
+			Afas_i = 0
+		end
+	else
+		Afas = unit_i
+		P[Afas_i].hasAfas = true
+		print("Afa's applied to " .. P[Afas_i].name)
 	end
-	return CLASSES[GAME_VERSION][unit_i]
-end
-
-function P.promotion(unit_i)
-	unit_i = unit_i or P.sel_Unit_i
-	
-	return PROMOTIONS[GAME_VERSION][unit_i]
-end
-
-function P.bases(unit_i)
-	unit_i = unit_i or P.sel_Unit_i
-	
-	local ret = {}
-	for stat_i, base_stat in ipairs(BASE_STATS[GAME_VERSION][unit_i]) do
-		ret[stat_i] = base_stat + BOOSTERS[GAME_VERSION][unit_i][stat_i]
-	end
-	
-	if not P.hasPromoted(unit_i) then
-		return ret
-	end
-	
-	for stat_i, gain in ipairs(classes.PROMO_GAINS[P.class(unit_i)]) do
-		ret[stat_i] = ret[stat_i] + gain
-	end
-	ret[P.LEVEL_I] = 1 - P.levelsPrePromotion(unit_i)
-	return ret
-end
-
-function P.nextDeployed()
-	local canditate_i = P.sel_Unit_i
-	canditate_i = rotInc(canditate_i, #NAMES[GAME_VERSION])
-	while (canditate_i ~= P.sel_Unit_i) and (not P.deployed(canditate_i)) do
-		canditate_i = rotInc(canditate_i, #NAMES[GAME_VERSION])
-	end
-	return canditate_i
 end
 
 local savedStats = {0, 0, 0, 0, 0, 0, 0, 0, 0} -- last two are level, exp
-function P.getSavedStats() -- needed for rnEvent construction
-	return savedStats
+
+function P.getSavedStats()
+	return saveStats
 end
 
-function P.willLevelStat(HP_RN_i, unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
-	charStats = charStats or savedStats
+function unitObj:willLevelStat(HP_RN_i, currStats)
+	currStats = currStats or savedStats
 	
-	ret = {}	
-	for stat_i, growth in ipairs(GROWTHS[GAME_VERSION][unit_i]) do
-		if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
+	ret = {}
+	for stat_i, growth in ipairs(self.growths) do
+		if currStats[stat_i] >= classes.CAPS[self.class][stat_i] then
 			ret[stat_i] = -1 -- stat capped
 		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth then
 			ret[stat_i] = 1 -- stat grows without afa's
-		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and unit_i == Afas then
+		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and self.hasAfas then
 			ret[stat_i] = 2 -- stat grows because of afa's
 		else
 			ret[stat_i] = 0 -- stat doesn't grow
@@ -824,15 +805,14 @@ function P.willLevelStat(HP_RN_i, unit_i, charStats)
 	return ret
 end
 
-function P.levelUpProcs_string(HP_RN_i, unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
+function unitObj:levelUpProcs_string(HP_RN_i, charStats)
 	charStats = charStats or savedStats
 	
 	local seq = ""
 	local noStatWillRise = true
 	local noStatIsCapped = true
 
-	for _, proc in ipairs(P.willLevelStat(HP_RN_i, unit_i, charStats)) do		
+	for _, proc in ipairs(self.willLevelStat(HP_RN_i, charStats)) do		
 		if proc == 1 then
 			seq = seq .. "+" -- grows this stat
 			noStatWillRise = false
@@ -855,15 +835,9 @@ function P.levelUpProcs_string(HP_RN_i, unit_i, charStats)
 end
 
 -- works for levels too
-local function statsGained(stat_i, unit_i, stat)
-	unit_i = unit_i or P.sel_Unit_i
+function unitObj:statsGained(stat_i, stat)
 	stat = stat or savedStats[stat_i]
-	
-	if stat_i == P.LEVEL_I and P.hasPromoted(unit_i) then
-		return stat - 1 + P.levelsPrePromotion(unit_i)
-	end
-	
-	return stat - P.bases(unit_i)[stat_i]
+	return stat - self.bases[stat_i]
 end
 
 local function factorial(x)
@@ -891,24 +865,18 @@ local function cumulativeBinDistrib(numSuccesses, numTrials, p)
 end
 
 -- adjusts preset stat weights downward when stat is likely to cap
-local function dynamicStatWeights(unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
-	
-	if P.class(unit_i) == classes.DANCER or P.class(unit_i) == classes.BARD then
-		return P.growthWeights(unit_i)
-	end
-	
-	charStats = charStats or savedStats
+function unitObj:dynamicStatWeights(currStats)	
+	currStats = currStats or savedStats
 	local ret = {}
 	
-	local levelsTil20 = 20 - charStats[P.LEVEL_I]
+	local levelsTil20 = 20 - currStats[P.LEVEL_I]
 	if levelsTil20 <= 0 then
 		return {0, 0, 0, 0, 0, 0, 0}
 	end
 	
-	for stat_i = 1, 7 do
-		local procsTilStatCap = classes.CAPS[P.class(unit_i)][stat_i] - charStats[stat_i]
-			
+	for stat_i = 1, 7 do	
+		local procsTilStatCap = classes.CAPS[self.class][stat_i] - currStats[stat_i]
+		
 		-- multiply by 1 - P(reaching/exceeding cap even if not gaining stat this level)
 		-- if no chance to reach cap if not leveling, full weight
 		-- if 100% chance (ie at cap), no weight
@@ -918,67 +886,65 @@ local function dynamicStatWeights(unit_i, charStats)
 		-- P(less than cap | gained levelsTil20 - 1 levels)
 		
 		local probCapUnreachableIfNotProcing = 
-			cumulativeBinDistrib(procsTilStatCap-1, levelsTil20-1, P.growths(unit_i)[stat_i]/100)
+			cumulativeBinDistrib(procsTilStatCap-1, levelsTil20-1, self.growths[stat_i]/100)
 		
 		-- if more likely to hit promoted class cap than unpromoted, use that probability
-		if P.canPromote(unit_i) then
-			local procsTilStatCap_P = classes.CAPS[P.promotion(unit_i)][stat_i] 
-				- charStats[stat_i] - classes.PROMO_GAINS[P.promotion(unit_i)][stat_i]
+		if self.canPromote then
+			local procsTilStatCap_P = classes.CAPS[self.promotion][stat_i] 
+				- currStats[stat_i] - classes.PROMO_GAINS[self.promotion][stat_i]
 			
 			-- may need levels to even reach promotion
-			local levelsTil20_P = 19 + math.max(10 - charStats[P.LEVEL_I], 0)
+			local levelsTil20_P = 19 + math.max(10 - currStats[P.LEVEL_I], 0)
 			
 			probCapUnreachableIfNotProcing_P = 
-				cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, P.growths(unit_i)[stat_i]/100)
+				cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, self.growths[stat_i]/100)
 				
 			if probCapUnreachableIfNotProcing > probCapUnreachableIfNotProcing_P then
 				probCapUnreachableIfNotProcing = probCapUnreachableIfNotProcing_P
 			end
 		end
 		
-		ret[stat_i] = P.growthWeights(unit_i)[stat_i]*probCapUnreachableIfNotProcing
+		ret[stat_i] = self.growthWeights[stat_i] * probCapUnreachableIfNotProcing
 	end
 	
 	return ret
 end
 
 -- if growth rate needed to cap is less than growth rate, reduce proportionally
-function P.expValueFactor(unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
-	charStats = charStats or savedStats
+function unitObj:expValueFactor(currStats)
+	currStats = currStats or savedStats
 	
-	local ret = 0
 	local weightTotal = 0
-	local dSW = dynamicStatWeights(unit_i, charStats)
+	local dsw = self:dynamicStatWeights(currStats)
+	local dswTotal = 0
 	
 	for stat_i = 1, 7 do
-		weightTotal = weightTotal + P.growthWeights(unit_i)[stat_i]
-		ret = ret + dSW[stat_i]
+		weightTotal = weightTotal + self.growthWeights[stat_i]
+		dswTotal = dswTotal + dsw[stat_i]
 	end
 	
 	if weightTotal == 0 then return 0 end
 	
-	return ret/weightTotal
+	return self.baseExpValue * dswTotal / weightTotal
 end
 
 -- gets score for level up starting at rns index HP_RN_i
 -- scored such that average level is 0, empty level is -100
 -- in units of exp: empty level wipes out value of exp used to level up
-function P.statProcScore(HP_RN_i, unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
-	charStats = charStats or savedStats
+function unitObj:statProcScore(HP_RN_i, currStats)
+	currStats = currStats or savedStats
 	
 	local score = 0
 	local avg = 0
 	
-	local procs = P.willLevelStat(HP_RN_i, unit_i, charStats)
-	local dSW = dynamicStatWeights(unit_i, charStats)
+	local procs = self:willLevelStat(HP_RN_i, currStats)
+	local dsw = self:dynamicStatWeights(currStats)
 	
 	for stat_i = 1, 7 do
 		if procs[stat_i] > 0 then
-			score = score + 100 * dSW[stat_i]
+			score = score + 100 * dsw[stat_i]
 		end
-		avg = avg + P.growths(unit_i)[stat_i] * dSW[stat_i] -- growths are in cents
+		avg = avg + self.growths[stat_i] * dsw[stat_i] -- growths are in cents
 	end
 	
 	if avg == 0 then return 0 end
@@ -988,88 +954,41 @@ function P.statProcScore(HP_RN_i, unit_i, charStats)
 	return 100*score/avg
 end
 
-local function statAverageAt(stat_i, unit_i, level)
-	unit_i = unit_i or P.sel_Unit_i
+function unitObj:statAverageAt(stat_i, level)
 	level = level or savedStats[P.LEVEL_I]
 	
-	return P.bases(unit_i)[stat_i] 
-			+ (statsGained(P.LEVEL_I, unit_i, level)
-			* P.growths(unit_i)[stat_i] / 100)
+	return self.bases[stat_i] + self:statsGained(P.LEVEL_I, level)*self.growths[stat_i]/100
 end
 
-function P.statDeviation(stat_i, unit_i, charStat, charLevel)
-	unit_i = unit_i or P.sel_Unit_i
+function unitObj:statDeviation(stat_i, charStat, charLevel)
 	charStat = charStat or savedStats[stat_i]
 	charLevel = charLevel or savedStats[P.LEVEL_I]
 	
-	return charStat - statAverageAt(stat_i, unit_i, charLevel)
+	return charStat - self:statAverageAt(stat_i, charLevel)
 end
 
 -- how many sigma's off from average
-function P.statStdDev(stat_i, unit_i, charStat)
-	unit_i = unit_i or P.sel_Unit_i
+function unitObj:statStdDev(stat_i, charStat)
 	charStat = charStat or savedStats[stat_i]
 	
-	local levelsGained = statsGained(P.LEVEL_I, unit_i)
+	local levelsGained = self:statsGained(P.LEVEL_I)
 	if levelsGained == 0 then return 0 end
 	
-	local stdDev = (levelsGained*P.growths(unit_i)[stat_i]*
-		(100-P.growths(unit_i)[stat_i])/10000)^0.5
+	local growthProb = self.growths[stat_i]/100
 	
-	return P.statDeviation(stat_i, unit_i, charStat)/stdDev
+	local stdDev = (levelsGained*growthProb*(1-growthProb))^0.5
+	
+	return self:statDeviation(stat_i, charStat)/stdDev
 end
 
-function P.statDevWeightedTotal(unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
-	charStats = charStats or savedStats
-	
-	local ret = 0
-	for stat_i = 1, 7 do
-		ret = ret + P.statDeviation(stat_i, unit_i, charStats[stat_i])
-			*P.growthWeights(unit_i)[stat_i]
-	end
-	return ret
-end
-
--- characters stats evaluated against X random characters at the same level
-function P.percentile(unit_i, charStats)
-	unit_i = unit_i or P.sel_Unit_i
-	charStats = charStats or savedStats
-	local numOfTrials = 1000
-	
-	local levelsGained = statsGained(P.LEVEL_I, unit_i)
-	local charStatsScore = 0
-	for stat_i = 1, 7 do
-		charStatsScore = charStatsScore + 
-			charStats[stat_i]*P.growthWeights(unit_i)[stat_i]
-	end
-	
-	local worseTrials = 0
-	for trial_i = 1, numOfTrials do
-		local trialScore = 0
-		for stat_i = 1, 7 do
-			trialScore = trialScore + P.growthWeights(unit_i)[stat_i]
-				*P.bases(unit_i)[stat_i]
-			for level_i = 1, levelsGained do
-				if math.random(0, 99) < P.growths(unit_i)[stat_i] then
-					trialScore = trialScore + P.growthWeights(unit_i)[stat_i]
-				end
-			end
-		end
-		if trialScore <= charStatsScore then
-			worseTrials = worseTrials + 1
-		end
-	end
-	return worseTrials/numOfTrials
-end
-
-function P.effectiveGrowthRate(stat_i, unit_i, charStat)
-	unit_i = unit_i or P.sel_Unit_i
+function unitObj:effectiveGrowthRate(stat_i, charStat)
 	charStat = charStat or savedStats[stat_i]
 	
-	local levelsGained = statsGained(P.LEVEL_I, unit_i)
+	local levelsGained = self:statsGained(P.LEVEL_I)
+	
 	if levelsGained == 0 then return 0 end
-	return 100*statsGained(stat_i, unit_i, charStat)/levelsGained
+	
+	return 100*self:statsGained(stat_i, charStat)/levelsGained
 end
 
 local statMaxHpAddr = {}
@@ -1098,10 +1017,10 @@ function P.saveStats()
 	savedStats[9] = memory.readbyte(statExpAddr[GAME_VERSION])
 end
 
-function P.statData_strings(showPromo)
+function unitObj:statData_strings(showPromo)
 	local ret = {}
 	
-	showPromo = showPromo and P.canPromote()
+	showPromo = showPromo and self.canPromote
 	
 	local indexer = 0
 	local function nextInd()
@@ -1119,7 +1038,7 @@ function P.statData_strings(showPromo)
 	local EF_GROW = nextInd()
 	local STND_DEV = nextInd()
 	
-	ret[STAT_HEAD]	= string.format("%-10.10sLv Xp Hp St Sk Sp Df Rs Lk", P.names())
+	ret[STAT_HEAD]	= string.format("%-10.10sLv Xp Hp St Sk Sp Df Rs Lk", self.name)
 	
 	ret[STATS]		= "Stats    " .. string.format(" %02d %02d", savedStats[P.LEVEL_I], savedStats[9])
 	if savedStats[9] == 255 then
@@ -1127,11 +1046,11 @@ function P.statData_strings(showPromo)
 	end
 	ret[CAPS]		= "Caps           " 	
 	if showPromo then
-		ret[CAPS]		= "Caps      PROMO" 
+		ret[CAPS]	= "Caps      PROMO" 
 	end
 	
-	ret[WEIGHTS]	= "Weights  " .. string.format(" x%4.2f", P.expValueFactor(unit_i, charStats))
-	if P.sel_Unit_i ~= Afas then
+	ret[WEIGHTS]	= "Weights  " .. string.format(" x%4.2f", self:expValueFactor(charStats))
+	if not self.hasAfas then
 		ret[GROWTHS]= "Growths        "
 	else
 		ret[GROWTHS]= "Growths +Afa's "
@@ -1139,35 +1058,30 @@ function P.statData_strings(showPromo)
 	ret[EF_GROW]	= "Actual Growths "
 	ret[STND_DEV]	= "Standard Dev   "
 	
-	local dSW = dynamicStatWeights(unit_i, charStats)
+	local dsw = self:dynamicStatWeights(charStats)
 	for stat_i = 1, 7 do
 		ret[GROWTHS] = ret[GROWTHS] .. 
-				string.format(" %02d", P.growths()[stat_i])
+				string.format(" %02d", self.growths[stat_i])
 		
 		if showPromo then
 			ret[STATS] = ret[STATS] .. string.format(" %02d", savedStats[stat_i] 
-					+ classes.PROMO_GAINS[P.promotion(unit_i)][stat_i])
+					+ classes.PROMO_GAINS[self.promotion][stat_i])
+			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[self.promotion][stat_i])
 		else
 			ret[STATS] = ret[STATS] .. string.format(" %02d", savedStats[stat_i])
+			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[self.class][stat_i])
 		end
 		
-		if showPromo then
-			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[P.promotion(unit_i)][stat_i])
-		else
-			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[P.class()][stat_i])
-		end
+		ret[WEIGHTS] = ret[WEIGHTS] .. string.format(" %02d", dsw[stat_i])
 		
-		ret[WEIGHTS] = ret[WEIGHTS] .. 
-				string.format(" %02d", dSW[stat_i])
-		
-		if P.effectiveGrowthRate(stat_i) < 100 then
+		if self:effectiveGrowthRate(stat_i) < 100 then
 			ret[EF_GROW] = ret[EF_GROW] .. 
-					string.format(" %02d", P.effectiveGrowthRate(stat_i))
+					string.format(" %02d", self:effectiveGrowthRate(stat_i))
 		else
 			ret[EF_GROW] = ret[EF_GROW] .. " A0"
 		end
 		
-		local stdDv = P.statStdDev(stat_i)
+		local stdDv = self:statStdDev(stat_i)
 		ret[STND_DEV] = ret[STND_DEV] .. string.format("%+03d", 10*stdDv)
 	end
 	

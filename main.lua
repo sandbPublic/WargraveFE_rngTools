@@ -185,9 +185,9 @@ while true do
 		if pressed(5) then rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp) end
 		
 		if pressed(7) then -- advance to next deployed
-			unitData.sel_Unit_i = unitData.nextDeployed()
-			print(string.format("Selected %-10.10s (next %s)", unitData.names(), 
-				unitData.names(unitData.nextDeployed())))
+			unitData.sel_Unit_i = unitData.nextDeployed_i()
+			print(string.format("Selected %-10.10s (next %s)", unitData.selectedUnit().name, 
+				unitData[unitData.nextDeployed_i()].name))
 		end
 		
 		if pressed(8) then -- quick toggle visibility
@@ -211,7 +211,7 @@ while true do
 			unitData.saveStats()
 			rnEvent.updateStats()
 			
-			printStringArray(unitData.statData_strings())
+			printStringArray(unitData.selectedUnit():statData_strings())
 		end
 		
 		if keybCtrl.thisFrame[hotkeys[13].key] then -- hold down, then press direction

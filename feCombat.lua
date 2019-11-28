@@ -358,7 +358,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 	
 	local function nextRn()
 		retHitEv.RNsConsumed = retHitEv.RNsConsumed + 1
-		return rns.rng1:getRNasCent(index+retHitEv.RNsConsumed-1)--use consumed rn
+		return rns.rng1:getRN(index+retHitEv.RNsConsumed-1)--use consumed rn
 	end
 		
 	if hit ~= 255 then -- no action	
@@ -441,7 +441,7 @@ function P.combatObj:staffHitEvent(index)
 	retStvHitEv.dmg = 0
 	retStvHitEv.expWasGained = true
 	
-	if self.attacker[P.HIT_I] <= rns.rng1:getRNasCent(index) then
+	if self.attacker[P.HIT_I] <= rns.rng1:getRN(index) then
 		retStvHitEv.action = "STF-O"
 		retStvHitEv.expWasGained = false
 	end

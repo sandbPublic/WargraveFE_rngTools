@@ -303,7 +303,7 @@ function rnEventObj:levelScore()
 	return unitData.statProcScore(self.postCombatRN_i, self.unit_i, self.stats)
 end
 function rnEventObj:digSucceed()
-	return rns.rng1:getRNasCent(self.nextRN_i - 1) <= self.stats[unitData.LUCK_I]
+	return rns.rng1:getRN(self.nextRN_i - 1) <= self.stats[unitData.LUCK_I]
 	-- luck+1% chance, therefore even 0 luck has 1% chance, confirmed luck 8 succeeds with rn = 8
 end
 

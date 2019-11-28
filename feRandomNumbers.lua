@@ -1,6 +1,8 @@
 local P = {}
 rns = P
 
+local MAX_RNS = 999999
+
 local function nextrng(r1, r2, r3)
 	return AND(XOR(SHIFT(r3, 5), SHIFT(r2, -11), SHIFT(r1, -1), SHIFT(r2, 15)),0xFFFF)
 end
@@ -32,24 +34,22 @@ function rnStreamObj:new(rngMemoryOffset, primary)
 	setmetatable(o, self)
 	self.__index = self
 	
+	o.rawBytes = {} -- save these in memory to find exact position/move position
 	o.rngAddr = rngMemoryOffset
 	o.isPrimary = primary
 	
 	if o.isPrimary then
-		o[-3] = 0x1496
-		o[-2] = 0x90EA
-		o[-1] = 0x3671
+		o.rawBytes[-3] = 0x1496
+		o.rawBytes[-2] = 0x90EA
+		o.rawBytes[-1] = 0x3671
 	else
-		o[-1] = 0x3C7CA4D2
+		o.rawBytes[-1] = 0x3C7CA4D2
 	end
 	
 	o.pos = 0 -- position in the rn stream relative to gba power on
 	o.prevPos = 0
 	o.rnsGenerated = 0
-	-- # length operator is logarithmic, and indexing from -3 is more natural
-	
-	o.lastFrameUpdated = 0 -- prevent 2ndary from printing a lot during crits
-	
+	-- # length operator is logarithmic, and indexing from -3 is more natural	
 	return o
 end
 
@@ -59,8 +59,8 @@ function rnStreamObj:name()
 end
 
 -- gets rns that construct the next rn, initially the seed
-function rnStreamObj:generator(num)
-	return memory.readword(self.rngAddr+2*(num-1))
+function rnStreamObj:generator(relative_prior_index)
+	return memory.readword(self.rngAddr + 2*(relative_prior_index - 1))
 end
 
 P.rng1 = rnStreamObj:new(0x03000000, true)
@@ -69,23 +69,29 @@ P.rng1 = rnStreamObj:new(0x03000000, true)
 -- and most usefully by merely opening a unit's item
 P.rng2 = rnStreamObj:new(0x03000008, false)
 
-function rnStreamObj:rnsLastConsumed()
-	return self.pos - self.prevPos
-end
-
 -- generates more if needed
-function rnStreamObj:getRN(pos_i)
+function rnStreamObj:getRN(pos_i, isRaw)
 	while pos_i >= self.rnsGenerated do
 		if self.isPrimary then
-			self[self.rnsGenerated] = nextrng(
-				self[self.rnsGenerated-3], 
-				self[self.rnsGenerated-2], 
-				self[self.rnsGenerated-1])
+			local rawDoubleByte = nextrng(
+				self.rawBytes[self.rnsGenerated-3], 
+				self.rawBytes[self.rnsGenerated-2], 
+				self.rawBytes[self.rnsGenerated-1])
+		
+			self.rawBytes[self.rnsGenerated] = rawDoubleByte
+			self[self.rnsGenerated] = byteToPercent(rawDoubleByte)
 		else
-			self[self.rnsGenerated] = nextrng2(self[self.rnsGenerated-1])
+			local rawQuadByte = nextrng2(self.rawBytes[self.rnsGenerated-1])
+		
+			self.rawBytes[self.rnsGenerated] = rawQuadByte			
+			self[self.rnsGenerated] = (rawQuadByte%11 == 0)
 		end
 		self.rnsGenerated = self.rnsGenerated + 1
 	end
+	
+	if isRaw then
+		return self.rawBytes[pos_i]
+	end	
 	return self[pos_i]
 end
 
@@ -93,12 +99,12 @@ function rnStreamObj:moveRNpos(delta)
 	local destination = self.pos + delta
 	if destination < 0 then destination = 0 end
 	
-	generator = self:getRN(destination-1)
+	generator = self:getRN(destination-1, "isRaw")
 	
 	if self.isPrimary then
 		memory.writeword(self.rngAddr, generator)
-		memory.writeword(self.rngAddr+2, self[destination-2])
-		memory.writeword(self.rngAddr+4, self[destination-3])
+		memory.writeword(self.rngAddr+2, self.rawBytes[destination-2])
+		memory.writeword(self.rngAddr+4, self.rawBytes[destination-3])
 	else
 		memory.writeword(self.rngAddr, AND(generator, 0x0000FFFF))
 		memory.writeword(self.rngAddr+2, AND(generator, 0xFFFF0000)/0x10000)
@@ -107,21 +113,20 @@ function rnStreamObj:moveRNpos(delta)
 	self:update()
 end
 
-function rnStreamObj:getRNasCent(index)
-	return byteToPercent(self:getRN(index))
-end
-
 -- returns false if current generators don't match previous 3 rns
 function rnStreamObj:isAtCurrentPosition()
+	self:getRN(self.pos) -- ensure bytes are generated
+
 	return (self.isPrimary and 
-			(self:getRN(self.pos-3) == self:generator(3) and
-		     self:getRN(self.pos-2) == self:generator(2) and
-		     self:getRN(self.pos-1) == self:generator(1)))
+			(self.rawBytes[self.pos-3] == self:generator(3) and
+		     self.rawBytes[self.pos-2] == self:generator(2) and
+		     self.rawBytes[self.pos-1] == self:generator(1)))
 			or
 			((not self.isPrimary) and
-			 self:getRN(self.pos-1) == self:generator(1)+self:generator(2)*0x10000)
+			 self.rawBytes[self.pos-1] == self:generator(1)+self:generator(2)*0x10000)
 end
 
+local lastFrameUpdated = 0
 -- returns true if updated
 function rnStreamObj:update()
 	if not self:isAtCurrentPosition() then
@@ -133,11 +138,11 @@ function rnStreamObj:update()
 			-- sometimes the place in memory that holds the rns
 			-- temporarily holds other values
 			-- failsafe against this
-			if self.pos >= 999999 then
+			if self.pos > MAX_RNS then
 				print(string.format(
 					"%s generators not found in rnStream within %d rns." 
 					.. " Skipping frame %d. Generators %04X %04X %04X", 
-					self:name(), self.pos, vba.framecount(), 
+					self:name(), MAX_RNS, vba.framecount(), 
 					self:generator(3), self:generator(2), self:generator(1)))
 				
 				self.pos = 0
@@ -146,13 +151,13 @@ function rnStreamObj:update()
 		end
 		
 		-- prevent 2ndary from printing a lot during crits
-		if (not self.isPrimary) and (vba.framecount() - self.lastFrameUpdated) <= 4 then
-			self.lastFrameUpdated = vba.framecount()
+		if (not self.isPrimary) and (vba.framecount() - lastFrameUpdated) <= 4 then
+			lastFrameUpdated = vba.framecount()
 			return
 		end
-		self.lastFrameUpdated = vba.framecount()
+		lastFrameUpdated = vba.framecount()
 		
-		local rnPosDelta = self:rnsLastConsumed()
+		local rnPosDelta = self.pos - self.prevPos
 		
 		local str = string.format("rng pos %4d -> %4d, %d", self.prevPos, self.pos, rnPosDelta)
 		if not self.isPrimary then
@@ -161,7 +166,7 @@ function rnStreamObj:update()
 		
 		-- print what was consumed if not a large jump
 		if rnPosDelta == 1 and self.isPrimary then -- print single rns on same line
-			print(str .. ": " .. self:getRNasCent(self.pos-1))
+			print(str .. ": " .. self:getRN(self.pos - 1))
 		elseif rnPosDelta > 0 and rnPosDelta <= 24 then
 			print(str)
 		
@@ -169,9 +174,8 @@ function rnStreamObj:update()
 				print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
 			else
 				str = "Next: "
-				for rn2_i = self.pos, self.pos+30 do -- show next 30
-				--	print(string.format("%08X %%B %X", self:getRN(rn2_i), self:getRN(rn2_i)%11))
-					if self:getRN(rn2_i)%11 == 0 then
+				for rn2_i = self.pos, self.pos + 30 do -- show next 30
+					if self:getRN(rn2_i) then
 						str = str .. "!"
 					else
 						str = str .. "."
@@ -188,15 +192,11 @@ function rnStreamObj:update()
 	return false -- no update performed or needed
 end
 
-function rnStreamObj:relToAbsPos(relPos_i) -- relative position
-	return relPos_i + self.pos
-end
-
  -- string, append space after each rn
 function rnStreamObj:rnSeqString(index, length)
 	local seq = ""
 	for offset = 0, length - 1 do
-		seq = seq .. string.format("%02d ", self:getRNasCent(index+offset))
+		seq = seq .. string.format("%02d ", self:getRN(index+offset))
 	end
 	return seq
 end
@@ -215,9 +215,9 @@ function rnStreamObj:RNstream_strings(isColored, numLines, rnsPerLine)
 		if not isColored then
 			for rnPos = currLineRnPos, currLineRnPos + rnsPerLine - 1 do
 				if rnPos == self.pos then
-					lineString = lineString .. string.format("%>02d", self:getRNasCent(rnPos))
+					lineString = lineString .. string.format("%>02d", self:getRN(rnPos))
 				else
-					lineString = lineString .. string.format("% 02d", self:getRNasCent(rnPos))
+					lineString = lineString .. string.format("% 02d", self:getRN(rnPos))
 				end
 			end
 		end

@@ -1,6 +1,5 @@
 require("feRandomNumbers")
 require("feClass")
---require("feGUI")
 
 
 local P = {}
@@ -814,9 +813,9 @@ function P.willLevelStat(HP_RN_i, unit_i, charStats)
 	for stat_i, growth in ipairs(GROWTHS[GAME_VERSION][unit_i]) do
 		if charStats[stat_i] >= classes.CAPS[P.class(unit_i)][stat_i] then
 			ret[stat_i] = -1 -- stat capped
-		elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < growth then
+		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth then
 			ret[stat_i] = 1 -- stat grows without afa's
-		elseif rns.rng1:getRNasCent(HP_RN_i+stat_i-1) < growth + 5 and unit_i == Afas then
+		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and unit_i == Afas then
 			ret[stat_i] = 2 -- stat grows because of afa's
 		else
 			ret[stat_i] = 0 -- stat doesn't grow

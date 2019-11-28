@@ -221,7 +221,7 @@ end
 
 function rectObj:drawColorizedRNString(line_i, char_offset, RN_start, length)
 	for rn_offset = 0, length-1 do
-		local rn = rns.rng1:getRNasCent(RN_start + rn_offset)
+		local rn = rns.rng1:getRN(RN_start + rn_offset)
 		
 		self:drawString(line_i, char_offset + 3*rn_offset,
 			string.format("%02d", rn), rnColors[rn], rnBorderColors[rn])

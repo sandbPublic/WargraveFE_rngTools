@@ -298,11 +298,10 @@ while true do
 		if pressed(11) then
 			if currentRNG.isPrimary then
 				currentRNG = rns.rng2
-				print("Switching to 2ndary rng")
 			else
 				currentRNG = rns.rng1
-				print("Switching to primary rng")
 			end
+			print(string.format("Switching to %s rng", currentRNG:name()))
 		end
 		
 		if pressed(12) then rnEvent.diagnostic() end

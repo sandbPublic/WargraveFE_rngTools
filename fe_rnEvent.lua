@@ -8,7 +8,6 @@
 
 require("feUnitData")
 require("feCombat")
---require("feGUI")
 
 local P = {}
 rnEvent = P
@@ -28,17 +27,6 @@ local function limitSel_rnEvent_i()
 	if sel_rnEvent_i > #eventList then sel_rnEvent_i = #eventList end
 	if sel_rnEvent_i < 1 then sel_rnEvent_i = 1 end 
 end
-
-local LEVEL_UP_COLORS = {
-	0xFF8080FF, -- hue   0 pink
-	0xFFAA00FF, -- hue  40 orange
-	0xFFFF00FF, -- hue  60 yellow
-	0x00FF00FF, -- hue 100 green
-	0x00FFFFFF, -- hue 180 cyan
-	0x0000FFFF, -- hue 240 blue
-	0xFF00FFFF  -- hue 300 magenta
-}
-
 
 local rnEventObj = {}
 
@@ -328,15 +316,11 @@ function rnEventObj:resultString()
 end
 function rnEventObj:headerString(rnEvent_i)
 	local hString = "  "
-	if rnEvent_i == sel_rnEvent_i and feGUI.canAlter_rnEvent() then 
-		if feGUI.pulse() then 
-			hString = "<>" 
-		else
-			hString = "--"
-		end
+	if rnEvent_i == sel_rnEvent_i then
+		hString = "->" 
 	end
 	
-	local specialStringEvents = ""	
+	local specialStringEvents = ""
 	
 	if self.burns ~= 0 then
 		specialStringEvents = specialStringEvents .. 
@@ -470,40 +454,6 @@ function P.searchFutureOutcomes(event_i)
 	
 	event.burns = 0
 	P.update_rnEvents(1)
-end
-
--- draw boxes around rns on second line
-function rnEventObj:drawMyBoxes(rect, rnEvent_i)
-	local line_i = 2*rnEvent_i
-	local INIT_CHARS = 6
-	
-	rect:drawBox(line_i, INIT_CHARS, self.burns * 3, "red")
-	
-	if self.hasCombat then
-		hitStart = self.burns
-		
-		for _, hitEvent in ipairs(self.mHitSeq) do
-			rect:drawBox(line_i, INIT_CHARS + hitStart * 3, hitEvent.RNsConsumed * 3, "yellow")
-			
-			hitStart = hitStart + hitEvent.RNsConsumed
-		end
-	end
-	
-	if self:levelDetected() then
-		local procs = unitData.willLevelStat(self.postCombatRN_i, self.unit_i, self.stats)
-		
-		for stat_i = 1, 7 do
-			local char_start = INIT_CHARS + (self.postCombatRN_i-self.startRN_i + stat_i-1) * 3
-			
-			if procs[stat_i] == 1 then
-				rect:drawBox(line_i, char_start, 3, LEVEL_UP_COLORS[stat_i]) 
-			elseif procs[stat_i] == 2 then -- Afa's provided stat
-				rect:drawBox(line_i, char_start, 3, feGUI.flashcolor(LEVEL_UP_COLORS[stat_i], "white")) 
-			elseif procs[stat_i] == -1 then -- capped stat
-				rect:drawBox(line_i, char_start, 3, feGUI.flashcolor(0x662222FF, "black"))
-			end
-		end
-	end
 end
 
 function P.addEvent(event)

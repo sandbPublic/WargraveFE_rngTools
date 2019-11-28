@@ -25,6 +25,16 @@ local RECT_STRINGS = {
 	"compact btl params",
 }
 
+local LEVEL_UP_COLORS = {
+	0xFF8080FF, -- hue   0 pink
+	0xFFAA00FF, -- hue  40 orange
+	0xFFFF00FF, -- hue  60 yellow
+	0x00FF00FF, -- hue 100 green
+	0x00FFFFFF, -- hue 180 cyan
+	0x0000FFFF, -- hue 240 blue
+	0xFF00FFFF  -- hue 300 magenta
+}
+
 P.selRect_i = P.RN_EVENT_I
 function P.advanceDisplay()
 	P.selRect_i = rotInc(P.selRect_i, #P.rects)
@@ -53,6 +63,21 @@ rectObj.Yratio = 0
 rectObj.opacity = 0
 rectObj.color = 0
 rectObj.strings = {}
+
+function rectObj:new(ID_p, color_p)
+	color_p = color_p or RECT_COLORS[ID_p]
+	
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
+	o.ID = ID_p
+	o.color = color_p
+	return o
+end
+
+for rect_i = 1, #RECT_COLORS do
+	table.insert(P.rects, rectObj:new(rect_i))
+end
 
 -- height of a line
 function rectObj:linePixels()
@@ -237,6 +262,40 @@ function rectObj:drawBox(line_i, char_offset, length, color)
 	gui.box(x1, y1, x2, y2, 0, color)
 end
 
+-- draw boxes around rns on second line
+function rectObj:drawEventBoxes(event, rnEvent_i)
+	local line_i = 2*rnEvent_i
+	local INIT_CHARS = 6
+	
+	self:drawBox(line_i, INIT_CHARS, event.burns * 3, "red")
+	
+	if event.hasCombat then
+		hitStart = event.burns
+		
+		for _, hitEvent in ipairs(event.mHitSeq) do
+			self:drawBox(line_i, INIT_CHARS + hitStart * 3, hitEvent.RNsConsumed * 3, "yellow")
+			
+			hitStart = hitStart + hitEvent.RNsConsumed
+		end
+	end
+	
+	if event:levelDetected() then
+		local procs = unitData.willLevelStat(event.postCombatRN_i, event.unit_i, event.stats)
+		
+		for stat_i = 1, 7 do
+			local char_start = INIT_CHARS + (event.postCombatRN_i-event.startRN_i + stat_i-1) * 3
+			
+			if procs[stat_i] == 1 then
+				self:drawBox(line_i, char_start, 3, LEVEL_UP_COLORS[stat_i]) 
+			elseif procs[stat_i] == 2 then -- Afa's provided stat
+				self:drawBox(line_i, char_start, 3, P.flashcolor(LEVEL_UP_COLORS[stat_i], "white")) 
+			elseif procs[stat_i] == -1 then -- capped stat
+				self:drawBox(line_i, char_start, 3, P.flashcolor(0x662222FF, "black"))
+			end
+		end
+	end
+end
+
 function rectObj:draw()
 	if self.opacity <= 0 then return end
 	
@@ -252,7 +311,7 @@ function rectObj:draw()
 		for i, event in ipairs(rnEvent.getEventList()) do
 			self:drawColorizedRNString(2*i, 6, -- 5 digits, space
 				event.startRN_i, event.length)
-			event:drawMyBoxes(self, i)
+			self:drawEventBoxes(event, i)
 		end	
 	elseif self.ID == P.RN_STREAM_I then
 		-- draw the previous line for context
@@ -272,21 +331,6 @@ function rectObj:draw()
 	end
 	
 	gui.opacity(1)
-end
-
-function rectObj:new(ID_p, color_p)
-	color_p = color_p or RECT_COLORS[ID_p]
-	
-	local o = {}
-	setmetatable(o, self)
-	self.__index = self
-	o.ID = ID_p
-	o.color = color_p
-	return o
-end
-
-for rect_i = 1, #RECT_COLORS do
-	table.insert(P.rects, rectObj:new(rect_i))
 end
 
 function P.selRect()

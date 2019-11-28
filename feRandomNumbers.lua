@@ -99,15 +99,15 @@ function rnStreamObj:moveRNpos(delta)
 	local destination = self.pos + delta
 	if destination < 0 then destination = 0 end
 	
-	generator = self:getRN(destination-1, "isRaw")
+	gen = self:getRN(destination-1, "isRaw")
 	
 	if self.isPrimary then
-		memory.writeword(self.rngAddr, generator)
+		memory.writeword(self.rngAddr, gen)
 		memory.writeword(self.rngAddr+2, self.rawBytes[destination-2])
 		memory.writeword(self.rngAddr+4, self.rawBytes[destination-3])
 	else
-		memory.writeword(self.rngAddr, AND(generator, 0x0000FFFF))
-		memory.writeword(self.rngAddr+2, AND(generator, 0xFFFF0000)/0x10000)
+		memory.writeword(self.rngAddr, AND(gen, 0x0000FFFF))
+		memory.writeword(self.rngAddr+2, AND(gen, 0xFFFF0000)/0x10000)
 	end
 	
 	self:update()
@@ -115,15 +115,15 @@ end
 
 -- returns false if current generators don't match previous 3 rns
 function rnStreamObj:isAtCurrentPosition()
-	self:getRN(self.pos) -- ensure bytes are generated
+	local gen = self:getRN(self.pos-1, "isRaw")
 
 	return (self.isPrimary and 
-			(self.rawBytes[self.pos-3] == self:generator(3) and
+			(self.rawBytes[self.pos-3] == self:generator(3) and  -- other bytes are generated
 		     self.rawBytes[self.pos-2] == self:generator(2) and
-		     self.rawBytes[self.pos-1] == self:generator(1)))
+		     gen == self:generator(1)))
 			or
 			((not self.isPrimary) and
-			 self.rawBytes[self.pos-1] == self:generator(1)+self:generator(2)*0x10000)
+			 gen == self:generator(1)+self:generator(2)*0x10000)
 end
 
 local lastFrameUpdated = 0

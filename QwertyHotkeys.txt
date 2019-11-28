@@ -17,7 +17,7 @@ H
 switch to 2ndary functions
 switch to primary functions
 J
-unit_i to next deployed
+select next deployed unit
 hold, L/R change combat weight
 K
 toggle window visibility

@@ -364,7 +364,7 @@ function rnEventObj:healable()
 		return true
 	end
 	return self:levelDetected() 
-		and self.unit:willLevelStat(self.postCombatRN_i, self.stats)[1] >= 1
+		and self.unit:willLevelStats(self.postCombatRN_i, self.stats)[1] >= 1
 end
 
 -- measure in units of perfect levels (= 100)

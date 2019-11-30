@@ -808,7 +808,7 @@ function P.getSavedStats()
 	return savedStats
 end
 
-function unitObj:willLevelStat(HP_RN_i, currStats)
+function unitObj:willLevelStats(HP_RN_i, currStats)
 	currStats = currStats or savedStats
 	
 	ret = {}
@@ -833,7 +833,7 @@ function unitObj:levelUpProcs_string(HP_RN_i, charStats)
 	local noStatWillRise = true
 	local noStatIsCapped = true
 
-	for _, proc in ipairs(self:willLevelStat(HP_RN_i, charStats)) do		
+	for _, proc in ipairs(self:willLevelStats(HP_RN_i, charStats)) do		
 		if proc == 1 then
 			seq = seq .. "+" -- grows this stat
 			noStatWillRise = false
@@ -950,7 +950,7 @@ function unitObj:statProcScore(HP_RN_i, currStats)
 	
 	currStats = currStats or savedStats
 	
-	local procs = self:willLevelStat(HP_RN_i, currStats)
+	local procs = self:willLevelStats(HP_RN_i, currStats)
 	local dsw = self:dynamicStatWeights(currStats)
 	
 	local score = 0

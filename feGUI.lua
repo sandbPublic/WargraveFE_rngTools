@@ -282,7 +282,7 @@ function rectObj:drawEventBoxes(event, rnEvent_i)
 	end
 	
 	if event:levelDetected() then
-		local procs = event.unit:willLevelStat(event.postCombatRN_i, event.stats)
+		local procs = event.unit:willLevelStats(event.postCombatRN_i, event.stats)
 		
 		for stat_i = 1, 7 do
 			local char_start = INIT_CHARS + (event.postCombatRN_i-event.startRN_i + stat_i-1) * 3

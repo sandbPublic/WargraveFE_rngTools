@@ -38,11 +38,12 @@ function rnEventObj:setStats(stats)
 		self.stats[stat_i] = stats[stat_i]
 	end
 	
-	self.expValueFactor = self.unit:expValueFactor(self.stats)
+	self.mExpValueFactor = self.unit:expValueFactor(self.stats)
 end
 
 -- INDEX FROM 1
 function rnEventObj:new(stats, batParams, sel_Unit_i)
+	stats = stats or unitData.getSavedStats()
 	batParams = batParams or combat.currBattleParams
 	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
 	
@@ -53,7 +54,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	o.ID = #eventList+1 -- order in which rnEvents were registered
 	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
 	
-	o.unit = unitData[sel_Unit_i]
+	o.unit = unitData.selectedUnit()
 	o:setStats(stats) -- todo do we get enemy stats on EP?
 	o.batParams = batParams:copy()
 	
@@ -62,7 +63,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	o.dig = false
 	
 	-- as units ram their caps (or have the potential to), the value of their levels drops
-	o.expValueFactor = o.unit:expValueFactor(o.stats)
+	o.mExpValueFactor = o.unit:expValueFactor(o.stats)
 	o.combatWeight = 1
 	
 	o.enemyID = 0 -- for units attacking the same enemyID
@@ -355,7 +356,7 @@ function rnEventObj:headerString(rnEvent_i)
 	end
 	
 	return hString .. string.format("%2d %s%s%s",
-		self.ID, unitData[self.unit_i].name, self:resultString(), specialStringEvents)
+		self.ID, self.unit.name, self:resultString(), specialStringEvents)
 end
 
 function rnEventObj:healable()
@@ -366,11 +367,11 @@ function rnEventObj:healable()
 		and self.unit:willLevelStat(self.postCombatRN_i, self.stats)[1] >= 1
 end
 
--- measure in units of exp
--- perfect combat value == 100 exp
+-- measure in units of perfect levels (= 100)
+-- perfect combat value == 50
 -- can adjust combat weight
--- dig = 50 exp
--- if healing is relevant, +11xp if player hp is less than max
+-- dig = 25
+-- if healing is relevant, +5 if player hp is less than max
 function rnEventObj:evaluation_fn(printV)
 	local score = 0	
 	local printStr = string.format("%02d", self.ID)
@@ -378,7 +379,7 @@ function rnEventObj:evaluation_fn(printV)
 	-- could have empty combat if enemy HP == 0 e.g. another unit killed this enemy this phase
 	if self.hasCombat and self.mHitSeq[1] then 
 		if self.mHitSeq[1].action == "STF-X" then
-			score = score + 100
+			score = score + 50
 			if printV then printStr = printStr .. " staff hit" end
 		else
 			-- normalize to 1, out of HP at start of phase.
@@ -391,30 +392,30 @@ function rnEventObj:evaluation_fn(printV)
 			local dmgToPlayer = 1-self.mHitSeq.pHP/
 				self.batParams:data(combat.enum_PLAYER)[combat.HP_I]
 			
-			score = score + 100*dmgToEnemy - 200*dmgToPlayer 
-				+ self.mHitSeq.expGained*self.expValueFactor
+			score = score + 50*dmgToEnemy - 100*dmgToPlayer 
+				+ self.mHitSeq.expGained*self.mExpValueFactor
 			
 			printStr = printStr .. string.format(" d2e %.2f  d2p %.2f  exp %dx%.2f", 
-					dmgToEnemy, dmgToPlayer, self.mHitSeq.expGained, self.expValueFactor)
+					dmgToEnemy, dmgToPlayer, self.mHitSeq.expGained, self.mExpValueFactor)
 		end
 		
 		score = score * self.combatWeight
 	end
 	
 	if self:healable() then
-		score = score + 6
+		score = score + 5
 		printStr = printStr .. " healable"
 	end
 	
 	if self:levelDetected() then
-		score = score + self:levelScore()*self.expValueFactor
+		score = score + self:levelScore()*self.mExpValueFactor
 		
 		printStr = printStr .. string.format(" level %3d", self:levelScore())
 	end
 	if self.dig and self:digSucceed() then
-		score = score + 50
+		score = score + 25
 		
-		printStr = printStr .. " dig 50"
+		printStr = printStr .. " dig 25"
 	end
 	
 	if printV then print(printStr) end

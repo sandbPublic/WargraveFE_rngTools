@@ -185,7 +185,7 @@ while true do
 		if pressed(5) then rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp) end
 		
 		if pressed(7) then -- advance to next deployed
-			unitData.sel_Unit_i = unitData.nextDeployed_i()
+			unitData.setToNextDeployed()
 			print(string.format("Selected %-10.10s (next %s)", unitData.selectedUnit().name, 
 				unitData[unitData.nextDeployed_i()].name))
 		end

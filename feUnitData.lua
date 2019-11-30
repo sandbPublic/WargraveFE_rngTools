@@ -668,6 +668,8 @@ end
 
 DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
 DEPLOYED[6][INDEX_OF_NAME["Zealot"]] = true
+DEPLOYED[6][INDEX_OF_NAME["Lugh"]] = true
+PROMOTED_AT[6][INDEX_OF_NAME["Lugh"]] = 10
 GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
 GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 20, 20, 10, 10}
 
@@ -714,30 +716,33 @@ function unitObj:new(unit_i)
 	o.growthWeights = GROWTH_WEIGHTS[GAME_VERSION][unit_i]
 	
 	-- units with low growths or growths in bad areas have less value in gaining exp
-	o.baseExpValue = 0
+	-- events are scored based on exp gained
+	-- in terms of exp, average level is worth 100, blank level 0
+	-- average level is worth some fraction of a perfect level, so 1 exp is worth 100th of that
+	o.avgLevelValue = 0
+	o.weightTotal = 0
 	for i = 1, 7 do
-		o.baseExpValue = o.baseExpValue + o.growths[i]*o.growthWeights[i]
+		o.avgLevelValue = o.avgLevelValue + o.growths[i]*o.growthWeights[i]
+		o.weightTotal = o.weightTotal + o.growthWeights[i]
 	end
-	
-	o.class = CLASSES[GAME_VERSION][unit_i]
-	o.promotion = PROMOTIONS[GAME_VERSION][unit_i]
-	
-	o.hasPromoted = (PROMOTED_AT[GAME_VERSION][unit_i] > 0)
-	o.canPromote = CLASSES[GAME_VERSION][unit_i] ~= PROMOTIONS[GAME_VERSION][unit_i]
-	o.levelsPrePromotion = PROMOTED_AT[GAME_VERSION][unit_i] - BASE_STATS[GAME_VERSION][unit_i][P.LEVEL_I]
+	o.perfLevelValue = 100 * o.weightTotal
 	
 	o.bases = BASE_STATS[GAME_VERSION][unit_i]
 	for i, boost in ipairs(BOOSTERS[GAME_VERSION][unit_i]) do
 		o.bases[i] = o.bases[i] + boost
 	end
-	if o.hasPromoted then
+
+	o.class = CLASSES[GAME_VERSION][unit_i]
+	o.promotion = PROMOTIONS[GAME_VERSION][unit_i]
+	if PROMOTED_AT[GAME_VERSION][unit_i] > 0 then
 		o.class = o.promotion
 		for i, gain in ipairs(classes.PROMO_GAINS[o.promotion]) do
 			o.bases[i] = o.bases[i] + gain
 		end
-		o.bases[P.LEVEL_I] = 1 - o.levelsPrePromotion
+		o.bases[P.LEVEL_I] = 1 + BASE_STATS[GAME_VERSION][unit_i][P.LEVEL_I] 
+							   - PROMOTED_AT[GAME_VERSION][unit_i]
 	end
-	
+	o.canPromote = o.class ~= o.promotion
 	o.hasAfas = false
 	
 	return o
@@ -752,6 +757,10 @@ end
 function P.nextDeployed_i()
 	return rotInc(sel_Unit_i, #P)
 end
+
+function P.setToNextDeployed()
+	sel_Unit_i = P.nextDeployed_i()
+end 
 
 for unit_i = 1, #NAMES[GAME_VERSION] do
 	if DEPLOYED[GAME_VERSION][unit_i] then
@@ -768,14 +777,14 @@ function P.setAfas(unit_i)
 		print("Afa's removed from " .. P[Afas_i].name)
 		
 		if Afas_i ~= unit_i then
-			Afas = unit_i
+			Afas_i = unit_i
 			P[Afas_i].hasAfas = true
 			print("Afa's applied to " .. P[Afas_i].name)
 		else
 			Afas_i = 0
 		end
 	else
-		Afas = unit_i
+		Afas_i = unit_i
 		P[Afas_i].hasAfas = true
 		print("Afa's applied to " .. P[Afas_i].name)
 	end
@@ -784,7 +793,7 @@ end
 local savedStats = {0, 0, 0, 0, 0, 0, 0, 0, 0} -- last two are level, exp
 
 function P.getSavedStats()
-	return saveStats
+	return savedStats
 end
 
 function unitObj:willLevelStat(HP_RN_i, currStats)
@@ -812,7 +821,7 @@ function unitObj:levelUpProcs_string(HP_RN_i, charStats)
 	local noStatWillRise = true
 	local noStatIsCapped = true
 
-	for _, proc in ipairs(self.willLevelStat(HP_RN_i, charStats)) do		
+	for _, proc in ipairs(self:willLevelStat(HP_RN_i, charStats)) do		
 		if proc == 1 then
 			seq = seq .. "+" -- grows this stat
 			noStatWillRise = false
@@ -910,48 +919,45 @@ function unitObj:dynamicStatWeights(currStats)
 	return ret
 end
 
--- if growth rate needed to cap is less than growth rate, reduce proportionally
+-- if growth rate needed to cap is less than growth rate, reduce proportional to weight
+-- ranges from 1, when no stats capped and growth = 100, to 0
 function unitObj:expValueFactor(currStats)
+	if self.weightTotal == 0 then return 0 end
+
 	currStats = currStats or savedStats
 	
-	local weightTotal = 0
 	local dsw = self:dynamicStatWeights(currStats)
 	local dswTotal = 0
 	
 	for stat_i = 1, 7 do
-		weightTotal = weightTotal + self.growthWeights[stat_i]
 		dswTotal = dswTotal + dsw[stat_i]
 	end
 	
-	if weightTotal == 0 then return 0 end
-	
-	return self.baseExpValue * dswTotal / weightTotal
+	return (self.avgLevelValue/self.perfLevelValue) * (dswTotal/self.weightTotal)
 end
 
 -- gets score for level up starting at rns index HP_RN_i
--- scored such that average level is 0, empty level is -100
--- in units of exp: empty level wipes out value of exp used to level up
+-- scored such that average level is 0, empty level is -100 exp
+-- empty level wipes out value of exp used to level up
 function unitObj:statProcScore(HP_RN_i, currStats)
-	currStats = currStats or savedStats
+	if self.avgLevelValue == 0 then return 0 end
 	
-	local score = 0
-	local avg = 0
+	currStats = currStats or savedStats
 	
 	local procs = self:willLevelStat(HP_RN_i, currStats)
 	local dsw = self:dynamicStatWeights(currStats)
 	
+	local score = 0
 	for stat_i = 1, 7 do
 		if procs[stat_i] > 0 then
-			score = score + 100 * dsw[stat_i]
+			score = score + dsw[stat_i]
 		end
-		avg = avg + self.growths[stat_i] * dsw[stat_i] -- growths are in cents
 	end
+	score = score * 100
 	
-	if avg == 0 then return 0 end
+	score = score - self.avgLevelValue -- score now ranges [-avg, perf-avg]
 	
-	score = score - avg
-	
-	return 100*score/avg
+	return 100*score/self.avgLevelValue
 end
 
 function unitObj:statAverageAt(stat_i, level)
@@ -1020,15 +1026,16 @@ end
 function unitObj:statData_strings(showPromo)
 	local ret = {}
 	
-	showPromo = showPromo and self.canPromote
+	showPromo = (showPromo and self.canPromote)
 	
 	local indexer = 0
 	local function nextInd()
 		indexer = indexer+1
 		return indexer
 	end
-	local STAT_HEAD = nextInd()
+	local STAT_HEADER = nextInd()
 	
+	local BASES = nextInd()
 	local STATS = nextInd()
 	
 	local CAPS = nextInd()
@@ -1038,8 +1045,9 @@ function unitObj:statData_strings(showPromo)
 	local EF_GROW = nextInd()
 	local STND_DEV = nextInd()
 	
-	ret[STAT_HEAD]	= string.format("%-10.10sLv Xp Hp St Sk Sp Df Rs Lk", self.name)
+	ret[STAT_HEADER] = string.format("%-10.10sLv Xp Hp St Sk Sp Df Rs Lk", self.name)
 	
+	ret[BASES]		= "Bases + boosts " 
 	ret[STATS]		= "Stats    " .. string.format(" %02d %02d", savedStats[P.LEVEL_I], savedStats[9])
 	if savedStats[9] == 255 then
 		ret[STATS]	= "Stats    " .. string.format(" %02d --", savedStats[P.LEVEL_I])
@@ -1060,8 +1068,12 @@ function unitObj:statData_strings(showPromo)
 	
 	local dsw = self:dynamicStatWeights(charStats)
 	for stat_i = 1, 7 do
-		ret[GROWTHS] = ret[GROWTHS] .. 
-				string.format(" %02d", self.growths[stat_i])
+		ret[BASES] = ret[BASES] .. string.format(" %02d", self.bases[stat_i])
+		if self.hasAfas then
+			ret[GROWTHS] = ret[GROWTHS] .. string.format(" %02d", self.growths[stat_i] + 5)
+		else
+			ret[GROWTHS] = ret[GROWTHS] .. string.format(" %02d", self.growths[stat_i])
+		end
 		
 		if showPromo then
 			ret[STATS] = ret[STATS] .. string.format(" %02d", savedStats[stat_i] 

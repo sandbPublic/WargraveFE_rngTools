@@ -229,37 +229,37 @@ P.PROMO_GAINS[P.GREAT_LORD_8_M] 	= {4, 2, 3, 2, 2, 5, 0}
 
 P.PROMO_GAINS[P.WYVERN_LORD_F] 		= {5, 2, 2, 2, 2, 2, 0} --6__
 P.PROMO_GAINS[P.WYVERN_LORD_M] 		= {4, 0, 2, 2, 0, 2, 0} -- 7
-									-- 6:  5, 2, 2, 2, 2, 1
-									-- 8:  4, 2, 2, 0, 2, 0
+									-- 6: 5, 2, 2, 2, 2, 1
+									-- 8: 4, 2, 2, 0, 2, 0
 P.PROMO_GAINS[P.FALCO_KNIGHT] 		= {5, 2, 0, 0, 2, 2, 0} -- 7
-									-- 6:  6, 2, 2, 2, 2, 2
-									-- 8:  5, 2, 0, 2, 2, 2
+									-- 6: 6, 2, 2, 2, 2, 2
+									-- 8: 5, 2, 0, 2, 2, 2
 P.PROMO_GAINS[P.WYVERN_KNIGHT_F]	= {3, 2, 1, 2, 1, 1, 0} --__8
 P.PROMO_GAINS[P.WYVERN_KNIGHT_M]	= {3, 1, 2, 3, 0, 1, 0} --__8
 
 P.PROMO_GAINS[P.BISHOP_F] 			= {3, 1, 2, 1, 2, 2, 0} -- 78
-									-- 6:  3, 3, 3, 2, 2, 3
+									-- 6: 3, 3, 3, 2, 2, 3
 P.PROMO_GAINS[P.BISHOP_M] 			= {3, 2, 1, 0, 3, 2, 0} -- 78
-									-- 6:  3, 3, 3, 2, 2, 3
+									-- 6: 3, 3, 3, 2, 2, 3
 P.PROMO_GAINS[P.SAGE_F] 			= {3, 1, 1, 0, 3, 3, 0} -- 78
-									-- 6:  3, 3, 3, 3, 1, 2
+									-- 6: 3, 3, 3, 3, 1, 2
 P.PROMO_GAINS[P.SAGE_M] 			= {4, 1, 0, 0, 3, 3, 0} -- 78
-									-- 6:  4, 4, 2, 1, 2, 2
+									-- 6: 4, 4, 2, 1, 2, 2
 P.PROMO_GAINS[P.DRUID_F] 			= {2, 4, 2, 3, 2, 2, 0} --6__
 P.PROMO_GAINS[P.DRUID_M] 			= {4, 0, 0, 3, 2, 2, 0} -- 78
-									-- 6:  3, 4, 2, 2, 2, 2
+									-- 6: 3, 4, 2, 2, 2, 2
 P.PROMO_GAINS[P.VALKYRIE] 			= {3, 2, 1, 0, 2, 3, 0} -- 78
-									-- 6:  4, 3, 2, 2, 2, 3
+									-- 6: 4, 3, 2, 2, 2, 3
 P.PROMO_GAINS[P.MAGE_KNIGHT_F] 		= {3, 2, 1, 0, 2, 2, 0} --__8
 P.PROMO_GAINS[P.MAGE_KNIGHT_M] 		= {4, 2, 0, 0, 2, 2, 0} --__8
 P.PROMO_GAINS[P.SUMMONER] 			= {3, 0, 1, 3, 1, 3, 0} --__8
 P.PROMO_GAINS[P.S_PUPIL] 			= {4, 2, 0, 1, 3, 3, 0} --__8
 
 P.PROMO_GAINS[P.GENERAL_F] 			= {3, 2, 3, 2, 3, 3, 0} -- _8
-									-- 6:  4, 4, 2, 4, 3, 3
+									-- 6: 4, 4, 2, 4, 3, 3
 P.PROMO_GAINS[P.GENERAL_M] 			= {4, 2, 2, 3, 2, 2, 0} -- 7
-									-- 6:  4, 3, 2, 3, 4, 3
-									-- 8:  4, 2, 2, 3, 2, 3
+									-- 6: 4, 3, 2, 3, 4, 3
+									-- 8: 4, 2, 2, 3, 2, 3
 P.PROMO_GAINS[P.PALADIN_F] 			= {1, 1, 1, 2, 1, 2, 0} --__8
 P.PROMO_GAINS[P.PALADIN_M] 			= {2, 1, 1, 1, 2, 1, 0} -- 78
 									-- 6:  3, 2, 2, 2, 2, 3 
@@ -268,27 +268,27 @@ P.PROMO_GAINS[P.GREAT_KNIGHT_M] 	= {3, 2, 1, 2, 2, 1, 0} --__8
 P.PROMO_GAINS[P.S_RECRUIT] 			= {2, 2, 1, 1, 2, 1, 0} --__8
 
 P.PROMO_GAINS[P.WARRIOR] 			= {3, 1, 2, 0, 3, 3, 0} -- 7
-									-- 6:  8, 3, 3, 2, 3, 0
+									-- 6: 8, 3, 3, 2, 3, 0
 P.PROMO_GAINS[P.BERSERKER] 			= {4, 1, 1, 1, 2, 2, 0} -- 7
-									-- 6:  4, 2, 5, 2, 3, 0 brigand
-									-- 6:  5, 3, 4, 1, 3, 0 pirate
+									-- 6: 4, 2, 5, 2, 3, 0 brigand
+									-- 6: 5, 3, 4, 1, 3, 0 pirate
 P.PROMO_GAINS[P.HERO_F] 			= {6, 3, 5, 5, 4, 3, 0} --6__ but female merc does not exist?
 P.PROMO_GAINS[P.HERO_M] 			= {4, 0, 2, 2, 2, 2, 0} -- 7
-									-- 6:  4, 2, 1, 2, 4, 2
+									-- 6: 4, 2, 1, 2, 4, 2
 P.PROMO_GAINS[P.TROOPER_F] 			= {0, 0, 0, 0, 0, 0, 0} --  _8
-									-- 6:  6, 2, 1, 1, 2, 4
+									-- 6: 6, 2, 1, 1, 2, 4
 P.PROMO_GAINS[P.TROOPER_M] 			= {3, 2, 1, 1, 3, 3, 0} -- 7
-									-- 6:  5, 2, 2, 2, 2, 3
+									-- 6: 5, 2, 2, 2, 2, 3
 P.PROMO_GAINS[P.SNIPER_F] 			= {4, 3, 1, 1, 2, 2, 0} -- 7
-									-- 6:  2, 3, 3, 3, 2, 3
+									-- 6: 2, 3, 3, 3, 2, 3
 P.PROMO_GAINS[P.SNIPER_M] 			= {3, 1, 2, 2, 2, 3, 0} -- 7
-									-- 6:  3, 3, 3, 2, 2, 2
+									-- 6: 3, 3, 3, 2, 2, 2
 P.PROMO_GAINS[P.S_JOURNEYMAN] 		= {0, 0, 0, 0, 0, 0, 0} -- __8
 
 P.PROMO_GAINS[P.SWORDMASTER_F] 		= {4, 2, 1, 0, 2, 1, 0} -- _8
-									-- 6:  4, 3, 2, 2, 3, 2
+									-- 6: 4, 3, 2, 2, 3, 2
 P.PROMO_GAINS[P.SWORDMASTER_M] 		= {5, 2, 0, 0, 2, 1, 0} -- 7
-									-- 6:  5, 2, 2, 1, 3, 2
+									-- 6: 5, 2, 2, 1, 3, 2
 P.PROMO_GAINS[P.ASSASSIN_F] 		= {2, 1, 1, 1, 2, 1, 0} --__8
 P.PROMO_GAINS[P.ASSASSIN_M] 		= {3, 1, 0, 0, 2, 2, 0} --_78
 P.PROMO_GAINS[P.ROGUE] 				= {0, 0, 0, 0, 0, 0, 0} --__8

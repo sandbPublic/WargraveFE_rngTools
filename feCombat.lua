@@ -14,23 +14,26 @@ local battleSimBase = {}
 battleSimBase[6] = 0x02039200
 battleSimBase[7] = 0x0203A400
 battleSimBase[8] = 0x0203A500
+
+-- in the order they appear in RAM
 P.ATTACK_I 	= 1 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
 P.DEF_I 	= 2 -- includes terrain bonus
 P.AS_I 		= 3 -- Attack speed
 P.HIT_I 	= 4 -- if can't attack, 0xFF
-P.CRIT_I 	= 5 
-P.HP_I 		= 6 -- current HP
+P.LUCK_I	= 5 -- for devil axe
+P.CRIT_I 	= 6 
 P.LEVEL_I	= 7 -- for Great Shield, Pierce, Sure Strike, and exp cap at level 19
 P.EXP_I		= 8 -- for level up detection
-P.LUCK_I	= 9 -- for devil axe, not read from memory here
+P.HP_I 		= 9 -- current HP
+
 local relativeBattleAddrs = {}
---						  atk   def   AS    hit   crit  hp    lvl   xp
-relativeBattleAddrs[6] = {0x6C, 0x6E, 0x70, 0x76, 0x7C, 0x82, 0x80, 0x81}
-relativeBattleAddrs[7] = {0x4A, 0x4C, 0x4E, 0x54, 0x5A, 0x62, 0x60, 0x61}
-relativeBattleAddrs[8] = {0x46, 0x48, 0x4A, 0x50, 0x56, 0x5E, 0x5C, 0x5D}
---						  0		+2    +2    +6    +6    +8    -2    +1
+--						   atk   def    AS   hit  luck  crit   lvl    xp    hp
+relativeBattleAddrs[6] = {0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82}
+relativeBattleAddrs[7] = {0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62}
+relativeBattleAddrs[8] = {0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}
+--						     0    +2    +2    +6    +4    +2  +6/4    +1    +1  
 local defenderBattleAddrs = {}
-defenderBattleAddrs[6] = 0x7C
+defenderBattleAddrs[6] = 0x7C -- -4
 defenderBattleAddrs[7] = 0x80
 defenderBattleAddrs[8] = 0x80
 
@@ -39,7 +42,7 @@ defenderBattleAddrs[8] = 0x80
 -- therefore, normal combat can be set in preview or after RNs used
 -- staff can only be set after RN used
 
--- special weapon types, index from 1 so WEAPON_TYPE_STRINGS works
+-- special weapon types
 P.enum_NORMAL = 1
 P.enum_DEVIL  = 2
 P.enum_DRAIN  = 3 -- nosferatu
@@ -59,7 +62,8 @@ local function battleAddrs(isAttacker, index)
 	if isAttacker then
 		return battleSimBase[GAME_VERSION] + relativeBattleAddrs[GAME_VERSION][index]		
 	end
-	return battleSimBase[GAME_VERSION] + relativeBattleAddrs[GAME_VERSION][index] + defenderBattleAddrs[GAME_VERSION]
+	return battleSimBase[GAME_VERSION] + relativeBattleAddrs[GAME_VERSION][index] 
+	                                   + defenderBattleAddrs[GAME_VERSION]
 end
 
 P.combatObj = {}
@@ -73,7 +77,6 @@ function P.combatObj:new()
 	o.attacker.class = classes.LORD
 	o.attacker.weapon = P.enum_NORMAL
 	
-	
 	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0}
 	o.defender.class = classes.LORD
 	o.defender.weapon = P.enum_NORMAL
@@ -81,7 +84,6 @@ function P.combatObj:new()
 	o.player = o.attacker -- alias, sometimes one description makes more sense
 	o.enemy = o.defender
 	
-	o.unit_ID  = 1
 	o.bonusExp = 0 -- 20 for killing thief, 40 for killing boss
 	
 	return o
@@ -94,7 +96,7 @@ function P.combatObj:copy()
 	
 	o.attacker = {}
 	o.defender = {}
-	for i = 1, P.LUCK_I do
+	for i = 1, 9 do
 		o.attacker[i] = self.attacker[i]
 		o.defender[i] = self.defender[i]
 	end
@@ -106,7 +108,6 @@ function P.combatObj:copy()
 	o.player = o.attacker
 	o.enemy = o.defender
 	
-	o.unit_ID  = self.unit_ID
 	o.bonusExp = self.bonusExp
 	
 	return o
@@ -142,12 +143,11 @@ function P.combatObj:togglePromo(isAttacker)
 end
 
 function P.combatObj:set()
-	for i = 1, 8 do
+	for i = 1, 9 do
 		self.attacker[i] = memory.readbyte(battleAddrs(true, i))
 		self.defender[i] = memory.readbyte(battleAddrs(false, i))
 	end
 	
-	self.unit_ID = unitData.sel_Unit_i
 	self.player.class = unitData.selectedUnit().class
 	
 	if classes.PROMOTED[self.player.class] then
@@ -163,7 +163,6 @@ function P.combatObj:cycleWeapon(isAttacker)
 		self:data(isAttacker).weapon = 1
 	end
 	
-	self:data(isAttacker)[P.LUCK_I] = unitData.getSavedStats()[unitData.LUCK_I]
 	print(P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weapon])
 end
 

@@ -236,7 +236,6 @@ P.PROMO_GAINS[P.GREAT_LORD_7] 		= {3, 0, 2, 3, 1, 5, 0}
 P.PROMO_GAINS[P.GREAT_LORD_8_F] 	= {4, 2, 2, 1, 3, 5, 0}
 P.PROMO_GAINS[P.GREAT_LORD_8_M] 	= {4, 2, 3, 2, 2, 5, 0}
 
-P.PROMO_GAINS[P.WYVERN_LORD_F] 		= {5, 2, 2, 2, 2, 2, 0} --6__
 P.PROMO_GAINS[P.WYVERN_LORD_M] 		= {4, 0, 2, 2, 0, 2, 0}
 P.PROMO_GAINS[P.FALCO_KNIGHT] 		= {5, 2, 0, 0, 2, 2, 0}
 P.PROMO_GAINS[P.WYVERN_KNIGHT_F]	= {3, 2, 1, 2, 1, 1, 0}
@@ -246,7 +245,6 @@ P.PROMO_GAINS[P.BISHOP_F] 			= {3, 1, 2, 1, 2, 2, 0}
 P.PROMO_GAINS[P.BISHOP_M] 			= {3, 2, 1, 0, 3, 2, 0}
 P.PROMO_GAINS[P.SAGE_F] 			= {3, 1, 1, 0, 3, 3, 0}
 P.PROMO_GAINS[P.SAGE_M] 			= {4, 1, 0, 0, 3, 3, 0}
-P.PROMO_GAINS[P.DRUID_F] 			= {2, 4, 2, 3, 2, 2, 0} --6__
 P.PROMO_GAINS[P.DRUID_M] 			= {4, 0, 0, 3, 2, 2, 0}
 P.PROMO_GAINS[P.VALKYRIE] 			= {3, 2, 1, 0, 2, 3, 0}
 P.PROMO_GAINS[P.MAGE_KNIGHT_F] 		= {3, 2, 1, 0, 2, 2, 0}
@@ -264,7 +262,7 @@ P.PROMO_GAINS[P.S_RECRUIT] 			= {2, 2, 1, 1, 2, 1, 0}
 
 P.PROMO_GAINS[P.WARRIOR] 			= {3, 1, 2, 0, 3, 3, 0}
 P.PROMO_GAINS[P.BERSERKER] 			= {4, 1, 1, 1, 2, 2, 0}
-P.PROMO_GAINS[P.HERO_F] 			= {6, 3, 5, 5, 4, 3, 0} --6__ but female merc does not exist?
+
 P.PROMO_GAINS[P.HERO_M] 			= {4, 0, 2, 2, 2, 2, 0}
 P.PROMO_GAINS[P.TROOPER_F] 			= {2, 2, 2, 1, 3, 3, 0}
 P.PROMO_GAINS[P.TROOPER_M] 			= {3, 2, 1, 1, 3, 3, 0}
@@ -275,13 +273,11 @@ P.PROMO_GAINS[P.S_JOURNEYMAN] 		= {4, 1, 2, 2, 2, 2, 0}
 P.PROMO_GAINS[P.SWORDMASTER_F] 		= {4, 2, 1, 0, 2, 1, 0}
 P.PROMO_GAINS[P.SWORDMASTER_M] 		= {5, 2, 0, 0, 2, 1, 0}
 P.PROMO_GAINS[P.ASSASSIN_F] 		= {2, 1, 1, 1, 2, 1, 0}
-P.PROMO_GAINS[P.ASSASSIN_M] 		= {3, 1, 0, 0, 2, 2, 0} -- from thief in 8
+P.PROMO_GAINS[P.ASSASSIN_M] 		= {3, 1, 0, 0, 2, 2, 0}
 P.PROMO_GAINS[P.ROGUE] 				= {2, 1, 1, 0, 2, 2, 0}
 
-P.PROMO_GAINS[P.ARCHSAGE] 			= {0, 0, 0, 0, 0, 0, 0}
-P.PROMO_GAINS[P.NECROMANCER] 		= {0, 0, 0, 0, 0, 0, 0}
-
 if GAME_VERSION == 6 then
+	P.PROMO_GAINS[P.WYVERN_LORD_F] 	= {5, 2, 2, 2, 2, 2, 0} -- 6 only
 	P.PROMO_GAINS[P.WYVERN_LORD_M] 	= {5, 2, 2, 2, 2, 1, 0}
 	P.PROMO_GAINS[P.FALCO_KNIGHT] 	= {6, 2, 2, 2, 2, 2, 0}
 
@@ -289,6 +285,7 @@ if GAME_VERSION == 6 then
 	P.PROMO_GAINS[P.BISHOP_M] 		= {3, 3, 3, 2, 2, 3, 0}
 	P.PROMO_GAINS[P.SAGE_F] 		= {3, 3, 3, 3, 1, 2, 0}
 	P.PROMO_GAINS[P.SAGE_M] 		= {4, 4, 2, 1, 2, 2, 0}
+	P.PROMO_GAINS[P.DRUID_F]		= {2, 4, 2, 3, 2, 2, 0} -- 6 only
 	P.PROMO_GAINS[P.DRUID_M] 		= {3, 4, 2, 2, 2, 2, 0}
 	P.PROMO_GAINS[P.VALKYRIE] 		= {4, 3, 2, 2, 2, 3, 0}
 

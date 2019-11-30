@@ -1,14 +1,12 @@
 require("feRandomNumbers")
 require("feClass")
 
-
 local P = {}
 unitData = P
 
 -- luck is in the wrong place relative to what is shown on screen:
 -- HP Str Skl Spd Def Res Lck Lvl Exp
 
-P.LUCK_I = 7
 P.LEVEL_I = 8
 P.EXP_I = 9
 
@@ -704,6 +702,14 @@ end
 
 
 
+local function sumArray(array)
+	sum = 0
+	for _, x in ipairs(array) do
+		sum = sum + x
+	end
+	return sum
+end
+
 local unitObj = {}
 
 function unitObj:new(unit_i)
@@ -720,10 +726,9 @@ function unitObj:new(unit_i)
 	-- in terms of exp, average level is worth 100, blank level 0
 	-- average level is worth some fraction of a perfect level, so 1 exp is worth 100th of that
 	o.avgLevelValue = 0
-	o.weightTotal = 0
+	o.weightTotal = sumArray(o.growthWeights)
 	for i = 1, 7 do
 		o.avgLevelValue = o.avgLevelValue + o.growths[i]*o.growthWeights[i]
-		o.weightTotal = o.weightTotal + o.growthWeights[i]
 	end
 	o.perfLevelValue = 100 * o.weightTotal
 	
@@ -748,45 +753,52 @@ function unitObj:new(unit_i)
 	return o
 end
 
-local sel_Unit_i = 1
-
-function P.selectedUnit()
-	return P[sel_Unit_i]
-end
+local selectedUnit_i = 1
+local deployedUnits = {}
 
 function P.nextDeployed_i()
-	return rotInc(sel_Unit_i, #P)
+	local next_i = selectedUnit_i + 1
+	if next_i > #deployedUnits then next_i = 1 end
+	return next_i
 end
 
 function P.setToNextDeployed()
-	sel_Unit_i = P.nextDeployed_i()
+	selectedUnit_i = P.nextDeployed_i()
 end 
+
+function P.selectedUnit()
+	return deployedUnits[selectedUnit_i]
+end
+
+function P.nextUnit()
+	return deployedUnits[P.nextDeployed_i()]
+end
 
 for unit_i = 1, #NAMES[GAME_VERSION] do
 	if DEPLOYED[GAME_VERSION][unit_i] then
-		table.insert(P, unitObj:new(unit_i))
+		table.insert(deployedUnits, unitObj:new(unit_i))
 	end
 end
 
 local Afas_i = 0
 function P.setAfas(unit_i)
-	unit_i = unit_i or sel_Unit_i
+	unit_i = unit_i or selectedUnit_i
 	
 	if Afas_i > 0 then
-		P[Afas_i].hasAfas = false
-		print("Afa's removed from " .. P[Afas_i].name)
+		deployedUnits[Afas_i].hasAfas = false
+		print("Afa's removed from " .. deployedUnits[Afas_i].name)
 		
 		if Afas_i ~= unit_i then
 			Afas_i = unit_i
-			P[Afas_i].hasAfas = true
-			print("Afa's applied to " .. P[Afas_i].name)
+			deployedUnits[Afas_i].hasAfas = true
+			print("Afa's applied to " .. deployedUnits[Afas_i].name)
 		else
 			Afas_i = 0
 		end
 	else
 		Afas_i = unit_i
-		P[Afas_i].hasAfas = true
-		print("Afa's applied to " .. P[Afas_i].name)
+		deployedUnits[Afas_i].hasAfas = true
+		print("Afa's applied to " .. deployedUnits[Afas_i].name)
 	end
 end
 
@@ -926,14 +938,8 @@ function unitObj:expValueFactor(currStats)
 
 	currStats = currStats or savedStats
 	
-	local dsw = self:dynamicStatWeights(currStats)
-	local dswTotal = 0
-	
-	for stat_i = 1, 7 do
-		dswTotal = dswTotal + dsw[stat_i]
-	end
-	
-	return (self.avgLevelValue/self.perfLevelValue) * (dswTotal/self.weightTotal)
+	return (self.avgLevelValue/self.perfLevelValue) 
+		 * (sumArray(self:dynamicStatWeights(currStats))/self.weightTotal)
 end
 
 -- gets score for level up starting at rns index HP_RN_i
@@ -1019,8 +1025,8 @@ function P.saveStats()
 	for stat_i = 2, 7 do
 		savedStats[stat_i] = memory.readbyte(statScreenBase[GAME_VERSION] + stat_i - 2)
 	end
-	savedStats[8] = memory.readbyte(statLevelAddr[GAME_VERSION])
-	savedStats[9] = memory.readbyte(statExpAddr[GAME_VERSION])
+	savedStats[P.LEVEL_I] = memory.readbyte(statLevelAddr[GAME_VERSION])
+	savedStats[P.EXP_I] = memory.readbyte(statExpAddr[GAME_VERSION])
 end
 
 function unitObj:statData_strings(showPromo)
@@ -1045,25 +1051,26 @@ function unitObj:statData_strings(showPromo)
 	local EF_GROW = nextInd()
 	local STND_DEV = nextInd()
 	
-	ret[STAT_HEADER] = string.format("%-10.10sLv Xp Hp St Sk Sp Df Rs Lk", self.name)
+	ret[STAT_HEADER] = string.format("%-10.10s      Hp St Sk Sp Df Rs Lk", self.name)
 	
-	ret[BASES]		= "Bases + boosts " 
-	ret[STATS]		= "Stats    " .. string.format(" %02d %02d", savedStats[P.LEVEL_I], savedStats[9])
-	if savedStats[9] == 255 then
-		ret[STATS]	= "Stats    " .. string.format(" %02d --", savedStats[P.LEVEL_I])
+	ret[BASES]		= "Base+boost     "
+	ret[STATS]		= "Stat at   " .. string.format("%2d.%02d", savedStats[P.LEVEL_I], savedStats[P.EXP_I])
+	if savedStats[P.EXP_I] == 255 then
+		ret[STATS]	= "Stat at   " .. string.format("%2d.--", savedStats[P.LEVEL_I])
 	end
-	ret[CAPS]		= "Caps           " 	
+	ret[CAPS]		= "Cap            " 	
 	if showPromo then
-		ret[CAPS]	= "Caps      PROMO" 
+		ret[STATS]	= "Stat at   PROMO"
+		ret[CAPS]	= "Cap       PROMO"
 	end
 	
-	ret[WEIGHTS]	= "Weights  " .. string.format(" x%4.2f", self:expValueFactor(charStats))
+	ret[WEIGHTS]	= "Weight   " .. string.format(" x%4.2f", self:expValueFactor(charStats))
 	if not self.hasAfas then
-		ret[GROWTHS]= "Growths        "
+		ret[GROWTHS]= "Growth         "
 	else
-		ret[GROWTHS]= "Growths +Afa's "
+		ret[GROWTHS]= "Growth   +Afa's"
 	end
-	ret[EF_GROW]	= "Actual Growths "
+	ret[EF_GROW]	= "Actual Growth  "
 	ret[STND_DEV]	= "Standard Dev   "
 	
 	local dsw = self:dynamicStatWeights(charStats)

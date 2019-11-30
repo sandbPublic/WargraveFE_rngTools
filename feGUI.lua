@@ -37,7 +37,9 @@ local LEVEL_UP_COLORS = {
 
 P.selRect_i = P.RN_EVENT_I
 function P.advanceDisplay()
-	P.selRect_i = rotInc(P.selRect_i, #P.rects)
+	P.selRect_i = P.selRect_i + 1 
+	if P.selRect_i > #P.rects then P.selRect_i = 1 end
+	
 	print("selecting display: " .. RECT_STRINGS[P.selRect_i])
 end
 

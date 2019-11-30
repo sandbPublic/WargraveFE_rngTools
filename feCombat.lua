@@ -158,7 +158,11 @@ function P.combatObj:set()
 end
 
 function P.combatObj:cycleWeapon(isAttacker)
-	self:data(isAttacker).weapon = rotInc(self:data(isAttacker).weapon, 5)
+	self:data(isAttacker).weapon = self:data(isAttacker).weapon + 1
+	if self:data(isAttacker).weapon > #P.WEAPON_TYPE_STRINGS then
+		self:data(isAttacker).weapon = 1
+	end
+	
 	self:data(isAttacker)[P.LUCK_I] = unitData.getSavedStats()[unitData.LUCK_I]
 	print(P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weapon])
 end

@@ -5,13 +5,13 @@
 
 -- package dependencies
 -- main
---     gui
---         event
---             unit
---                 class
---             combat
---                 class
---                 rn
+--   gui
+--     event
+--       unit
+--         class
+--       combat
+--         class
+--         rn
 
 require("feGUI")
 
@@ -20,15 +20,6 @@ local function printStringArray(array)
 	for _, string_ in ipairs(array) do
 		print(string_)
 	end
-end
-
-function rotInc(num, maxVal, inc, minVal)
-	minVal = minVal or 1
-	inc = inc or 1
-	if num + inc > maxVal then
-		return minVal
-	end
-	return num + inc
 end
 
 local primaryFunctions = true
@@ -187,7 +178,7 @@ while true do
 		if pressed(7) then -- advance to next deployed
 			unitData.setToNextDeployed()
 			print(string.format("Selected %-10.10s (next %s)", unitData.selectedUnit().name, 
-				unitData[unitData.nextDeployed_i()].name))
+				unitData.nextUnit().name))
 		end
 		
 		if pressed(8) then -- quick toggle visibility

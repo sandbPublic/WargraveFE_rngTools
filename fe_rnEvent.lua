@@ -34,8 +34,8 @@ function rnEventObj:setStats(stats)
 	stats = stats or unitData.getSavedStats()
 
 	self.stats = {}
-	for stat_i = 1, unitData.EXP_I do
-		self.stats[stat_i] = stats[stat_i]
+	for stat_i, stat in ipairs(stats) do
+		self.stats[stat_i] = stat
 	end
 	
 	self.mExpValueFactor = self.unit:expValueFactor(self.stats)
@@ -295,7 +295,7 @@ function rnEventObj:levelScore()
 end
 
 function rnEventObj:digSucceed()
-	return rns.rng1:getRN(self.nextRN_i - 1) <= self.stats[unitData.LUCK_I]
+	return rns.rng1:getRN(self.nextRN_i - 1) <= self.stats[7]
 	-- luck+1% chance, therefore even 0 luck has 1% chance, confirmed luck 8 succeeds with rn = 8
 end
 

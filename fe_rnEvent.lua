@@ -6,7 +6,6 @@
 -- as enemy phase events can't be permuted and the burns are unpredictable.
 -- Instead implement rn advancing to enable fast enemy phase trials.
 
-require("feUnitData")
 require("feCombat")
 
 local P = {}
@@ -206,7 +205,7 @@ function rnEventObj:setEnemyHP(rnEvent_i)
 		return 
 	end
 
-	self.enemyHP = self.batParams.enemy[combat.HP_I]
+	self.enemyHP = self.batParams:getHP(false)
 		
 	-- check eHP from previous combat(s) if applicable
 	if self.enemyID ~= 0 then
@@ -337,12 +336,12 @@ function rnEventObj:headerString(rnEvent_i)
 			string.format(" eID %d %dhp", self.enemyID, self.enemyHP)
 	end
 
-	if self.batParams.player.weapon ~= combat.enum_NORMAL then
+	if self.batParams:isWeaponSpecial("isPlayer") then
 		specialStringEvents = specialStringEvents .. " " 
 			.. string.upper(combat.WEAPON_TYPE_STRINGS[self.batParams.player.weapon])
 	end
 	
-	if self.batParams.enemy.weapon ~= combat.enum_NORMAL then
+	if self.batParams:isWeaponSpecial(false) then
 		specialStringEvents = specialStringEvents .. " " 
 			.. combat.WEAPON_TYPE_STRINGS[self.batParams.enemy.weapon]
 	end
@@ -388,9 +387,9 @@ function rnEventObj:evaluation_fn(printV)
 			-- A - B + (B - C) == A - C
 			
 			local dmgToEnemy = (self.enemyHP-self.mHitSeq.eHP)/
-				self.batParams:data(combat.enum_ENEMY)[combat.HP_I]
+				self.batParams:getHP(false)
 			local dmgToPlayer = 1-self.mHitSeq.pHP/
-				self.batParams:data(combat.enum_PLAYER)[combat.HP_I]
+				self.batParams:getHP("isPlayer")
 			
 			score = score + 50*dmgToEnemy - 100*dmgToPlayer 
 				+ self.mHitSeq.expGained*self.mExpValueFactor

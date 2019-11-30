@@ -7,11 +7,10 @@
 -- main
 --   gui
 --     event
---       unit
---         class
 --       combat
---         class
---         rn
+--         unit
+--           class
+--           rn
 
 require("feGUI")
 

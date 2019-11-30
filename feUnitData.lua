@@ -7,8 +7,8 @@ unitData = P
 -- luck is in the wrong place relative to what is shown on screen:
 -- HP Str Skl Spd Def Res Lck Lvl Exp
 
-P.LEVEL_I = 8
-P.EXP_I = 9
+local LEVEL_I = 8
+local EXP_I = 9
 
 local NAMES = {}
 local INDEX_OF_NAME = {} -- useful to set values for a specific unit
@@ -744,7 +744,7 @@ function unitObj:new(unit_i)
 		for i, gain in ipairs(classes.PROMO_GAINS[o.promotion]) do
 			o.bases[i] = o.bases[i] + gain
 		end
-		o.bases[P.LEVEL_I] = 1 + BASE_STATS[GAME_VERSION][unit_i][P.LEVEL_I] 
+		o.bases[LEVEL_I] = 1 + BASE_STATS[GAME_VERSION][unit_i][LEVEL_I] 
 							   - PROMOTED_AT[GAME_VERSION][unit_i]
 	end
 	o.canPromote = o.class ~= o.promotion
@@ -890,7 +890,7 @@ function unitObj:dynamicStatWeights(currStats)
 	currStats = currStats or savedStats
 	local ret = {}
 	
-	local levelsTil20 = 20 - currStats[P.LEVEL_I]
+	local levelsTil20 = 20 - currStats[LEVEL_I]
 	if levelsTil20 <= 0 then
 		return {0, 0, 0, 0, 0, 0, 0}
 	end
@@ -915,7 +915,7 @@ function unitObj:dynamicStatWeights(currStats)
 				- currStats[stat_i] - classes.PROMO_GAINS[self.promotion][stat_i]
 			
 			-- may need levels to even reach promotion
-			local levelsTil20_P = 19 + math.max(10 - currStats[P.LEVEL_I], 0)
+			local levelsTil20_P = 19 + math.max(10 - currStats[LEVEL_I], 0)
 			
 			probCapUnreachableIfNotProcing_P = 
 				cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, self.growths[stat_i]/100)
@@ -967,14 +967,14 @@ function unitObj:statProcScore(HP_RN_i, currStats)
 end
 
 function unitObj:statAverageAt(stat_i, level)
-	level = level or savedStats[P.LEVEL_I]
+	level = level or savedStats[LEVEL_I]
 	
-	return self.bases[stat_i] + self:statsGained(P.LEVEL_I, level)*self.growths[stat_i]/100
+	return self.bases[stat_i] + self:statsGained(LEVEL_I, level)*self.growths[stat_i]/100
 end
 
 function unitObj:statDeviation(stat_i, charStat, charLevel)
 	charStat = charStat or savedStats[stat_i]
-	charLevel = charLevel or savedStats[P.LEVEL_I]
+	charLevel = charLevel or savedStats[LEVEL_I]
 	
 	return charStat - self:statAverageAt(stat_i, charLevel)
 end
@@ -983,7 +983,7 @@ end
 function unitObj:statStdDev(stat_i, charStat)
 	charStat = charStat or savedStats[stat_i]
 	
-	local levelsGained = self:statsGained(P.LEVEL_I)
+	local levelsGained = self:statsGained(LEVEL_I)
 	if levelsGained == 0 then return 0 end
 	
 	local growthProb = self.growths[stat_i]/100
@@ -996,7 +996,7 @@ end
 function unitObj:effectiveGrowthRate(stat_i, charStat)
 	charStat = charStat or savedStats[stat_i]
 	
-	local levelsGained = self:statsGained(P.LEVEL_I)
+	local levelsGained = self:statsGained(LEVEL_I)
 	
 	if levelsGained == 0 then return 0 end
 	
@@ -1025,8 +1025,8 @@ function P.saveStats()
 	for stat_i = 2, 7 do
 		savedStats[stat_i] = memory.readbyte(statScreenBase[GAME_VERSION] + stat_i - 2)
 	end
-	savedStats[P.LEVEL_I] = memory.readbyte(statLevelAddr[GAME_VERSION])
-	savedStats[P.EXP_I] = memory.readbyte(statExpAddr[GAME_VERSION])
+	savedStats[LEVEL_I] = memory.readbyte(statLevelAddr[GAME_VERSION])
+	savedStats[EXP_I] = memory.readbyte(statExpAddr[GAME_VERSION])
 end
 
 function unitObj:statData_strings(showPromo)
@@ -1054,9 +1054,9 @@ function unitObj:statData_strings(showPromo)
 	ret[STAT_HEADER] = string.format("%-10.10s      Hp St Sk Sp Df Rs Lk", self.name)
 	
 	ret[BASES]		= "Base+boost     "
-	ret[STATS]		= "Stat at   " .. string.format("%2d.%02d", savedStats[P.LEVEL_I], savedStats[P.EXP_I])
-	if savedStats[P.EXP_I] == 255 then
-		ret[STATS]	= "Stat at   " .. string.format("%2d.--", savedStats[P.LEVEL_I])
+	ret[STATS]		= "Stat at   " .. string.format("%2d.%02d", savedStats[LEVEL_I], savedStats[EXP_I])
+	if savedStats[EXP_I] == 255 then
+		ret[STATS]	= "Stat at   " .. string.format("%2d.--", savedStats[LEVEL_I])
 	end
 	ret[CAPS]		= "Cap            " 	
 	if showPromo then

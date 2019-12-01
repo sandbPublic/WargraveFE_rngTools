@@ -15,22 +15,25 @@ battleSimBase[7] = 0x0203A400
 battleSimBase[8] = 0x0203A500
 
 -- in the order they appear in RAM
-local ATTACK_I 	= 1 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
-local DEF_I 	= 2 -- includes terrain bonus
-local AS_I 		= 3 -- attack speed
-local HIT_I 	= 4 -- if can't attack, 0xFF
-local LUCK_I	= 5 -- for devil axe in fe7/8
-local CRIT_I 	= 6 
-local LEVEL_I	= 7 -- for Great Shield, Pierce, Sure Strike, and exp cap at level 19
-local EXP_I		= 8 -- for level up detection
-local HP_I 		= 9 -- current HP
+local MAX_HP_I  = 1 -- for drain
+local ATTACK_I  = 2 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
+local DEF_I     = 3 -- includes terrain bonus
+local AS_I      = 4 -- attack speed
+local HIT_I     = 5 -- if can't attack, 0xFF
+local LUCK_I    = 6 -- for devil axe in fe7/8
+local CRIT_I    = 7 
+local LEVEL_I   = 8 -- for Great Shield, Pierce, Sure Strike, and exp cap at level 19
+local EXP_I     = 9 -- for level up detection
+local HP_I      = 10 -- current HP
+local NUM_ADDRS = 10
 
 local relativeBattleAddrs = {}
---						   atk   def    AS   hit  luck  crit   lvl    xp    hp
-relativeBattleAddrs[6] = {0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82}
-relativeBattleAddrs[7] = {0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62}
-relativeBattleAddrs[8] = {0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}
---						     0    +2    +2    +6    +4    +2  +6/4    +1    +1  
+--						  mxHP   atk   def    AS   hit  luck  crit   lvl    xp    hp
+--						       +0x48    +2    +2    +6    +4    +2  +6/4    +1    +1
+relativeBattleAddrs[6] = {0x24, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82}
+relativeBattleAddrs[7] = {0x02, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62}
+relativeBattleAddrs[8] = {  -2, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}
+
 local defenderBattleAddrs = {}
 defenderBattleAddrs[6] = 0x7C -- -4
 defenderBattleAddrs[7] = 0x80
@@ -72,12 +75,12 @@ function P.combatObj:new()
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0}
+	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	o.attacker.class = classes.LORD
 	o.attacker.weapon = NORMAL
 	o.name = "no name"
 	
-	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0}
+	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	o.defender.class = classes.LORD
 	o.defender.weapon = NORMAL
 	
@@ -96,7 +99,7 @@ function P.combatObj:copy()
 	
 	o.attacker = {}
 	o.defender = {}
-	for i = 1, 9 do
+	for i = 1, NUM_ADDRS do
 		o.attacker[i] = self.attacker[i]
 		o.defender[i] = self.defender[i]
 	end
@@ -116,7 +119,7 @@ function P.combatObj:copy()
 end
 
 function P.combatObj:set()
-	for i = 1, 9 do
+	for i = 1, NUM_ADDRS do
 		self.attacker[i] = memory.readbyte(battleAddrs(true, i))
 		self.defender[i] = memory.readbyte(battleAddrs(false, i))
 	end
@@ -134,6 +137,11 @@ end
 function P.combatObj:getHP(isPlayer)
 	if isPlayer then return self.player[HP_I] end
 	return self.enemy[HP_I]
+end
+
+function P.combatObj:getMaxHP(isPlayer)
+	if isPlayer then return self.player[MAX_HP_I] end
+	return self.enemy[MAX_HP_I]
 end
 
 function P.combatObj:isWeaponSpecial(isPlayer)
@@ -157,13 +165,12 @@ function P.combatObj:dmg(isAttacker, pierce)
 	return math.max(0, self:data(isAttacker)[ATTACK_I] - self:data(not isAttacker)[DEF_I])
 end
 
-function P.combatObj:relAS() -- relative attack speed from attacker's perspective
-	return self.attacker[AS_I] - self.defender[AS_I]
-end
-
 function P.combatObj:doubles(isAttacker)
-	return (self:relAS() >= 4 and isAttacker) or 
-	(self:relAS() <= -4 and not isAttacker)
+	return (self.attacker[AS_I] >= self.defender[AS_I] + 4 
+			and isAttacker and self.attacker.weapon ~= HALVE) 
+		   or 
+		   (self.defender[AS_I] >= self.attacker[AS_I] + 4 
+		    and not isAttacker and self.defender.weapon ~= HALVE)
 end
 
 function P.combatObj:togglePromo(isAttacker)
@@ -357,10 +364,10 @@ function P.combatObj:hitEvent(index, isAttacker)
 		retHitEv.dmg = 999
 	end
 	
-	-- todo
-	if self:data(isAttacker).weapon == HALVE then
+	-- todo, only matters if eclipse happens after the target is damaged by another unit
+	--if self:data(isAttacker).weapon == HALVE then
 		--retHitEv.dmg = 999 
-	end
+	--end
 	
 	retHitEv.expWasGained = isAttacker -- assume true and falsify
 	retHitEv.assassinated = false
@@ -505,7 +512,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		setNext(DEFENDER)
 	end
 	
-	if self:doubles(ATTACKER) and self.attacker.weapon ~= HALVE then
+	if self:doubles(ATTACKER) then
 		setNext(ATTACKER)
 	elseif self:doubles(DEFENDER) and defenderCounters then
 		setNext(DEFENDER)
@@ -513,41 +520,60 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	
 	for ev_i, isAttacker in ipairs(isAttackers) do
 		local hE = self:hitEvent(index, isAttacker)
-	
+		
 		rHitSeq[ev_i] = hE
 		index = index + hE.RNsConsumed
 		rHitSeq.totalRNsConsumed = rHitSeq.totalRNsConsumed + hE.RNsConsumed
 		
-		if (isAttacker and hE.action ~= "DEV") or 
-			(not isAttacker and hE.action == "DEV") then 
-			rHitSeq.eHP = rHitSeq.eHP - hE.dmg -- player or enemy-devil damage
+		if isAttacker then
+			hE.dmg = math.min(hE.dmg, rHitSeq.eHP)
+			
+			if self.attacker.weapon == DRAIN then
+				rHitSeq.pHP = math.min(rHitSeq.pHP + hE.dmg, self.attacker[MAX_HP_I])
+			end
+			
+			if hE.action == "DEV" then
+				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
+			else
+				rHitSeq.eHP = rHitSeq.eHP - hE.dmg
+			end
+			
+			if rHitSeq.eHP <= 0 then  -- enemy died, combat over
+				rHitSeq.eHP = 0
+				rHitSeq.expGained = self:expFrom(true, hE.assassinated)
+				rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
+				return rHitSeq
+			end	
 		else
-			rHitSeq.pHP = rHitSeq.pHP - hE.dmg -- enemy or self-devil damage
-		end
-		
-		if hE.expWasGained then
-			rHitSeq.expGained = self:expFrom()
-			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
-		end
-		
-		if not isAttacker then
+			hE.dmg = math.min(hE.dmg, rHitSeq.pHP)
+			
+			if self.defender.weapon == DRAIN then
+				rHitSeq.eHP = math.min(rHitSeq.eHP + hE.dmg, self.defender[MAX_HP_I])
+			end
+			
+			if hE.action == "DEV" then
+				rHitSeq.eHP = rHitSeq.eHP - hE.dmg
+			else
+				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
+			end
+			
 			rHitSeq[ev_i].action = string.lower(hE.action)
-		end
-		
-		if rHitSeq.pHP <= 0 then  -- player died, combat over
-			rHitSeq.pHP = 0
-			rHitSeq.expGained = 0
-			rHitSeq.lvlUp = false
-			return rHitSeq
-		end
-		
-		if rHitSeq.eHP <= 0 then  -- enemy died, combat over
-			rHitSeq.eHP = 0
-			rHitSeq.expGained = self:expFrom(true, hE.assassinated)
-			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
-			return rHitSeq
+			
+			if rHitSeq.pHP <= 0 then  -- player died, combat over
+				rHitSeq.pHP = 0
+				rHitSeq.expGained = 0
+				rHitSeq.lvlUp = false
+				return rHitSeq
+			end
 		end
 	end
+
+	-- no kill
+	if rHitSeq[1].expWasGained then
+		rHitSeq.expGained = self:expFrom()
+		rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
+	end
+	
 	return rHitSeq
 end
 

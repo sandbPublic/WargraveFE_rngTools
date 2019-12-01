@@ -99,10 +99,7 @@ function rnEventObj:diagnostic()
 	print(string.format("Diagnosis of rnEvent %d", self.ID))
 	
 	if self.hasCombat then
-		batParamStrings = self.batParams:toStrings()
-		print(batParamStrings[0])
-		print(batParamStrings[1])
-		print(batParamStrings[2])
+		for _, str_ in ipairs(self.batParams:toStrings()) do print(str_) end
 		
 		local str = ""
 		for _, hitEvent in ipairs(self.mHitSeq) do
@@ -116,9 +113,9 @@ function rnEventObj:diagnostic()
 			
 		strA = ""
 		strD = ""
-		for data_i = 1, 9 do
-			strA = strA .. string.format("%2d ",self.batParams.attacker[data_i])
-			strD = strD .. string.format("%2d ",self.batParams.defender[data_i])
+		for data_i = 1, #self.batParams.attacker do
+			strA = strA .. string.format("%2d ", self.batParams.attacker[data_i])
+			strD = strD .. string.format("%2d ", self.batParams.defender[data_i])
 		end
 		print(strA)
 		print(strD)
@@ -372,7 +369,7 @@ end
 -- dig = 25
 -- if healing is relevant, +5 if player hp is less than max
 function rnEventObj:evaluation_fn(printV)
-	local score = 0	
+	local score = 0
 	local printStr = string.format("%02d", self.ID)
 	
 	-- could have empty combat if enemy HP == 0 e.g. another unit killed this enemy this phase
@@ -381,15 +378,15 @@ function rnEventObj:evaluation_fn(printV)
 			score = score + 50
 			if printV then printStr = printStr .. " staff hit" end
 		else
-			-- normalize to 1, out of HP at start of phase.
+			-- normalize to 1, out of max HP
 			-- damaging the same enemy for X damage by 2 units
-			-- should be evaled the same as by 1 unit.
-			-- A - B + (B - C) == A - C
+			-- should be evaluated the same as by 1 unit.
+			-- (HP_0 - HP_1) + (HP_1 - HP_2) == HP_0 - HP_2
 			
 			local dmgToEnemy = (self.enemyHP-self.mHitSeq.eHP)/
-				self.batParams:getHP(false)
+				self.batParams:getMaxHP(false)
 			local dmgToPlayer = 1-self.mHitSeq.pHP/
-				self.batParams:getHP("isPlayer")
+				self.batParams:getMaxHP("isPlayer")
 			
 			score = score + 50*dmgToEnemy - 100*dmgToPlayer 
 				+ self.mHitSeq.expGained*self.mExpValueFactor

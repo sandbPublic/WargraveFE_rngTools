@@ -1005,20 +1005,22 @@ end
 
 local statMaxHpAddr = {}
 statMaxHpAddr[6] = 0x02039224
-statMaxHpAddr[7] = 0x0203A402 -- A403, A462?
+statMaxHpAddr[7] = 0x0203A402
 statMaxHpAddr[8] = 0x0203A4FE
 local statScreenBase = {}
 statScreenBase[6] = 0x02039226
 statScreenBase[7] = 0x0203A404
 statScreenBase[8] = 0x0203A500
+
+-- compare to the addresses in feCombat
 local statLevelAddr = {}
-statLevelAddr[6] = 0x0203921C -- ..80?
-statLevelAddr[7] = 0x0203A3F8 -- ..406?
-statLevelAddr[8] = 0x0203A55C -- ..4F4?
+statLevelAddr[6] = 0x0203921C
+statLevelAddr[7] = 0x0203A3F8
+statLevelAddr[8] = 0x0203A4F4
 local statExpAddr = {} 
-statExpAddr[6] = 0x0203921D -- ..81?
-statExpAddr[7] = 0x0203A3F9 -- ..461?
-statExpAddr[8] = 0x0203A55D -- ..4F5?
+statExpAddr[6] = 0x0203921D
+statExpAddr[7] = 0x0203A3F9
+statExpAddr[8] = 0x0203A4F5
 
 function P.saveStats()
 	savedStats[1] = memory.readbyte(statMaxHpAddr[GAME_VERSION])

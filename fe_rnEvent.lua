@@ -363,39 +363,57 @@ function rnEventObj:healable()
 		and self.unit:willLevelStats(self.postCombatRN_i, self.stats)[1] >= 1
 end
 
+-- the most important point of hp is the last;
+-- going from 100%->90% is far better than 1%->0 for the player.
+-- define a parabola f(x) such that f(0) = 0, f(1) = 1, f'(0) = K*f'(1),
+-- where K is the slope at 0 / slope at 100%.
+-- then f(x) = x(2K-(K-1)x)/(K+1).
+-- (note the slope at 0 never becomes asymptotic with this definition,
+-- instead it approaches 2 while the slope at 1 approaches 0.)
+-- let K = 4.
+-- in this way it evaluates better to lose 5 hp from a 25 hp unit than a 
+-- 10 hp remaining unit if both have 25 max hp (a loss of 13/125 in the 
+-- first case and 31/125 in the second, rather than 1/5 in both cases)
+local function nonlinearhpValue(frac)
+	return frac*(8-3*frac)/5
+end
+
 -- measure in units of perfect levels (= 100)
 -- perfect combat value == 50
 -- can adjust combat weight
 -- dig = 25
--- if healing is relevant, +5 if player hp is less than max
+-- if healing exp is relevant, +5 if player hp is less than max
 function rnEventObj:evaluation_fn(printV)
 	local score = 0
-	local printStr = string.format("%02d:", self.ID)
+	local printStr = string.format("  %2d:", self.ID)
 	
 	-- could have empty combat if enemy HP == 0 e.g. another unit killed this enemy this phase
 	if self.hasCombat and self.mHitSeq[1] then 
 		if self.mHitSeq[1].action == "STF-X" then
 			score = score + 50
 			if printV then printStr = printStr .. " staff hit" end
-		else
-			-- normalize to 1: divide damage taken by max hp
-			-- damaging the same enemy for X damage by 2 units
-			-- should be evaluated the same as by 1 unit.
-			-- (HP_0 - HP_1) + (HP_1 - HP_2) == HP_0 - HP_2
+		else			
+			local eHPstartFrac = self.enemyHPstart/self.batParams:getMaxHP(false)
+			local eHPendFrac = self.mHitSeq.eHP/self.batParams:getMaxHP(false)
+			local lossInEnemyValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
 			
-			local dmgToEnemy = (self.enemyHPstart-self.mHitSeq.eHP)/
-			                   self.batParams:getMaxHP(false)
-			local dmgToPlayer = (self.batParams:getHP("isPlayer")-self.mHitSeq.pHP)/
-			                    self.stats[1]
+			local pHPstartFrac = self.batParams:getHP("isPlayer")/self.stats[1]
+			local pHPendFrac = self.mHitSeq.pHP/self.stats[1]
+			local lossInPlayerValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
 			
-			score = score + 50*dmgToEnemy - 100*dmgToPlayer 
+			score = score + 50*lossInEnemyValue - 100*lossInPlayerValue 
 				+ self.mHitSeq.expGained*self.mExpValueFactor
 			
-			printStr = printStr .. string.format(" dmg2e %3d%%, dmg2p %3d%%, exp %dx%.2f", 
-					dmgToEnemy * 100, 
-					dmgToPlayer * 100, 
-					self.mHitSeq.expGained, 
-					self.mExpValueFactor)
+			printStr = printStr .. string.format(
+				" eHP %d%%->%d%% (nonlinear %d%%), pHP %d%%->%d%% (nonlinear %d%%), exp %dx%.2f", 
+				eHPstartFrac * 100, 
+				eHPendFrac * 100,
+				-lossInEnemyValue * 100,
+				pHPstartFrac * 100, 
+				pHPendFrac * 100,
+				-lossInPlayerValue * 100,
+				self.mHitSeq.expGained, 
+				self.mExpValueFactor)
 		end
 		
 		score = score * self.combatWeight

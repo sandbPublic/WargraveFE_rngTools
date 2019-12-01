@@ -66,7 +66,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	o.combatWeight = 1
 	
 	o.enemyID = 0 -- for units attacking the same enemyID
-	o.enemyHP = 0 -- if a previous unit has damaged this enemy. HP at start of this rnEvent
+	o.enemyHPstart = 0 -- if a previous unit has damaged this enemy. HP at start of this rnEvent
 	o.enemyHPend = 0 -- HP at end of this rnEvent
 	-- TODO player HP (from multi combat due to dance, or EP)
 	
@@ -126,8 +126,8 @@ function rnEventObj:diagnostic()
 	
 	if self.cache then
 		for c_i = self.cache.min_i, self.cache.max_i do
-			if self.cache[c_i] and self.cache[c_i][self.enemyHP] then
-				--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHP].eval))
+			if self.cache[c_i] and self.cache[c_i][self.enemyHPstart] then
+				--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHPstart].eval))
 			end
 		end
 	end
@@ -148,10 +148,10 @@ function rnEventObj:writeToCache()
 		self.cache.max_i = self.postBurnsRN_i
 	end
 	
-	self.cache[self.postBurnsRN_i][self.enemyHP] = {}
-	self.cache[self.postBurnsRN_i][self.enemyHP].postBurnLength = self.length - self.burns
-	self.cache[self.postBurnsRN_i][self.enemyHP].eval = self.eval
-	self.cache[self.postBurnsRN_i][self.enemyHP].enemyHPend = self.enemyHPend
+	self.cache[self.postBurnsRN_i][self.enemyHPstart] = {}
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength = self.length - self.burns
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].eval = self.eval
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend = self.enemyHPend
 end
 
 function rnEventObj:printCache()
@@ -182,10 +182,10 @@ function rnEventObj:printCache()
 end
 
 function rnEventObj:readFromCache()
-	self.length = self.burns + self.cache[self.postBurnsRN_i][self.enemyHP].postBurnLength
+	self.length = self.burns + self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength
 	self.nextRN_i = self.startRN_i + self.length
-	self.eval = self.cache[self.postBurnsRN_i][self.enemyHP].eval
-	self.enemyHPend = self.cache[self.postBurnsRN_i][self.enemyHP].enemyHPend
+	self.eval = self.cache[self.postBurnsRN_i][self.enemyHPstart].eval
+	self.enemyHPend = self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend
 end
 
 function rnEventObj:setStart(rnEvent_i)
@@ -198,11 +198,11 @@ end
 
 function rnEventObj:setEnemyHP(rnEvent_i)
 	if not self.hasCombat then 
-		self.enemyHP = 0 
+		self.enemyHPstart = 0 
 		return 
 	end
 
-	self.enemyHP = self.batParams:getHP(false)
+	self.enemyHPstart = self.batParams:getHP(false)
 		
 	-- check eHP from previous combat(s) if applicable
 	if self.enemyID ~= 0 then
@@ -210,7 +210,7 @@ function rnEventObj:setEnemyHP(rnEvent_i)
 			local prior_rnEvent = eventList[prevCombat_i]
 		
 			if prior_rnEvent.enemyID == self.enemyID and prior_rnEvent.hasCombat then
-				self.enemyHP = prior_rnEvent.enemyHPend
+				self.enemyHPstart = prior_rnEvent.enemyHPend
 				return
 			end
 		end
@@ -220,7 +220,7 @@ end
 -- assumes previous rnEvents have updates for optimization
 function rnEventObj:updateFull()
 	if self.hasCombat then
-		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHP)
+		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
 		
 		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
 		
@@ -257,7 +257,7 @@ function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
 	
 	if cacheUpdateOnly then
 		if self.cache[self.postBurnsRN_i] then
-			if self.cache[self.postBurnsRN_i][self.enemyHP] then
+			if self.cache[self.postBurnsRN_i][self.enemyHPstart] then
 				self:readFromCache()
 			else
 				self:updateFull()
@@ -330,7 +330,7 @@ function rnEventObj:headerString(rnEvent_i)
 	
 	if self.enemyID ~= 0 then
 		specialStringEvents = specialStringEvents .. 
-			string.format(" eID %d %dhp", self.enemyID, self.enemyHP)
+			string.format(" eID %d %dhp", self.enemyID, self.enemyHPstart)
 	end
 
 	if self.batParams:isWeaponSpecial("isPlayer") then
@@ -370,7 +370,7 @@ end
 -- if healing is relevant, +5 if player hp is less than max
 function rnEventObj:evaluation_fn(printV)
 	local score = 0
-	local printStr = string.format("%02d", self.ID)
+	local printStr = string.format("%02d:", self.ID)
 	
 	-- could have empty combat if enemy HP == 0 e.g. another unit killed this enemy this phase
 	if self.hasCombat and self.mHitSeq[1] then 
@@ -378,40 +378,42 @@ function rnEventObj:evaluation_fn(printV)
 			score = score + 50
 			if printV then printStr = printStr .. " staff hit" end
 		else
-			-- normalize to 1, out of max HP
+			-- normalize to 1: divide damage taken by max hp
 			-- damaging the same enemy for X damage by 2 units
 			-- should be evaluated the same as by 1 unit.
 			-- (HP_0 - HP_1) + (HP_1 - HP_2) == HP_0 - HP_2
 			
-			local dmgToEnemy = (self.enemyHP-self.mHitSeq.eHP)/
-				self.batParams:getMaxHP(false)
-			local dmgToPlayer = 1-self.mHitSeq.pHP/
-				self.batParams:getMaxHP("isPlayer")
+			local dmgToEnemy = (self.enemyHPstart-self.mHitSeq.eHP)/
+			                   self.batParams:getMaxHP(false)
+			local dmgToPlayer = (self.batParams:getHP("isPlayer")-self.mHitSeq.pHP)/
+			                    self.stats[1]
 			
 			score = score + 50*dmgToEnemy - 100*dmgToPlayer 
 				+ self.mHitSeq.expGained*self.mExpValueFactor
 			
-			printStr = printStr .. string.format(" d2e %.2f  d2p %.2f  exp %dx%.2f", 
-					dmgToEnemy, dmgToPlayer, self.mHitSeq.expGained, self.mExpValueFactor)
+			printStr = printStr .. string.format(" dmg2e %3d%%, dmg2p %3d%%, exp %dx%.2f", 
+					dmgToEnemy * 100, 
+					dmgToPlayer * 100, 
+					self.mHitSeq.expGained, 
+					self.mExpValueFactor)
 		end
 		
 		score = score * self.combatWeight
 	end
-	
-	if self:healable() then
-		score = score + 5
-		printStr = printStr .. " healable"
-	end
-	
+		
 	if self:levelDetected() then
 		score = score + self:levelScore()*self.mExpValueFactor
-		
-		printStr = printStr .. string.format(" level %3d", self:levelScore())
+		printStr = printStr .. string.format(", level %dx%.2f", self:levelScore(), self.mExpValueFactor)
 	end
+
+	if self:healable() then
+		score = score + 5
+		printStr = printStr .. ", healable 5"
+	end
+	
 	if self.dig and self:digSucceed() then
 		score = score + 25
-		
-		printStr = printStr .. " dig 25"
+		printStr = printStr .. ", dig 25"
 	end
 	
 	if printV then print(printStr) end

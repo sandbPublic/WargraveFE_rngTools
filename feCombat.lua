@@ -46,14 +46,14 @@ defenderBattleAddrs[8] = 0x80
 
 -- special weapon types
 NORMAL = 1
-DEVIL  = 2
-DRAIN  = 3 -- nosferatu, hp restore not implemented (max HP not captured)
-BRAVE  = 4
+BRAVE  = 2
+DEVIL  = 3
+DRAIN  = 4
 HALVE  = 5 -- prevents doubling. damage unimplemented
 STONE  = 6 -- treated as 999 dmg
 --POISON = 7 -- unimplemented, value of opportunity to restore vs minor hp loss
 
-P.WEAPON_TYPE_STRINGS = {"normal", "devil", "drain", "brave", "halve", "stone"}
+P.WEAPON_TYPE_STRINGS = {"normal", "brave", "devil", "drain", "halve", "stone"}
 
 local ATTACKER = true
 local DEFENDER = false

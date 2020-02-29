@@ -1,7 +1,7 @@
 local P = {}
 rns = P
 
-local MAX_RNS = 999999
+local MAX_RNS = 99999
 
 local function nextrng(r1, r2, r3)
 	return AND(XOR(SHIFT(r3, 5), SHIFT(r2, -11), SHIFT(r1, -1), SHIFT(r2, 15)),0xFFFF)
@@ -138,6 +138,11 @@ function rnStreamObj:update()
 			-- sometimes the place in memory that holds the rns
 			-- temporarily holds other values
 			-- failsafe against this
+			
+			if self.pos % 10000 == 0 then
+				emu.frameadvance()
+			end
+			
 			if self.pos > MAX_RNS then
 				print(string.format(
 					"%s generators not found in rnStream within %d rns." 

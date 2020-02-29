@@ -1,7 +1,7 @@
 local P = {}
 classes = P
 
-GAME_VERSION = 8
+GAME_VERSION = 6
 
 local indexer = 0
 local function nextInd()

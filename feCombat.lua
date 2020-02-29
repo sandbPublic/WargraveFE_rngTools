@@ -68,6 +68,10 @@ local function battleAddrs(isAttacker, index)
 	                                   + defenderBattleAddrs[GAME_VERSION]
 end
 
+function P.printStat(i)
+	print(memory.readbyte((battleAddrs(true, i))))
+end
+
 P.combatObj = {}
 
 function P.combatObj:new()
@@ -491,7 +495,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		return rHitSeq
 	end
 	
-	if self:staff() then 
+	if self:staff() then
 		rHitSeq[1] = self:staffHitEvent(index)
 		isAttackers[1] = true
 		rHitSeq.totalRNsConsumed = 1
@@ -543,6 +547,9 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 				rHitSeq.expGained = self:expFrom(true, hE.assassinated)
 				rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
 				return rHitSeq
+			elseif hE.expWasGained then -- no kill
+				rHitSeq.expGained = self:expFrom()
+				rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
 			end	
 		else
 			hE.dmg = math.min(hE.dmg, rHitSeq.pHP)
@@ -557,7 +564,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
 			end
 			
-			rHitSeq[ev_i].action = string.lower(hE.action)
+			rHitSeq[ev_i].action = hE.action:lower()
 			
 			if rHitSeq.pHP <= 0 then  -- player died, combat over
 				rHitSeq.pHP = 0
@@ -568,12 +575,6 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		end
 	end
 
-	-- no kill
-	if rHitSeq[1].expWasGained then
-		rHitSeq.expGained = self:expFrom()
-		rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
-	end
-	
 	return rHitSeq
 end
 

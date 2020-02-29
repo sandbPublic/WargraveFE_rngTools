@@ -129,7 +129,7 @@ BASE_STATS[6] = {
 {14, 01, 02, 11, 02, 04, 09, 01}, -- Lalum
 {35, 13, 19, 18, 08, 07, 06, 01}, -- Echidna
 {15, 01, 03, 10, 04, 01, 11, 01}, -- Elphin
-{48, 22, 11, 10, 10, 03, 14, 01}, -- Bartre
+{48, 22, 11, 10, 10, 03, 14, 02}, -- Bartre
 {23, 12, 09, 09, 05, 10, 06, 12}, -- Ray
 {16, 03, 07, 11, 02, 01, 08, 05}, -- Cath, more stats if recruited later
 {30, 12, 11, 10, 13, 03, 05, 10}, -- Miredy
@@ -659,15 +659,20 @@ for v = 6, 8 do
 	PROMOTED_AT[v] = {}
 	for unit_i = 1, #NAMES[v] do
 		GROWTH_WEIGHTS[v][unit_i] = {20, 40, 20, 50, 30, 10, 10} -- speed>str>def>skl=hp>res=luck		
-		BOOSTERS[v][unit_i] = {0, 0, 0, 0, 0, 0, 0, 0} -- needs 8 to add to base stats (base level)
+		BOOSTERS[v][unit_i] = {0, 0, 0, 0, 0, 0, 0}
 		PROMOTED_AT[v][unit_i] = 0
 	end
 end
 
 DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
-DEPLOYED[6][INDEX_OF_NAME["Zealot"]] = true
-DEPLOYED[6][INDEX_OF_NAME["Lugh"]] = true
-PROMOTED_AT[6][INDEX_OF_NAME["Lugh"]] = 10
+DEPLOYED[6][INDEX_OF_NAME["Dieck"]] = true
+DEPLOYED[6][INDEX_OF_NAME["Bartre6"]] = true
+DEPLOYED[6][INDEX_OF_NAME["Elphin"]] = true
+BOOSTERS[6][INDEX_OF_NAME["Roy"]] = {7, 0, 0, 0, 0, 0, 0}
+BOOSTERS[6][INDEX_OF_NAME["Dieck"]] = {0, 2, 0, 0, 0, 0, 0}
+BOOSTERS[6][INDEX_OF_NAME["Elphin"]] = {7, 0, 0, 0, 0, 0, 0}
+PROMOTED_AT[6][INDEX_OF_NAME["Dieck"]] = 13
+
 GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
 GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 20, 20, 10, 10}
 
@@ -1076,28 +1081,28 @@ function unitObj:statData_strings(showPromo)
 	ret[STND_DEV]	= "Standard Dev   "
 	
 	local dsw = self:dynamicStatWeights(charStats)
+	local twoDigits = " %02d"
 	for stat_i = 1, 7 do
-		ret[BASES] = ret[BASES] .. string.format(" %02d", self.bases[stat_i])
+		ret[BASES] = ret[BASES] .. twoDigits:format(self.bases[stat_i])
 		if self.hasAfas then
-			ret[GROWTHS] = ret[GROWTHS] .. string.format(" %02d", self.growths[stat_i] + 5)
+			ret[GROWTHS] = ret[GROWTHS] .. twoDigits:format(self.growths[stat_i] + 5)
 		else
-			ret[GROWTHS] = ret[GROWTHS] .. string.format(" %02d", self.growths[stat_i])
+			ret[GROWTHS] = ret[GROWTHS] .. twoDigits:format(self.growths[stat_i])
 		end
 		
 		if showPromo then
-			ret[STATS] = ret[STATS] .. string.format(" %02d", savedStats[stat_i] 
+			ret[STATS] = ret[STATS] .. twoDigits:format(savedStats[stat_i] 
 					+ classes.PROMO_GAINS[self.promotion][stat_i])
-			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[self.promotion][stat_i])
+			ret[CAPS] = ret[CAPS] .. twoDigits:format(classes.CAPS[self.promotion][stat_i])
 		else
-			ret[STATS] = ret[STATS] .. string.format(" %02d", savedStats[stat_i])
-			ret[CAPS] = ret[CAPS] .. string.format(" %02d", classes.CAPS[self.class][stat_i])
+			ret[STATS] = ret[STATS] .. twoDigits:format(savedStats[stat_i])
+			ret[CAPS] = ret[CAPS] .. twoDigits:format(classes.CAPS[self.class][stat_i])
 		end
 		
-		ret[WEIGHTS] = ret[WEIGHTS] .. string.format(" %02d", dsw[stat_i])
+		ret[WEIGHTS] = ret[WEIGHTS] .. twoDigits:format(dsw[stat_i])
 		
 		if self:effectiveGrowthRate(stat_i) < 100 then
-			ret[EF_GROW] = ret[EF_GROW] .. 
-					string.format(" %02d", self:effectiveGrowthRate(stat_i))
+			ret[EF_GROW] = ret[EF_GROW] .. twoDigits:format(self:effectiveGrowthRate(stat_i))
 		else
 			ret[EF_GROW] = ret[EF_GROW] .. " A0"
 		end

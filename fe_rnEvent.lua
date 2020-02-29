@@ -335,7 +335,7 @@ function rnEventObj:headerString(rnEvent_i)
 
 	if self.batParams:isWeaponSpecial("isPlayer") then
 		specialStringEvents = specialStringEvents .. " " 
-			.. string.upper(combat.WEAPON_TYPE_STRINGS[self.batParams.player.weapon])
+			.. combat.WEAPON_TYPE_STRINGS[self.batParams.player.weapon]:upper()
 	end
 	
 	if self.batParams:isWeaponSpecial(false) then
@@ -451,7 +451,7 @@ function P.searchFutureOutcomes(event_i)
 	
 	print()
 	print("Searching for event ID " .. event.ID)
-	print("Position Score Outcome")
+	print("RNG-pos Score Outcome")
 	
 	local record = -9999
 	for improveAttempts = 0, 1000 do		
@@ -463,7 +463,7 @@ function P.searchFutureOutcomes(event_i)
 		
 		if record < event:evaluation_fn() then
 			record = event:evaluation_fn()
-			print(string.format("%8d %5d%s", 
+			print(string.format("%7d %5d%s", 
 				rns.rng1.pos + event.burns, 
 				record, 
 				event:resultString()))

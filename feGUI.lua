@@ -93,7 +93,7 @@ function rectObj:width()
 	local longestStringLength = 0
 	-- set to max line length
 	for line_i, string_ in ipairs(self.strings) do
-		local stringLen = string.len(string_)
+		local stringLen = string_:len()
 		
 		-- add colorized string length
 		if (self.ID == P.RN_EVENT_I) and (line_i % 2 == 0) then

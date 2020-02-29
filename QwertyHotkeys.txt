@@ -24,7 +24,7 @@ toggle window visibility
 move window (<^v>LR)
 L
 next display mode
---
+print battle stat
 P
 suggest rnEvent permutation
 search future event outcomes

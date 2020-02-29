@@ -27,6 +27,9 @@ local primaryFunctions = true
 --   HJKL
 --  BNM
 
+print("1234567890123456789012345678901234567890") -- to align window width, 40 chars
+print("Game version " .. GAME_VERSION)
+
 local hotkeys = {}
 local function loadHotkeys(filename)
 	local f = assert(io.open(filename, "r"))
@@ -37,7 +40,7 @@ local function loadHotkeys(filename)
 		hotkey = {}
 		hotkey.key = c
 		hotkey.message1 = c .. ": " .. f:read("*line")
-		hotkey.message2 = string.lower(c) .. ": " ..f:read("*line")
+		hotkey.message2 = c:lower() .. ": " ..f:read("*line")
 		
 		table.insert(hotkeys, hotkey)
 		
@@ -280,7 +283,7 @@ while true do
 		end	
 		
 		if pressed(9) then 
-			
+			combat.printStat(4) -- 2 atk, 4 AS
 		end
 		
 		if pressed(10) then rnEvent.searchFutureOutcomes() end

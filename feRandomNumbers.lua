@@ -1,3 +1,5 @@
+require("feClass")
+
 local P = {}
 rns = P
 
@@ -21,10 +23,19 @@ local function nextrng2(generator)
 	return AND(lowerPart+upperPart,0x3FFFFFFF)
 end
 
-local function byteToPercent(rn)
-	return math.floor(100*rn/0x10000)
-	-- may round differently in FE6? simply divides by 655?
-	-- https://www.gamefaqs.com/boards/468480-fire-emblem/58065405?page=1
+local function bytesToPercent(rn)
+	if (GAME_VERSION == 6) then
+		-- rounds differently in FE6, simply divides by 655?
+		-- https://www.gamefaqs.com/boards/468480-fire-emblem/58065405?page=1
+		-- compare rn at 693 in FE6: raw is 0xB333, ~69.9996948242
+		-- but doesn't proc Bartre's 70 hp growth
+		-- 0xB333/655 ~70.0381679389
+		-- can produce 100s, if >= 0xFFDC (which is exactly 100)
+		-- there are 2 fairly close together, at 670 and 688
+		return math.floor(rn/655)
+	else
+		return math.floor(100*rn/0x10000)
+	end
 end
 
 local rnStreamObj = {}
@@ -34,7 +45,8 @@ function rnStreamObj:new(rngMemoryOffset, primary)
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.rawBytes = {} -- save these in memory to find exact position/move position
+	o.rawBytes = {} -- save these in memory to find or move to correct position
+	o.strings = {} -- only for primary
 	o.rngAddr = rngMemoryOffset
 	o.isPrimary = primary
 	
@@ -79,7 +91,13 @@ function rnStreamObj:getRN(pos_i, isRaw)
 				self.rawBytes[self.rnsGenerated-1])
 		
 			self.rawBytes[self.rnsGenerated] = rawDoubleByte
-			self[self.rnsGenerated] = byteToPercent(rawDoubleByte)
+			local cent = bytesToPercent(rawDoubleByte)
+			self[self.rnsGenerated] = cent
+			if cent < 100 then
+				self.strings[self.rnsGenerated] = string.format("%02d", cent)
+			else
+				self.strings[self.rnsGenerated] = "A0" -- only possible in FE6
+			end
 		else
 			local rawQuadByte = nextrng2(self.rawBytes[self.rnsGenerated-1])
 		
@@ -156,11 +174,11 @@ function rnStreamObj:update()
 		end
 		
 		-- prevent 2ndary from printing a lot during crits
-		if (not self.isPrimary) and (vba.framecount() - lastFrameUpdated) <= 4 then
-			lastFrameUpdated = vba.framecount()
-			return
-		end
-		lastFrameUpdated = vba.framecount()
+		--if (not self.isPrimary) and (vba.framecount() - lastFrameUpdated) <= 4 then
+		--	lastFrameUpdated = vba.framecount()
+		--	return
+		--end
+		--lastFrameUpdated = vba.framecount()
 		
 		local rnPosDelta = self.pos - self.prevPos
 		
@@ -197,6 +215,13 @@ function rnStreamObj:update()
 	return false -- no update performed or needed
 end
 
+function rnStreamObj:printRawBytes(relativeStart, relativeEnd)
+	self:getRN(relativeEnd + self.pos)
+	for pos = relativeStart + self.pos, relativeEnd + self.pos do	
+		print(string.format("%0d: %04X", pos, self.rawBytes[pos]))
+	end
+end
+
  -- string, append space after each rn
 function rnStreamObj:rnSeqString(index, length)
 	local seq = ""
@@ -220,9 +245,9 @@ function rnStreamObj:RNstream_strings(isColored, numLines, rnsPerLine)
 		if not isColored then
 			for rnPos = currLineRnPos, currLineRnPos + rnsPerLine - 1 do
 				if rnPos == self.pos then
-					lineString = lineString .. string.format("%>02d", self:getRN(rnPos))
+					lineString = lineString .. ">" .. self.strings[rnPos]
 				else
-					lineString = lineString .. string.format("% 02d", self:getRN(rnPos))
+					lineString = lineString .. " " .. self.strings[rnPos]
 				end
 			end
 		end

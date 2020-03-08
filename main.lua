@@ -1,16 +1,11 @@
--- 07000003 cursor pulse
--- 0202.. 55E0, 55E2, BCC4, BCC8 cursor x pos
--- 0202.. 55E1, 55E3, BCC6, BCCA cursor y pos
--- .. 55C6 = 0
-
 -- package dependencies
 -- main
 --   gui
 --     event
 --       combat
 --         unit
---           class
 --           rn
+--             class
 
 require("feGUI")
 
@@ -93,8 +88,8 @@ end
 
 local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
-local FOG_ADDR = {}
 
+local FOG_ADDR = {}
 FOG_ADDR[6] = 0x202AA55
 FOG_ADDR[7] = 0x202BC05
 FOG_ADDR[8] = 0x202BCFD
@@ -150,7 +145,7 @@ while true do
 		end
 	end
 	
-	if pressed(6) then -- print help
+	if pressed(6) then -- print help, switch functions
 		primaryFunctions = not primaryFunctions
 		printHelp()
 	end

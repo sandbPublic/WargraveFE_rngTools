@@ -5,24 +5,27 @@ feGUI = P
 
 P.rects = {}
 P.RN_EVENT_I 		= 1
-P.RN_STREAM_I		= 2 
+P.RN_STREAM_I		= 2
 P.STAT_DATA_I		= 3
 P.BATTLE_PARAMS_I 	= 4
 P.COMPACT_BPS_I		= 5
+P.COORD_I			= 6
 
 local RECT_COLORS = {
-	"blue", 
-	"white", 
+	"blue",
+	"white",
 	"green",
-	"red", 
+	"red",
 	"yellow",
+	"white",
 }
 local RECT_STRINGS = {
 	"rnEvents",
 	"rn stream",
-	"stat data", 
-	"battle parameters", 
+	"stat data",
+	"battle parameters",
 	"compact btl params",
+	"cursor coordinates",
 }
 
 local LEVEL_UP_COLORS = {
@@ -251,7 +254,7 @@ function rectObj:drawColorizedRNString(line_i, char_offset, RN_start, length)
 		local rn = rns.rng1:getRN(RN_start + rn_offset)
 		
 		self:drawString(line_i, char_offset + 3*rn_offset,
-			string.format("%02d", rn), rnColors[rn], rnBorderColors[rn])
+			rns.rng1.strings[RN_start + rn_offset], rnColors[rn], rnBorderColors[rn])
 	end
 end
 
@@ -339,6 +342,17 @@ function P.selRect()
 	return P.rects[P.selRect_i]
 end
 
+-- 0,0 is upper left
+local CURSOR_X_ADDR = {}
+CURSOR_X_ADDR[6] = 0x0202AA1C -- also ...20
+CURSOR_X_ADDR[7] = 0x0202BBCC -- also ...D0
+CURSOR_X_ADDR[8] = 0x0202BCC4 -- also ...C8
+
+local CURSOR_Y_ADDR = {}
+CURSOR_Y_ADDR[6] = CURSOR_X_ADDR[6] + 2 -- also +4
+CURSOR_Y_ADDR[7] = CURSOR_X_ADDR[7] + 2 -- also +4
+CURSOR_Y_ADDR[8] = CURSOR_X_ADDR[8] + 2 -- also +4
+
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
 	P.rects[P.STAT_DATA_I].strings = unitData.selectedUnit():statData_strings(P.pulse(480) and P.lookingAt(P.STAT_DATA_I))
@@ -351,6 +365,9 @@ function P.drawRects()
 	end
 	
 	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings("isColored")
+	P.rects[P.COORD_I].strings = {string.format("%02d,%02d", 
+				memory.readbyte(CURSOR_X_ADDR[GAME_VERSION]), 
+				memory.readbyte(CURSOR_Y_ADDR[GAME_VERSION]))}
 	
 	for _, rect in ipairs(P.rects) do
 		rect:draw()

@@ -341,6 +341,14 @@ function P.nextRelevantEnemyClass(class)
 	end
 end
 
+function P.isNoncombat(class)
+	return class == P.DANCER or 
+		class == P.BARD or 
+		class == P.CLERIC or 
+		class == P.PRIEST or 
+		class == P.TROUBADOUR or 
+		class == P.TRANSPORTER
+end
 
 function P.hasSilencer(class)
 	return class == P.ASSASSIN_F or class == P.ASSASSIN_M

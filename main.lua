@@ -93,6 +93,7 @@ local FOG_ADDR = {}
 FOG_ADDR[6] = 0x202AA55
 FOG_ADDR[7] = 0x202BC05
 FOG_ADDR[8] = 0x202BCFD
+local savedFog = 0
 
 while true do
 	if currentRNG:update() and currentRNG.isPrimary then
@@ -145,7 +146,7 @@ while true do
 		end
 	end
 	
-	if pressed(6) then -- print help, switch functions
+	if pressed(7) then -- print help, switch functions
 		primaryFunctions = not primaryFunctions
 		printHelp()
 	end
@@ -171,14 +172,16 @@ while true do
 		end	
 		
 		if pressed(5) then rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp) end
+
+		if pressed(6) then rnEvent.suggestedPermutation() end
 		
-		if pressed(7) then -- advance to next deployed
+		if pressed(8) then -- advance to next deployed
 			unitData.setToNextDeployed()
 			print(string.format("Selected %-10.10s (next %s)", unitData.selectedUnit().name, 
 				unitData.nextUnit().name))
 		end
 		
-		if pressed(8) then -- quick toggle visibility
+		if pressed(9) then -- quick toggle visibility
 			if feGUI.selRect().opacity == 0 then
 				feGUI.selRect().opacity = 0.75
 			else
@@ -186,10 +189,8 @@ while true do
 			end
 		end
 		
-		if pressed(9) then feGUI.advanceDisplay() end
-		
-		if pressed(10) then rnEvent.suggestedPermutation() end
-		
+		if pressed(10) then feGUI.advanceDisplay() end
+				
 		if pressed(11) then rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass) end
 		
 		if pressed(12) then -- save battle params & stats
@@ -238,21 +239,21 @@ while true do
 		
 		if pressed(4) then rnEvent.toggleDig() end
 		
-		if keybCtrl.thisFrame[hotkeys[5].key] then -- hold down, then press L/R
-			local currFogRange = memory.readbyte(FOG_ADDR[GAME_VERSION])
-			if pressed("L", gameCtrl) then
-				currFogRange = currFogRange - 1
-				memory.writebyte(FOG_ADDR[GAME_VERSION], currFogRange)
-				print("fog set to " .. tostring(currFogRange))
+		if pressed(5) then -- toggle fog
+			if savedFog > 0 then
+				memory.writebyte(FOG_ADDR[GAME_VERSION], savedFog)
+				print("fog set to " .. savedFog)
+				savedFog = 0
+			else
+				savedFog = memory.readbyte(FOG_ADDR[GAME_VERSION])
+				memory.writebyte(FOG_ADDR[GAME_VERSION], 0)
+				print("fog set to 0")
 			end
-			if pressed("R", gameCtrl) then
-				currFogRange = currFogRange + 1
-				memory.writebyte(FOG_ADDR[GAME_VERSION], currFogRange)
-				print("fog set to " .. tostring(currFogRange))
-			end
-		end	
-		
-		if keybCtrl.thisFrame[hotkeys[7].key] then -- hold down, then press L/R
+		end
+	
+		if pressed(6) then rnEvent.searchFutureOutcomes() end
+	
+		if keybCtrl.thisFrame[hotkeys[8].key] then -- hold down, then press L/R
 			if pressed("L", gameCtrl) then
 				rnEvent.adjustCombatWeight(-0.5)
 			end		
@@ -261,7 +262,7 @@ while true do
 			end
 		end
 		
-		if pressed(8) then 
+		if pressed(9) then 
 			feGUI.rectShiftMode = not feGUI.rectShiftMode
 			
 			if feGUI.rectShiftMode then
@@ -277,12 +278,8 @@ while true do
 			end
 		end	
 		
-		if pressed(9) then 
-			combat.printStat(4) -- 2 atk, 4 AS
-		end
-		
-		if pressed(10) then rnEvent.searchFutureOutcomes() end
-		
+		if pressed(10) then combat.printStat(4) end -- 2 atk, 4 AS
+			
 		if pressed(11) then
 			if currentRNG.isPrimary then
 				currentRNG = rns.rng2

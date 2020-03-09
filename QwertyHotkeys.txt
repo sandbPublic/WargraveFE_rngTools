@@ -12,7 +12,10 @@ toggle enemy promo
 toggle rnEvent dig
 O
 toggle bonus exp
-hold, L/R change fog
+toggle fog
+P
+suggest rnEvent permutation
+search future event outcomes
 H
 switch to 2ndary functions
 switch to primary functions
@@ -25,9 +28,6 @@ move window (<^v>LR)
 L
 next display mode
 print battle stat
-P
-suggest rnEvent permutation
-search future event outcomes
 B
 cycle enemy class
 switch RNG to 2ndary

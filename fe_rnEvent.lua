@@ -59,6 +59,12 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	
 	o.hasCombat = true -- most rnEvents will be combats without levels or digs
 	o.lvlUp = false
+	
+	if classes.isNoncombat(o.unit.class) then
+		o.hasCombat = false
+		o.lvlUp = true
+	end
+	
 	o.dig = false
 	
 	-- as units ram their caps (or have the potential to), the value of their levels drops

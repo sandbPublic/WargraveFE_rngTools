@@ -182,7 +182,7 @@ function rnStreamObj:update()
 		
 		local rnPosDelta = self.pos - self.prevPos
 		
-		local str = string.format("rng pos %4d -> %4d, %d", self.prevPos, self.pos, rnPosDelta)
+		local str = string.format("rng pos %4d -> %4d, %+d", self.prevPos, self.pos, rnPosDelta)
 		if not self.isPrimary then
 			str = "2ndary " .. str
 		end

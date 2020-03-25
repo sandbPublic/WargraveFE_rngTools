@@ -430,7 +430,7 @@ function rnEventObj:evaluation_fn(printV)
 		printStr = printStr .. string.format(", level %dx%.2f", self:levelScore(), self.mExpValueFactor)
 	end
 
-	if self:healable() then
+	if unitData.HEALER_DEPLOYED and self:healable() then
 		score = score + 5
 		printStr = printStr .. ", healable 5"
 	end

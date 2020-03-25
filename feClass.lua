@@ -146,7 +146,7 @@ P.EXP_KILL_MODIFIER[P.ROGUE] 	  = -20
 -- https://serenesforest.net/blazing-sword/classes/maximum-stats/
 -- https://serenesforest.net/the-sacred-stones/classes/maximum-stats/
 
-P.CAPS[P.DANCER]			= {60, 10, 10, 30, 24, 26, 30} -- ?78
+P.CAPS[P.DANCER]			= {60, 10, 10, 30, 24, 26, 30}
 P.CAPS[P.BARD]				= {60, 10, 10, 30, 24, 26, 30}
 
 P.CAPS[P.MASTER_LORD]		= {60, 25, 25, 25, 25, 25, 30}
@@ -202,6 +202,9 @@ P.CAPS[P.ARCHSAGE]			= {60, 30, 30, 25, 20, 30, 30}
 P.CAPS[P.NECROMANCER]		= {60, 30, 25, 25, 30, 30, 30}
 
 if GAME_VERSION == 6 then
+	P.CAPS[P.DANCER]		= {60, 20, 20, 20, 20, 20, 30}
+	P.CAPS[P.BARD]			= {60, 20, 20, 20, 20, 20, 30}
+
 	P.CAPS[P.WYVERN_LORD_F] = {60, 25, 26, 23, 29, 23, 30}
 	P.CAPS[P.WYVERN_LORD_M]	= {60, 26, 26, 23, 30, 22, 30}
 	

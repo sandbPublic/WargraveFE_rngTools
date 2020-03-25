@@ -184,30 +184,28 @@ function rnStreamObj:update()
 		
 		local str = string.format("rng pos %4d -> %4d, %+d", self.prevPos, self.pos, rnPosDelta)
 		if not self.isPrimary then
-			str = "2ndary " .. str
+			print("2ndary " .. str)
+			local str2 = "Next"
+			self:getRN(self.pos + 35)
+			for rn2_i = self.pos, self.pos + 35 do -- next 36 will fit on one line
+				if self[rn2_i] then
+					str2 = str2 .. "!"
+				else
+					str2 = str2 .. "."
+				end
+			end
+			print(str2)
+			return true
 		end
 		
 		-- print what was consumed if not a large jump
-		if rnPosDelta == 1 and self.isPrimary then -- print single rns on same line
-			print(str .. ": " .. self:getRN(self.pos - 1))
-		elseif rnPosDelta > 0 and rnPosDelta <= 24 then
-			print(str)
-		
-			if self.isPrimary then
-				print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
-			else
-				str = "Next: "
-				for rn2_i = self.pos, self.pos + 30 do -- show next 30
-					if self:getRN(rn2_i) then
-						str = str .. "!"
-					else
-						str = str .. "."
-					end
-				end
-				print(str)
-			end
+		if rnPosDelta == 1 then -- print single rns on same line
+			print(self.strings[self.pos - 1] .. " " .. str)
+		elseif 0 < rnPosDelta and rnPosDelta <= 26 then -- can fit 26 on 2 40 char lines
+			print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
+			print("   " .. str)
 		else
-			print(str)
+			print("   " .. str)
 		end
 		
 		return true
@@ -224,9 +222,11 @@ end
 
  -- string, append space after each rn
 function rnStreamObj:rnSeqString(index, length)
+	self:getRN(index + length - 1)
+
 	local seq = ""
 	for offset = 0, length - 1 do
-		seq = seq .. string.format("%02d ", self:getRN(index+offset))
+		seq = seq .. self.strings[index + offset] .. " "
 	end
 	return seq
 end

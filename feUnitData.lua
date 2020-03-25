@@ -663,24 +663,29 @@ for v = 6, 8 do
 	end
 end
 
+P.HEALER_DEPLOYED = false
 DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
 DEPLOYED[6][INDEX_OF_NAME["Dieck"]] = true
 DEPLOYED[6][INDEX_OF_NAME["Bartre6"]] = true
 DEPLOYED[6][INDEX_OF_NAME["Elphin"]] = true
-BOOSTERS[6][INDEX_OF_NAME["Roy"]] = {7, 0, 0, 0, 0, 0, 0}
+DEPLOYED[6][INDEX_OF_NAME["Karel6"]] = true
+BOOSTERS[6][INDEX_OF_NAME["Roy"]] = {7, 0, 0, 0, 2, 0, 0}
 BOOSTERS[6][INDEX_OF_NAME["Dieck"]] = {0, 2, 0, 0, 0, 0, 0}
-BOOSTERS[6][INDEX_OF_NAME["Elphin"]] = {7, 0, 0, 0, 0, 0, 0}
+BOOSTERS[6][INDEX_OF_NAME["Elphin"]] = {14, 0, 0, 0, 0, 0, 0}
 BOOSTERS[6][INDEX_OF_NAME["Bartre6"]] = {0, 0, 0, 2, 0, 0, 0}
 PROMOTED_AT[6][INDEX_OF_NAME["Dieck"]] = 13
+PROMOTED_AT[6][INDEX_OF_NAME["Roy"]] = 20
 
-GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 20, 20, 10, 10} -- ideally won't take more than 1 hit anyway
-GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 20, 20, 10, 10}
+-- ideally won't take more than 1 hit anyway, so hp is closer to def+res
+-- speed gives twice the avoid of luck, but luck also gives crit evade so 2 points luck slightly better
+GROWTH_WEIGHTS[6][INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 19, 30, 10, 10} 
+GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 19, 30, 10, 10}
 
 DEPLOYED[7][INDEX_OF_NAME["Eliwood"]] = true
-GROWTH_WEIGHTS[7][INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 20, 20, 10, 10}
+GROWTH_WEIGHTS[7][INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 19, 30, 10, 10}
 
 DEPLOYED[8][INDEX_OF_NAME["Eirika"]] = true
-GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 20, 20, 10, 10}
+GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
 
 -- expected hard mode stats, actually stats are rng dependent
 if hardMode then
@@ -890,6 +895,12 @@ local function cumulativeBinDistrib(numSuccesses, numTrials, p)
 	return ret
 end
 
+local function percentile(numSuccesses, numTrials, p)
+	-- treat half of same number of successes as below and half as above
+	return cumulativeBinDistrib(numSuccesses, numTrials, p) - 
+			binomialDistrib(numSuccesses, numTrials, p)/2
+end
+
 -- adjusts preset stat weights downward when stat is likely to cap
 function unitObj:dynamicStatWeights(currStats)	
 	currStats = currStats or savedStats
@@ -1037,81 +1048,67 @@ function P.saveStats()
 end
 
 function unitObj:statData_strings(showPromo)
-	local ret = {}
-	
 	showPromo = (showPromo and self.canPromote)
 	
-	local indexer = 0
-	local function nextInd()
-		indexer = indexer+1
-		return indexer
-	end
-	local STAT_HEADER = nextInd()
+	local statHeader = string.format("%-10.10s      Hp St Sk Sp Df Rs Lk", self.name)
 	
-	local BASES = nextInd()
-	local STATS = nextInd()
-	
-	local CAPS = nextInd()
-	local WEIGHTS = nextInd()
-	
-	local GROWTHS = nextInd()
-	local EF_GROW = nextInd()
-	local STND_DEV = nextInd()
-	
-	ret[STAT_HEADER] = string.format("%-10.10s      Hp St Sk Sp Df Rs Lk", self.name)
-	
-	ret[BASES]		= "Base+boost     "
-	ret[STATS]		= "Stat at   " .. string.format("%2d.%02d", savedStats[LEVEL_I], savedStats[EXP_I])
+	local baseStr       = "Base + boost   "
+	local statStr       = "Stat at " .. string.format("%2d.%02d  ", savedStats[LEVEL_I], savedStats[EXP_I])
 	if savedStats[EXP_I] == 255 then
-		ret[STATS]	= "Stat at   " .. string.format("%2d.--", savedStats[LEVEL_I])
+		statStr         = "Stat at " .. string.format("%2d.--  ", savedStats[LEVEL_I])
 	end
-	ret[CAPS]		= "Cap            " 	
+	local capStr        = "Cap            "
 	if showPromo then
-		ret[STATS]	= "Stat at   PROMO"
-		ret[CAPS]	= "Cap       PROMO"
+		statStr         = "Stat at PROMO  "
+		capStr          = "Cap     PROMO  "
 	end
 	
-	ret[WEIGHTS]	= "Weight   " .. string.format(" x%4.2f", self:expValueFactor(charStats))
-	if not self.hasAfas then
-		ret[GROWTHS]= "Growth         "
-	else
-		ret[GROWTHS]= "Growth   +Afa's"
+	local weightStr     = "Weight   " .. string.format(" x%4.2f", self:expValueFactor(charStats))
+	local growthStr     = "Growth         "
+	if self.hasAfas then
+		growthStr       = "Growth +Afa's  "
 	end
-	ret[EF_GROW]	= "Actual Growth  "
-	ret[STND_DEV]	= "Standard Dev   "
+	local trueGrowthStr = "Actual Growth  "
+	local percentileStr = "Percentile     "
+	local stndDevStr    = "Standard Dev   "
 	
 	local dsw = self:dynamicStatWeights(charStats)
 	local twoDigits = " %02d"
 	for stat_i = 1, 7 do
-		ret[BASES] = ret[BASES] .. twoDigits:format(self.bases[stat_i])
-		if self.hasAfas then
-			ret[GROWTHS] = ret[GROWTHS] .. twoDigits:format(self.growths[stat_i] + 5)
-		else
-			ret[GROWTHS] = ret[GROWTHS] .. twoDigits:format(self.growths[stat_i])
-		end
+		baseStr = baseStr .. twoDigits:format(self.bases[stat_i])
 		
 		if showPromo then
-			ret[STATS] = ret[STATS] .. twoDigits:format(savedStats[stat_i] 
+			statStr = statStr .. twoDigits:format(savedStats[stat_i] 
 					+ classes.PROMO_GAINS[self.promotion][stat_i])
-			ret[CAPS] = ret[CAPS] .. twoDigits:format(classes.CAPS[self.promotion][stat_i])
+			capStr = capStr .. twoDigits:format(classes.CAPS[self.promotion][stat_i])
 		else
-			ret[STATS] = ret[STATS] .. twoDigits:format(savedStats[stat_i])
-			ret[CAPS] = ret[CAPS] .. twoDigits:format(classes.CAPS[self.class][stat_i])
+			statStr = statStr .. twoDigits:format(savedStats[stat_i])
+			capStr = capStr .. twoDigits:format(classes.CAPS[self.class][stat_i])
 		end
 		
-		ret[WEIGHTS] = ret[WEIGHTS] .. twoDigits:format(dsw[stat_i])
+		weightStr = weightStr .. twoDigits:format(dsw[stat_i])
 		
 		if self:effectiveGrowthRate(stat_i) < 100 then
-			ret[EF_GROW] = ret[EF_GROW] .. twoDigits:format(self:effectiveGrowthRate(stat_i))
+			trueGrowthStr = trueGrowthStr .. twoDigits:format(self:effectiveGrowthRate(stat_i))
 		else
-			ret[EF_GROW] = ret[EF_GROW] .. " A0"
+			trueGrowthStr = trueGrowthStr .. " A0"
 		end
 		
+		local growth = self.growths[stat_i]
+		if self.hasAfas then
+			growth = growth + 5
+		end
+		
+		growthStr = growthStr .. twoDigits:format(growth)
+		
+		percentileStr = percentileStr .. twoDigits:format(
+			100*percentile(self:statsGained(stat_i), self:statsGained(LEVEL_I), growth/100))
+		
 		local stdDv = self:statStdDev(stat_i)
-		ret[STND_DEV] = ret[STND_DEV] .. string.format("%+03d", 10*stdDv)
+		stndDevStr = stndDevStr .. string.format("%+03d", 10*stdDv)
 	end
 	
-	return ret
+	return {statHeader, baseStr, statStr, capStr, growthStr, trueGrowthStr, percentileStr}
 end
 
 return unitData

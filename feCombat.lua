@@ -336,9 +336,10 @@ function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-
 		-- gains 27, not 42 xp??
 		-- yet Franz lvl 26 killing Entombed lvl 24 gains 55, not 15 exp?
 		-- in same level, Gilliam doesn't get this "mode bonus" when he otherwise would
+		-- level 21 Lute killing level 9 cav gains 6, not 22
 		
 		-- hypothesis: only affects promoted (enemy or player?) or boss units? in FE8?
-		if enemyValue - playerValue <= 0 and GAME_VERSION ~= 6 
+		if enemyValue - playerValue <= 0 and GAME_VERSION == 7 
 			--and self.bonusExp == 40 
 			then
 			playerValue = math.floor(playerValue/2)

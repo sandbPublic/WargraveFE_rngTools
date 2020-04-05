@@ -665,16 +665,6 @@ end
 
 P.HEALER_DEPLOYED = false
 DEPLOYED[6][INDEX_OF_NAME["Roy"]] = true
-DEPLOYED[6][INDEX_OF_NAME["Dieck"]] = true
-DEPLOYED[6][INDEX_OF_NAME["Bartre6"]] = true
-DEPLOYED[6][INDEX_OF_NAME["Elphin"]] = true
-DEPLOYED[6][INDEX_OF_NAME["Karel6"]] = true
-BOOSTERS[6][INDEX_OF_NAME["Roy"]] = {7, 0, 0, 0, 2, 0, 0}
-BOOSTERS[6][INDEX_OF_NAME["Dieck"]] = {0, 2, 0, 0, 0, 0, 0}
-BOOSTERS[6][INDEX_OF_NAME["Elphin"]] = {14, 0, 0, 0, 0, 0, 0}
-BOOSTERS[6][INDEX_OF_NAME["Bartre6"]] = {0, 0, 0, 2, 0, 0, 0}
-PROMOTED_AT[6][INDEX_OF_NAME["Dieck"]] = 13
-PROMOTED_AT[6][INDEX_OF_NAME["Roy"]] = 20
 
 -- ideally won't take more than 1 hit anyway, so hp is closer to def+res
 -- speed gives twice the avoid of luck, but luck also gives crit evade so 2 points luck slightly better
@@ -684,8 +674,16 @@ GROWTH_WEIGHTS[6][INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 19, 30, 10, 10}
 DEPLOYED[7][INDEX_OF_NAME["Eliwood"]] = true
 GROWTH_WEIGHTS[7][INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 19, 30, 10, 10}
 
-DEPLOYED[8][INDEX_OF_NAME["Eirika"]] = true
+DEPLOYED[8][INDEX_OF_NAME["Neimi"]] = true
+DEPLOYED[8][INDEX_OF_NAME["Lute"]] = true
+DEPLOYED[8][INDEX_OF_NAME["Seth"]] = true
+DEPLOYED[8][INDEX_OF_NAME["Ephraim"]] = true
+DEPLOYED[8][INDEX_OF_NAME["Forde"]] = true
+DEPLOYED[8][INDEX_OF_NAME["Cormag"]] = true
+GROWTH_WEIGHTS[8][INDEX_OF_NAME["Lute"]] = {20, 60, 20, 40, 30, 10, 10} -- prioritize warp range
 GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
+PROMOTED_AT[8][INDEX_OF_NAME["Lute"]] = 12
+BOOSTERS[8][INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
 
 -- expected hard mode stats, actually stats are rng dependent
 if hardMode then
@@ -1108,7 +1106,7 @@ function unitObj:statData_strings(showPromo)
 		stndDevStr = stndDevStr .. string.format("%+03d", 10*stdDv)
 	end
 	
-	return {statHeader, baseStr, statStr, capStr, growthStr, trueGrowthStr, percentileStr}
+	return {statHeader, baseStr, statStr, capStr, weightStr, growthStr, trueGrowthStr, percentileStr}
 end
 
 return unitData

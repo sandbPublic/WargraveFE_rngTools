@@ -95,11 +95,22 @@ FOG_ADDR[7] = 0x202BC05
 FOG_ADDR[8] = 0x202BCFD
 local savedFog = 0
 
+local TURN_ADDR = {}
+TURN_ADDR[6] = 0x202AA58
+TURN_ADDR[7] = 0x202BC08
+TURN_ADDR[8] = 0x202BD00
+local currTurn = 0
+
 while true do
+	if currTurn ~= memory.readbyte(TURN_ADDR[GAME_VERSION]) then
+		currTurn = memory.readbyte(TURN_ADDR[GAME_VERSION])
+		print("Turn " .. currTurn)
+	end
+	
 	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)
 	end
-	
+
 	updateCtrl(keybCtrl, input.get())
 	updateCtrl(gameCtrl, joypad.get(0))
 	

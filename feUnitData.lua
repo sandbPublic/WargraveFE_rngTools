@@ -649,6 +649,28 @@ classes.GENERAL_M,			--Fado
 classes.NECROMANCER			--Lyon
 }
 
+-- expected hard mode stats, actually stats are rng dependent
+if hardMode then
+	BASE_STATS[6][INDEX_OF_NAME["Rutger"]]   = {26, 09, 14, 15, 06, 01, 04, 04}
+	BASE_STATS[6][INDEX_OF_NAME["Fir"]]      = {25, 09, 12, 13, 04, 02, 05, 01}
+	BASE_STATS[6][INDEX_OF_NAME["Shin"]]     = {29, 09, 11, 14, 08, 01, 08, 05}
+	BASE_STATS[6][INDEX_OF_NAME["Gonzales"]] = {43, 16, 07, 11, 06, 07, 01, 05} -- level depends on route
+	BASE_STATS[6][INDEX_OF_NAME["Klein"]]    = {33, 16, 16, 13, 09, 07, 13, 01} -- depends on route
+	BASE_STATS[6][INDEX_OF_NAME["Tate"]]     = {28, 09, 12, 15, 08, 08, 06, 08} -- depends on route
+	BASE_STATS[6][INDEX_OF_NAME["Cath"]]     = {20, 03, 11, 15, 02, 03, 12, 05} -- more stats if recruited later
+	BASE_STATS[6][INDEX_OF_NAME["Milady"]]   = {38, 17, 15, 13, 16, 04, 08, 10}
+	BASE_STATS[6][INDEX_OF_NAME["Percival"]] = {51, 20, 16, 20, 15, 13, 15, 05}
+	BASE_STATS[6][INDEX_OF_NAME["Garret"]]   = {55, 21, 16, 11, 10, 05, 14, 05}
+	BASE_STATS[6][INDEX_OF_NAME["Zeis"]]     = {37, 19, 13, 11, 15, 03, 09, 07}
+	
+	BASE_STATS[7][INDEX_OF_NAME["Guy"]]      = {21, 06, 11, 11, 05, 00, 05, 03}
+	BASE_STATS[7][INDEX_OF_NAME["Raven"]]    = {25, 08, 11, 13, 05, 01, 02, 05}
+	BASE_STATS[7][INDEX_OF_NAME["Legault"]]  = {26, 08, 11, 15, 08, 03, 10, 12}
+	BASE_STATS[7][INDEX_OF_NAME["Heath"]]    = {28, 11, 08, 07, 10, 01, 07, 07}
+	BASE_STATS[7][INDEX_OF_NAME["Geitz"]]    = {40, 17, 12, 13, 11, 03, 10, 03}
+	BASE_STATS[7][INDEX_OF_NAME["Harken"]]   = {38, 21, 20, 17, 15, 10, 12, 08}
+	BASE_STATS[7][INDEX_OF_NAME["Vaida"]]    = {43, 20, 19, 13, 21, 06, 11, 09}
+end
 
 for v = 6, 8 do
 	for index,name in pairs(NAMES[v]) do INDEX_OF_NAME[name] = index end
@@ -685,29 +707,7 @@ GROWTH_WEIGHTS[8][INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
 PROMOTED_AT[8][INDEX_OF_NAME["Lute"]] = 12
 BOOSTERS[8][INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
 
--- expected hard mode stats, actually stats are rng dependent
-if hardMode then
-	BASE_STATS[6][INDEX_OF_NAME["Rutger"]]   = {26, 09, 14, 15, 06, 01, 04, 04}
-	BASE_STATS[6][INDEX_OF_NAME["Fir"]]      = {25, 09, 12, 13, 04, 02, 05, 01}
-	BASE_STATS[6][INDEX_OF_NAME["Shin"]]     = {29, 09, 11, 14, 08, 01, 08, 05}
-	BASE_STATS[6][INDEX_OF_NAME["Gonzales"]] = {43, 16, 07, 11, 06, 07, 01, 05} -- level depends on route
-	BASE_STATS[6][INDEX_OF_NAME["Klein"]]    = {33, 16, 16, 13, 09, 07, 13, 01} -- depends on route
-	BASE_STATS[6][INDEX_OF_NAME["Tate"]]     = {28, 09, 12, 15, 08, 08, 06, 08} -- depends on route
-	BASE_STATS[6][INDEX_OF_NAME["Cath"]]     = {20, 03, 11, 15, 02, 03, 12, 05} -- more stats if recruited later
-	BASE_STATS[6][INDEX_OF_NAME["Milady"]]   = {38, 17, 15, 13, 16, 04, 08, 10}
-	BASE_STATS[6][INDEX_OF_NAME["Percival"]] = {51, 20, 16, 20, 15, 13, 15, 05}
-	BASE_STATS[6][INDEX_OF_NAME["Garret"]]   = {55, 21, 16, 11, 10, 05, 14, 05}
-	BASE_STATS[6][INDEX_OF_NAME["Zeis"]]     = {37, 19, 13, 11, 15, 03, 09, 07}
-	
-	BASE_STATS[7][INDEX_OF_NAME["Guy"]]      = {21, 06, 11, 11, 05, 00, 05, 03}
-	BASE_STATS[7][INDEX_OF_NAME["Raven"]]    = {25, 08, 11, 13, 05, 01, 02, 05}
-	BASE_STATS[7][INDEX_OF_NAME["Legault"]]  = {26, 08, 11, 15, 08, 03, 10, 12}
-	BASE_STATS[7][INDEX_OF_NAME["Heath"]]    = {28, 11, 08, 07, 10, 01, 07, 07}
-	BASE_STATS[7][INDEX_OF_NAME["Geitz"]]    = {40, 17, 12, 13, 11, 03, 10, 03}
-	BASE_STATS[7][INDEX_OF_NAME["Harken"]]   = {38, 21, 20, 17, 15, 10, 12, 08}
-	BASE_STATS[7][INDEX_OF_NAME["Vaida"]]    = {43, 20, 19, 13, 21, 06, 11, 09}
-end
-
+local AFAS_I = 0
 
 local statMaxHpAddr = {}
 statMaxHpAddr[6] = 0x02039224
@@ -788,7 +788,7 @@ function unitObj:new(unit_i)
 							   - PROMOTED_AT[GAME_VERSION][unit_i]
 	end
 	o.canPromote = o.class ~= o.promotion
-	o.hasAfas = false
+	o.hasAfas = (unit_i == AFAS_I)
 	
 	return o
 end
@@ -820,26 +820,20 @@ for unit_i = 1, #NAMES[GAME_VERSION] do
 	end
 end
 
-local Afas_i = 0
-function P.setAfas(unit_i)
-	unit_i = unit_i or selectedUnit_i
-	
-	if Afas_i > 0 then
-		deployedUnits[Afas_i].hasAfas = false
-		print("Afa's removed from " .. deployedUnits[Afas_i].name)
-		
-		if Afas_i ~= unit_i then
-			Afas_i = unit_i
-			deployedUnits[Afas_i].hasAfas = true
-			print("Afa's applied to " .. deployedUnits[Afas_i].name)
-		else
-			Afas_i = 0
-		end
-	else
-		Afas_i = unit_i
-		deployedUnits[Afas_i].hasAfas = true
-		print("Afa's applied to " .. deployedUnits[Afas_i].name)
+function unitObj:toggleAfas()
+	local str = "Afa's "
+	if GAME_VERSION == 8 then
+		str = "Metis "
 	end
+
+	if self.hasAfas then
+		str = str .. "removed from "
+	else
+		str = str .. "applied to "
+	end
+	print(str .. self.name)
+	
+	self.hasAfas = not self.hasAfas
 end
 
 local savedStats = {0, 0, 0, 0, 0, 0, 0, 0, 0} -- last two are level, exp

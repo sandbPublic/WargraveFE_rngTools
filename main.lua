@@ -303,7 +303,7 @@ while true do
 		
 		if pressed(12) then rnEvent.diagnostic() end
 		
-		if pressed(13) then unitData.setAfas() end
+		if pressed(13) then unitData.selectedUnit():toggleAfas() end
 	end
 	
 	feGUI.drawRects()

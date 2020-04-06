@@ -37,7 +37,7 @@ function rnEventObj:setStats(stats)
 		self.stats[stat_i] = stat
 	end
 	
-	self.mExpValueFactor = self.unit:expValueFactor(self.stats)
+	self.mExpValueFactor = self.unit:expValueFactor()
 end
 
 -- INDEX FROM 1

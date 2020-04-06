@@ -728,6 +728,7 @@ function unitObj:new(unit_i)
 	o.name = NAMES[GAME_VERSION][unit_i]
 	o.growths = GROWTHS[GAME_VERSION][unit_i]
 	o.growthWeights = GROWTH_WEIGHTS[GAME_VERSION][unit_i]
+	o.stats = {0, 0, 0, 0, 0, 0, 0, 0, 0} -- last two are level, exp
 	
 	-- units with low growths or growths in bad areas have less value in gaining exp
 	-- events are scored based on exp gained
@@ -1036,13 +1037,32 @@ statExpAddr[6] = 0x0203921D
 statExpAddr[7] = 0x0203A3F9
 statExpAddr[8] = 0x0203A4F5
 
-function P.saveStats()
-	savedStats[1] = memory.readbyte(statMaxHpAddr[GAME_VERSION])
+local function statsInRAM()
+	local stats = {}
+	
+	stats[1] = memory.readbyte(statMaxHpAddr[GAME_VERSION])
 	for stat_i = 2, 7 do
-		savedStats[stat_i] = memory.readbyte(statScreenBase[GAME_VERSION] + stat_i - 2)
+		stats[stat_i] = memory.readbyte(statScreenBase[GAME_VERSION] + stat_i - 2)
 	end
-	savedStats[LEVEL_I] = memory.readbyte(statLevelAddr[GAME_VERSION])
-	savedStats[EXP_I] = memory.readbyte(statExpAddr[GAME_VERSION])
+	stats[LEVEL_I] = memory.readbyte(statLevelAddr[GAME_VERSION])
+	stats[EXP_I] = memory.readbyte(statExpAddr[GAME_VERSION])
+	
+	return stats
+end
+
+function P.saveStats()
+	savedStats = statsInRAM()
+end
+
+function unitObj:setStats(currStats)
+	self.stats = currStats or statsInRAM()
+	
+	self.avgLevelValue = 0
+	local dsw = self.dynamicStatWeights()
+	for i = 1, 7 do
+		self.avgLevelValue = self.avgLevelValue + self.growths[i]*dsw[i]
+	end
+	self.perfLevelValue = 100 * sumArray(dsw)
 end
 
 function unitObj:statData_strings(showPromo)
@@ -1061,7 +1081,7 @@ function unitObj:statData_strings(showPromo)
 		capStr          = "Cap     PROMO  "
 	end
 	
-	local weightStr     = "Weight   " .. string.format(" x%4.2f", self:expValueFactor(charStats))
+	local weightStr     = "Weight   " .. string.format(" x%4.2f", self:expValueFactor())
 	local growthStr     = "Growth         "
 	if self.hasAfas then
 		growthStr       = "Growth +Afa's  "
@@ -1070,7 +1090,7 @@ function unitObj:statData_strings(showPromo)
 	local percentileStr = "Percentile     "
 	local stndDevStr    = "Standard Dev   "
 	
-	local dsw = self:dynamicStatWeights(charStats)
+	local dsw = self:dynamicStatWeights()
 	local twoDigits = " %02d"
 	for stat_i = 1, 7 do
 		baseStr = baseStr .. twoDigits:format(self.bases[stat_i])

@@ -209,6 +209,7 @@ while true do
 			printStringArray(combat.currBattleParams:toStrings())
 			
 			unitData.saveStats()
+			unitData.selectedUnit():setStats()
 			rnEvent.updateStats()
 			
 			printStringArray(unitData.selectedUnit():statData_strings())

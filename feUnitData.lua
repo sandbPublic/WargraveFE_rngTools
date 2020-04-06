@@ -1058,7 +1058,7 @@ function unitObj:setStats(currStats)
 	self.stats = currStats or statsInRAM()
 	
 	self.avgLevelValue = 0
-	local dsw = self.dynamicStatWeights()
+	local dsw = self:dynamicStatWeights()
 	for i = 1, 7 do
 		self.avgLevelValue = self.avgLevelValue + self.growths[i]*dsw[i]
 	end

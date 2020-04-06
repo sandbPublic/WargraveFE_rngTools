@@ -142,6 +142,9 @@ function rnEventObj:diagnostic()
 	
 	print("stats")
 	print(self.stats)
+	print("unit avglvl/perflvl")
+	print(string.format("%5.2f/%5.2f", self.unit.avgLevelValue, self.unit.perfLevelValue))
+	print(string.format("mExpValueFactor %5.2f", self.mExpValueFactor))
 end
 
 -- assumes first index returns a table

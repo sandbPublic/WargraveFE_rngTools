@@ -709,6 +709,37 @@ if hardMode then
 end
 
 
+local statMaxHpAddr = {}
+statMaxHpAddr[6] = 0x02039224
+statMaxHpAddr[7] = 0x0203A402
+statMaxHpAddr[8] = 0x0203A4FE
+local statScreenBase = {}
+statScreenBase[6] = 0x02039226
+statScreenBase[7] = 0x0203A404
+statScreenBase[8] = 0x0203A500
+
+-- compare to the addresses in feCombat
+local statLevelAddr = {}
+statLevelAddr[6] = 0x0203921C
+statLevelAddr[7] = 0x0203A3F8
+statLevelAddr[8] = 0x0203A4F4
+local statExpAddr = {} 
+statExpAddr[6] = 0x0203921D
+statExpAddr[7] = 0x0203A3F9
+statExpAddr[8] = 0x0203A4F5
+
+local function statsInRAM()
+	local stats = {}
+	
+	stats[1] = memory.readbyte(statMaxHpAddr[GAME_VERSION])
+	for stat_i = 2, 7 do
+		stats[stat_i] = memory.readbyte(statScreenBase[GAME_VERSION] + stat_i - 2)
+	end
+	stats[LEVEL_I] = memory.readbyte(statLevelAddr[GAME_VERSION])
+	stats[EXP_I] = memory.readbyte(statExpAddr[GAME_VERSION])
+	
+	return stats
+end
 
 local function sumArray(array)
 	sum = 0
@@ -728,7 +759,7 @@ function unitObj:new(unit_i)
 	o.name = NAMES[GAME_VERSION][unit_i]
 	o.growths = GROWTHS[GAME_VERSION][unit_i]
 	o.growthWeights = GROWTH_WEIGHTS[GAME_VERSION][unit_i]
-	o.stats = {0, 0, 0, 0, 0, 0, 0, 0, 0} -- last two are level, exp
+	o.stats = statsInRAM()
 	
 	-- units with low growths or growths in bad areas have less value in gaining exp
 	-- events are scored based on exp gained
@@ -1018,37 +1049,9 @@ function unitObj:effectiveGrowthRate(stat_i, charStat)
 	return 100*self:statsGained(stat_i, charStat)/levelsGained
 end
 
-local statMaxHpAddr = {}
-statMaxHpAddr[6] = 0x02039224
-statMaxHpAddr[7] = 0x0203A402
-statMaxHpAddr[8] = 0x0203A4FE
-local statScreenBase = {}
-statScreenBase[6] = 0x02039226
-statScreenBase[7] = 0x0203A404
-statScreenBase[8] = 0x0203A500
 
--- compare to the addresses in feCombat
-local statLevelAddr = {}
-statLevelAddr[6] = 0x0203921C
-statLevelAddr[7] = 0x0203A3F8
-statLevelAddr[8] = 0x0203A4F4
-local statExpAddr = {} 
-statExpAddr[6] = 0x0203921D
-statExpAddr[7] = 0x0203A3F9
-statExpAddr[8] = 0x0203A4F5
 
-local function statsInRAM()
-	local stats = {}
-	
-	stats[1] = memory.readbyte(statMaxHpAddr[GAME_VERSION])
-	for stat_i = 2, 7 do
-		stats[stat_i] = memory.readbyte(statScreenBase[GAME_VERSION] + stat_i - 2)
-	end
-	stats[LEVEL_I] = memory.readbyte(statLevelAddr[GAME_VERSION])
-	stats[EXP_I] = memory.readbyte(statExpAddr[GAME_VERSION])
-	
-	return stats
-end
+
 
 function P.saveStats()
 	savedStats = statsInRAM()

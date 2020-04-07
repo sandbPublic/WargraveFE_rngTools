@@ -20,6 +20,15 @@ local CLASSES = {}
 local PROMOTIONS = {}
 local PROMOTED_AT = {}
 
+local function initializeCommonValues()
+	for index,name in pairs(NAMES) do INDEX_OF_NAME[name] = index end
+	for unit_i = 1, #NAMES do
+		GROWTH_WEIGHTS[unit_i] = {20, 40, 20, 50, 30, 10, 10} -- speed>str>def>skl=hp>res=luck		
+		BOOSTERS[unit_i] = {0, 0, 0, 0, 0, 0, 0}
+		PROMOTED_AT[unit_i] = 0
+	end
+end
+
 if GAME_VERSION == 6 then
 	-- disambiguate Marcus, Merlinus, Bartre, and Karel from FE7
 	NAMES = {
@@ -260,6 +269,29 @@ if GAME_VERSION == 6 then
 	classes.BISHOP_M, 		-- Yodel
 	classes.SWORDMASTER_M 	-- Karel
 	}
+
+	initializeCommonValues()
+	
+	-- expected hard mode stats, actual stats are rng dependent
+	if HARD_MODE then
+		BASE_STATS[INDEX_OF_NAME["Rutger"]]   = {26, 09, 14, 15, 06, 01, 04, 04}
+		BASE_STATS[INDEX_OF_NAME["Fir"]]      = {25, 09, 12, 13, 04, 02, 05, 01}
+		BASE_STATS[INDEX_OF_NAME["Shin"]]     = {29, 09, 11, 14, 08, 01, 08, 05}
+		BASE_STATS[INDEX_OF_NAME["Gonzales"]] = {43, 16, 07, 11, 06, 07, 01, 05} -- level depends on route
+		BASE_STATS[INDEX_OF_NAME["Klein"]]    = {33, 16, 16, 13, 09, 07, 13, 01} -- depends on route
+		BASE_STATS[INDEX_OF_NAME["Tate"]]     = {28, 09, 12, 15, 08, 08, 06, 08} -- depends on route
+		BASE_STATS[INDEX_OF_NAME["Cath"]]     = {20, 03, 11, 15, 02, 03, 12, 05} -- more stats if recruited later
+		BASE_STATS[INDEX_OF_NAME["Milady"]]   = {38, 17, 15, 13, 16, 04, 08, 10}
+		BASE_STATS[INDEX_OF_NAME["Percival"]] = {51, 20, 16, 20, 15, 13, 15, 05}
+		BASE_STATS[INDEX_OF_NAME["Garret"]]   = {55, 21, 16, 11, 10, 05, 14, 05}
+		BASE_STATS[INDEX_OF_NAME["Zeis"]]     = {37, 19, 13, 11, 15, 03, 09, 07}
+	end
+
+	DEPLOYED[INDEX_OF_NAME["Roy"]] = true
+	-- ideally won't take more than 1 hit anyway, so hp is closer to def+res
+	-- speed gives twice the avoid of luck, but luck also gives crit evade so 2 points luck slightly better
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 19, 30, 10, 10} 
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 19, 30, 10, 10}
 end
 
 if GAME_VERSION == 7 then
@@ -456,6 +488,21 @@ if GAME_VERSION == 7 then
 	classes.BISHOP_M,		-- Renault
 	classes.ARCHSAGE		-- Athos
 	}
+
+	initializeCommonValues()
+	
+	if HARD_MODE then
+		BASE_STATS[INDEX_OF_NAME["Guy"]]      = {21, 06, 11, 11, 05, 00, 05, 03}
+		BASE_STATS[INDEX_OF_NAME["Raven"]]    = {25, 08, 11, 13, 05, 01, 02, 05}
+		BASE_STATS[INDEX_OF_NAME["Legault"]]  = {26, 08, 11, 15, 08, 03, 10, 12}
+		BASE_STATS[INDEX_OF_NAME["Heath"]]    = {28, 11, 08, 07, 10, 01, 07, 07}
+		BASE_STATS[INDEX_OF_NAME["Geitz"]]    = {40, 17, 12, 13, 11, 03, 10, 03}
+		BASE_STATS[INDEX_OF_NAME["Harken"]]   = {38, 21, 20, 17, 15, 10, 12, 08}
+		BASE_STATS[INDEX_OF_NAME["Vaida"]]    = {43, 20, 19, 13, 21, 06, 11, 09}
+	end
+
+	DEPLOYED[INDEX_OF_NAME["Eliwood"]] = true
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 19, 30, 10, 10}	
 end
 
 if GAME_VERSION == 8 then
@@ -651,56 +698,9 @@ if GAME_VERSION == 8 then
 	classes.GENERAL_M,			--Fado
 	classes.NECROMANCER			--Lyon
 	}
-end
 
-for index,name in pairs(NAMES) do INDEX_OF_NAME[name] = index end
-for unit_i = 1, #NAMES do
-	GROWTH_WEIGHTS[unit_i] = {20, 40, 20, 50, 30, 10, 10} -- speed>str>def>skl=hp>res=luck		
-	BOOSTERS[unit_i] = {0, 0, 0, 0, 0, 0, 0}
-	PROMOTED_AT[unit_i] = 0
-end
-
--- expected hard mode stats, actually stats are rng dependent
-if HARD_MODE and GAME_VERSION == 6 then
-	BASE_STATS[INDEX_OF_NAME["Rutger"]]   = {26, 09, 14, 15, 06, 01, 04, 04}
-	BASE_STATS[INDEX_OF_NAME["Fir"]]      = {25, 09, 12, 13, 04, 02, 05, 01}
-	BASE_STATS[INDEX_OF_NAME["Shin"]]     = {29, 09, 11, 14, 08, 01, 08, 05}
-	BASE_STATS[INDEX_OF_NAME["Gonzales"]] = {43, 16, 07, 11, 06, 07, 01, 05} -- level depends on route
-	BASE_STATS[INDEX_OF_NAME["Klein"]]    = {33, 16, 16, 13, 09, 07, 13, 01} -- depends on route
-	BASE_STATS[INDEX_OF_NAME["Tate"]]     = {28, 09, 12, 15, 08, 08, 06, 08} -- depends on route
-	BASE_STATS[INDEX_OF_NAME["Cath"]]     = {20, 03, 11, 15, 02, 03, 12, 05} -- more stats if recruited later
-	BASE_STATS[INDEX_OF_NAME["Milady"]]   = {38, 17, 15, 13, 16, 04, 08, 10}
-	BASE_STATS[INDEX_OF_NAME["Percival"]] = {51, 20, 16, 20, 15, 13, 15, 05}
-	BASE_STATS[INDEX_OF_NAME["Garret"]]   = {55, 21, 16, 11, 10, 05, 14, 05}
-	BASE_STATS[INDEX_OF_NAME["Zeis"]]     = {37, 19, 13, 11, 15, 03, 09, 07}
-elseif HARD_MODE and GAME_VERSION == 7 then
-	BASE_STATS[INDEX_OF_NAME["Guy"]]      = {21, 06, 11, 11, 05, 00, 05, 03}
-	BASE_STATS[INDEX_OF_NAME["Raven"]]    = {25, 08, 11, 13, 05, 01, 02, 05}
-	BASE_STATS[INDEX_OF_NAME["Legault"]]  = {26, 08, 11, 15, 08, 03, 10, 12}
-	BASE_STATS[INDEX_OF_NAME["Heath"]]    = {28, 11, 08, 07, 10, 01, 07, 07}
-	BASE_STATS[INDEX_OF_NAME["Geitz"]]    = {40, 17, 12, 13, 11, 03, 10, 03}
-	BASE_STATS[INDEX_OF_NAME["Harken"]]   = {38, 21, 20, 17, 15, 10, 12, 08}
-	BASE_STATS[INDEX_OF_NAME["Vaida"]]    = {43, 20, 19, 13, 21, 06, 11, 09}
-end
-
-
--- playthrough specific details
-
-if GAME_VERSION == 6 then
-	DEPLOYED[INDEX_OF_NAME["Roy"]] = true
-
-	-- ideally won't take more than 1 hit anyway, so hp is closer to def+res
-	-- speed gives twice the avoid of luck, but luck also gives crit evade so 2 points luck slightly better
-	GROWTH_WEIGHTS[INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 19, 30, 10, 10} 
-	GROWTH_WEIGHTS[INDEX_OF_NAME["Elphin"]] = {30, 00, 00, 19, 30, 10, 10}
-end
-
-if GAME_VERSION == 7 then
-	DEPLOYED[INDEX_OF_NAME["Eliwood"]] = true
-	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 19, 30, 10, 10}
-end
-
-if GAME_VERSION == 8 then
+	initializeCommonValues()
+	
 	DEPLOYED[INDEX_OF_NAME["Neimi"]] = true
 	DEPLOYED[INDEX_OF_NAME["Lute"]] = true
 	DEPLOYED[INDEX_OF_NAME["Seth"]] = true
@@ -713,8 +713,10 @@ if GAME_VERSION == 8 then
 	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
 end
 
+
 P.HEALER_DEPLOYED = true
 local AFAS_I = 0
+
 
 local statMaxHpAddr = {}
 statMaxHpAddr[6] = 0x02039224
@@ -755,6 +757,7 @@ local function sumArray(array)
 	end
 	return sum
 end
+
 
 local unitObj = {}
 

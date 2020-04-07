@@ -2,6 +2,7 @@ local P = {}
 classes = P
 
 GAME_VERSION = 8
+HARD_MODE = true
 
 local indexer = 0
 local function nextInd()

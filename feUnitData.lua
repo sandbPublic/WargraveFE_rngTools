@@ -865,14 +865,12 @@ function unitObj:willLevelStats(HP_RN_i)
 	return ret
 end
 
-function unitObj:levelUpProcs_string(HP_RN_i, charStats)
-	charStats = charStats or self.stats
-	
+function unitObj:levelUpProcs_string(HP_RN_i)
 	local seq = ""
 	local noStatWillRise = true
 	local noStatIsCapped = true
 
-	for _, proc in ipairs(self:willLevelStats(HP_RN_i, charStats)) do		
+	for _, proc in ipairs(self:willLevelStats(HP_RN_i)) do		
 		if proc == 1 then
 			seq = seq .. "+" -- grows this stat
 			noStatWillRise = false
@@ -895,9 +893,8 @@ function unitObj:levelUpProcs_string(HP_RN_i, charStats)
 end
 
 -- works for levels too
-function unitObj:statsGained(stat_i, stat)
-	stat = stat or self.stats[stat_i]
-	return stat - self.bases[stat_i]
+function unitObj:statsGained(stat_i)
+	return self.stats[stat_i] - self.bases[stat_i]
 end
 
 local function factorial(x)
@@ -1006,10 +1003,8 @@ function unitObj:statProcScore(HP_RN_i)
 	return 100*score/self.avgLevelValue
 end
 
-function unitObj:statAverageAt(stat_i, level)
-	level = level or self.stats[LEVEL_I]
-	
-	return self.bases[stat_i] + self:statsGained(LEVEL_I, level)*self.growths[stat_i]/100
+function unitObj:statAverageAt(stat_i)
+	return self.bases[stat_i] + self:statsGained(LEVEL_I)*self.growths[stat_i]/100
 end
 
 function unitObj:statDeviation(stat_i, charStat, charLevel)
@@ -1020,27 +1015,20 @@ function unitObj:statDeviation(stat_i, charStat, charLevel)
 end
 
 -- how many sigma's off from average
-function unitObj:statStdDev(stat_i, charStat)
-	charStat = charStat or self.stats[stat_i]
-	
-	local levelsGained = self:statsGained(LEVEL_I)
-	if levelsGained == 0 then return 0 end
-	
+function unitObj:statStdDev(stat_i)
 	local growthProb = self.growths[stat_i]/100
 	
-	local stdDev = (levelsGained*growthProb*(1-growthProb))^0.5
+	local stdDev = (self:statsGained(LEVEL_I)*growthProb*(1-growthProb))^0.5
 	
-	return self:statDeviation(stat_i, charStat)/stdDev
+	if stdDev == 0 then return 0 end
+	
+	return self:statDeviation(stat_i, self.stats[stat_i])/stdDev
 end
 
-function unitObj:effectiveGrowthRate(stat_i, charStat)
-	charStat = charStat or self.stats[stat_i]
+function unitObj:effectiveGrowthRate(stat_i)
+	if self:statsGained(LEVEL_I) == 0 then return 0 end
 	
-	local levelsGained = self:statsGained(LEVEL_I)
-	
-	if levelsGained == 0 then return 0 end
-	
-	return 100*self:statsGained(stat_i, charStat)/levelsGained
+	return 100*self:statsGained(stat_i)/self:statsGained(LEVEL_I)
 end
 
 

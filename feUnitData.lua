@@ -849,12 +849,10 @@ function unitObj:toggleAfas()
 	self.hasAfas = not self.hasAfas
 end
 
-function unitObj:willLevelStats(HP_RN_i, currStats)
-	currStats = currStats or self.stats
-	
+function unitObj:willLevelStats(HP_RN_i)
 	ret = {}
 	for stat_i, growth in ipairs(self.growths) do
-		if currStats[stat_i] >= classes.CAPS[self.class][stat_i] then
+		if self.stats[stat_i] >= classes.CAPS[self.class][stat_i] then
 			ret[stat_i] = -1 -- stat capped
 		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth then
 			ret[stat_i] = 1 -- stat grows without afa's
@@ -933,17 +931,16 @@ local function percentile(numSuccesses, numTrials, p)
 end
 
 -- adjusts preset stat weights downward when stat is likely to cap
-function unitObj:dynamicStatWeights(currStats)	
-	currStats = currStats or self.stats
+function unitObj:dynamicStatWeights()
 	local ret = {}
 	
-	local levelsTil20 = 20 - currStats[LEVEL_I]
+	local levelsTil20 = 20 - self.stats[LEVEL_I]
 	if levelsTil20 <= 0 then
 		return {0, 0, 0, 0, 0, 0, 0}
 	end
 	
 	for stat_i = 1, 7 do	
-		local procsTilStatCap = classes.CAPS[self.class][stat_i] - currStats[stat_i]
+		local procsTilStatCap = classes.CAPS[self.class][stat_i] - self.stats[stat_i]
 		
 		-- multiply by 1 - P(reaching/exceeding cap even if not gaining stat this level)
 		-- if no chance to reach cap if not leveling, full weight
@@ -959,10 +956,10 @@ function unitObj:dynamicStatWeights(currStats)
 		-- if more likely to hit promoted class cap than unpromoted, use that probability
 		if self.canPromote then
 			local procsTilStatCap_P = classes.CAPS[self.promotion][stat_i] 
-				- currStats[stat_i] - classes.PROMO_GAINS[self.promotion][stat_i]
+				- self.stats[stat_i] - classes.PROMO_GAINS[self.promotion][stat_i]
 			
 			-- may need levels to even reach promotion
-			local levelsTil20_P = 19 + math.max(10 - currStats[LEVEL_I], 0)
+			local levelsTil20_P = 19 + math.max(10 - self.stats[LEVEL_I], 0)
 			
 			probCapUnreachableIfNotProcing_P = 
 				cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, self.growths[stat_i]/100)
@@ -980,25 +977,21 @@ end
 
 -- if growth rate needed to cap is less than growth rate, reduce proportional to weight
 -- ranges from 1, when no stats capped and growth = 100, to 0
-function unitObj:expValueFactor(currStats)
+function unitObj:expValueFactor()
 	if self.weightTotal == 0 then return 0 end
-
-	currStats = currStats or self.stats
 	
 	return (self.avgLevelValue/self.perfLevelValue) 
-		 * (sumArray(self:dynamicStatWeights(currStats))/self.weightTotal)
+		 * (sumArray(self:dynamicStatWeights())/self.weightTotal)
 end
 
 -- gets score for level up starting at rns index HP_RN_i
 -- scored such that average level is 0, empty level is -100 exp
 -- empty level wipes out value of exp used to level up
-function unitObj:statProcScore(HP_RN_i, currStats)
+function unitObj:statProcScore(HP_RN_i)
 	if self.avgLevelValue == 0 then return 0 end
 	
-	currStats = currStats or self.stats
-	
-	local procs = self:willLevelStats(HP_RN_i, currStats)
-	local dsw = self:dynamicStatWeights(currStats)
+	local procs = self:willLevelStats(HP_RN_i)
+	local dsw = self:dynamicStatWeights()
 	
 	local score = 0
 	for stat_i = 1, 7 do
@@ -1053,11 +1046,8 @@ end
 
 
 
-
-
-
-function unitObj:setStats(currStats)
-	self.stats = currStats or statsInRAM()
+function unitObj:setStats()
+	self.stats = statsInRAM()
 	
 	self.avgLevelValue = 0
 	local dsw = self:dynamicStatWeights()

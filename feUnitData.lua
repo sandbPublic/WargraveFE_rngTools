@@ -713,9 +713,11 @@ if GAME_VERSION == 8 then
 	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
 end
 
-
+-- determine if healer is present manually
 P.HEALER_DEPLOYED = true
 local AFAS_I = 0
+
+
 
 
 local statMaxHpAddr = {}
@@ -759,6 +761,8 @@ local function sumArray(array)
 end
 
 
+
+
 local unitObj = {}
 
 function unitObj:new(unit_i)
@@ -794,8 +798,7 @@ function unitObj:new(unit_i)
 		for i, gain in ipairs(classes.PROMO_GAINS[o.promotion]) do
 			o.bases[i] = o.bases[i] + gain
 		end
-		o.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] 
-							   - PROMOTED_AT[unit_i]
+		o.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
 	end
 	o.canPromote = o.class ~= o.promotion
 	o.hasAfas = (unit_i == AFAS_I)
@@ -846,14 +849,8 @@ function unitObj:toggleAfas()
 	self.hasAfas = not self.hasAfas
 end
 
-local savedStats = {0, 0, 0, 0, 0, 0, 0, 0, 0} -- last two are level, exp
-
-function P.getSavedStats()
-	return savedStats
-end
-
 function unitObj:willLevelStats(HP_RN_i, currStats)
-	currStats = currStats or savedStats
+	currStats = currStats or self.stats
 	
 	ret = {}
 	for stat_i, growth in ipairs(self.growths) do
@@ -871,7 +868,7 @@ function unitObj:willLevelStats(HP_RN_i, currStats)
 end
 
 function unitObj:levelUpProcs_string(HP_RN_i, charStats)
-	charStats = charStats or savedStats
+	charStats = charStats or self.stats
 	
 	local seq = ""
 	local noStatWillRise = true
@@ -901,7 +898,7 @@ end
 
 -- works for levels too
 function unitObj:statsGained(stat_i, stat)
-	stat = stat or savedStats[stat_i]
+	stat = stat or self.stats[stat_i]
 	return stat - self.bases[stat_i]
 end
 
@@ -937,7 +934,7 @@ end
 
 -- adjusts preset stat weights downward when stat is likely to cap
 function unitObj:dynamicStatWeights(currStats)	
-	currStats = currStats or savedStats
+	currStats = currStats or self.stats
 	local ret = {}
 	
 	local levelsTil20 = 20 - currStats[LEVEL_I]
@@ -986,7 +983,7 @@ end
 function unitObj:expValueFactor(currStats)
 	if self.weightTotal == 0 then return 0 end
 
-	currStats = currStats or savedStats
+	currStats = currStats or self.stats
 	
 	return (self.avgLevelValue/self.perfLevelValue) 
 		 * (sumArray(self:dynamicStatWeights(currStats))/self.weightTotal)
@@ -998,7 +995,7 @@ end
 function unitObj:statProcScore(HP_RN_i, currStats)
 	if self.avgLevelValue == 0 then return 0 end
 	
-	currStats = currStats or savedStats
+	currStats = currStats or self.stats
 	
 	local procs = self:willLevelStats(HP_RN_i, currStats)
 	local dsw = self:dynamicStatWeights(currStats)
@@ -1017,21 +1014,21 @@ function unitObj:statProcScore(HP_RN_i, currStats)
 end
 
 function unitObj:statAverageAt(stat_i, level)
-	level = level or savedStats[LEVEL_I]
+	level = level or self.stats[LEVEL_I]
 	
 	return self.bases[stat_i] + self:statsGained(LEVEL_I, level)*self.growths[stat_i]/100
 end
 
 function unitObj:statDeviation(stat_i, charStat, charLevel)
-	charStat = charStat or savedStats[stat_i]
-	charLevel = charLevel or savedStats[LEVEL_I]
+	charStat = charStat or self.stats[stat_i]
+	charLevel = charLevel or self.stats[LEVEL_I]
 	
 	return charStat - self:statAverageAt(stat_i, charLevel)
 end
 
 -- how many sigma's off from average
 function unitObj:statStdDev(stat_i, charStat)
-	charStat = charStat or savedStats[stat_i]
+	charStat = charStat or self.stats[stat_i]
 	
 	local levelsGained = self:statsGained(LEVEL_I)
 	if levelsGained == 0 then return 0 end
@@ -1044,7 +1041,7 @@ function unitObj:statStdDev(stat_i, charStat)
 end
 
 function unitObj:effectiveGrowthRate(stat_i, charStat)
-	charStat = charStat or savedStats[stat_i]
+	charStat = charStat or self.stats[stat_i]
 	
 	local levelsGained = self:statsGained(LEVEL_I)
 	
@@ -1057,9 +1054,7 @@ end
 
 
 
-function P.saveStats()
-	savedStats = statsInRAM()
-end
+
 
 function unitObj:setStats(currStats)
 	self.stats = currStats or statsInRAM()
@@ -1078,9 +1073,9 @@ function unitObj:statData_strings(showPromo)
 	local statHeader = string.format("%-10.10s      Hp St Sk Sp Df Rs Lk", self.name)
 	
 	local baseStr       = "Base + boost   "
-	local statStr       = "Stat at " .. string.format("%2d.%02d  ", savedStats[LEVEL_I], savedStats[EXP_I])
-	if savedStats[EXP_I] == 255 then
-		statStr         = "Stat at " .. string.format("%2d.--  ", savedStats[LEVEL_I])
+	local statStr       = "Stat at " .. string.format("%2d.%02d  ", self.stats[LEVEL_I], self.stats[EXP_I])
+	if self.stats[EXP_I] == 255 then
+		statStr         = "Stat at " .. string.format("%2d.--  ", self.stats[LEVEL_I])
 	end
 	local capStr        = "Cap            "
 	if showPromo then
@@ -1103,11 +1098,11 @@ function unitObj:statData_strings(showPromo)
 		baseStr = baseStr .. twoDigits:format(self.bases[stat_i])
 		
 		if showPromo then
-			statStr = statStr .. twoDigits:format(savedStats[stat_i] 
+			statStr = statStr .. twoDigits:format(self.stats[stat_i] 
 					+ classes.PROMO_GAINS[self.promotion][stat_i])
 			capStr = capStr .. twoDigits:format(classes.CAPS[self.promotion][stat_i])
 		else
-			statStr = statStr .. twoDigits:format(savedStats[stat_i])
+			statStr = statStr .. twoDigits:format(self.stats[stat_i])
 			capStr = capStr .. twoDigits:format(classes.CAPS[self.class][stat_i])
 		end
 		

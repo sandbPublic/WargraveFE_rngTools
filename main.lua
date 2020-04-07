@@ -166,7 +166,7 @@ while true do
 		if pressed(1) then rnEvent.deleteLastEvent() end
 		
 		if pressed(2) then
-			unitData.saveStats()
+			unitData.selectedUnit():setStats()
 			rnEvent.addEvent()
 			rnEvent.get().batParams:set()
 			rnEvent.update_rnEvents()
@@ -208,7 +208,6 @@ while true do
 			combat.currBattleParams:set()
 			printStringArray(combat.currBattleParams:toStrings())
 			
-			unitData.saveStats()
 			unitData.selectedUnit():setStats()
 			rnEvent.updateStats()
 			

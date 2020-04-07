@@ -29,20 +29,14 @@ end
 
 local rnEventObj = {}
 
-function rnEventObj:setStats(stats)
-	stats = stats or unitData.getSavedStats()
-
-	self.stats = {}
-	for stat_i, stat in ipairs(stats) do
-		self.stats[stat_i] = stat
-	end
-	
+function rnEventObj:setStats()
+	self.unit:setStats()
+	self.stats = self.unit.stats
 	self.mExpValueFactor = self.unit:expValueFactor()
 end
 
 -- INDEX FROM 1
-function rnEventObj:new(stats, batParams, sel_Unit_i)
-	stats = stats or unitData.getSavedStats()
+function rnEventObj:new(batParams, sel_Unit_i)
 	batParams = batParams or combat.currBattleParams
 	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
 	
@@ -54,7 +48,7 @@ function rnEventObj:new(stats, batParams, sel_Unit_i)
 	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
 	
 	o.unit = unitData.selectedUnit()
-	o:setStats(stats) -- todo do we get enemy stats on EP?
+	o:setStats() -- todo do we get enemy stats on EP?
 	o.batParams = batParams:copy()
 	
 	o.hasCombat = true -- most rnEvents will be combats without levels or digs

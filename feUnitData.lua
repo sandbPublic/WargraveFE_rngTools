@@ -20,10 +20,20 @@ local CLASSES = {}
 local PROMOTIONS = {}
 local PROMOTED_AT = {}
 
+local DEFAULT_GROWTH_WEIGHTS = {20, 40, 20, 50, 30, 10, 10} 
+-- speed>str>def>skl=hp>res=luck
+-- these values are not normalized: weights of {2, 4, 2, 5, 3, 1, 1} 
+-- make a unit's levels considered 10% as important
+-- this set of values are used to scale avgLevelValue for expValueFactor()
+local EXP_VALUE_FACTOR_SCALE = 0 -- value of perfect level using default weights
+for _, v in ipairs(DEFAULT_GROWTH_WEIGHTS) do
+	EXP_VALUE_FACTOR_SCALE = EXP_VALUE_FACTOR_SCALE + 100 * v
+end
+
 local function initializeCommonValues()
 	for index,name in pairs(NAMES) do INDEX_OF_NAME[name] = index end
 	for unit_i = 1, #NAMES do
-		GROWTH_WEIGHTS[unit_i] = {20, 40, 20, 50, 30, 10, 10} -- speed>str>def>skl=hp>res=luck		
+		GROWTH_WEIGHTS[unit_i] = DEFAULT_GROWTH_WEIGHTS
 		BOOSTERS[unit_i] = {0, 0, 0, 0, 0, 0, 0}
 		PROMOTED_AT[unit_i] = 0
 	end
@@ -752,14 +762,6 @@ local function statsInRAM()
 	return stats
 end
 
-local function sumArray(array)
-	sum = 0
-	for _, x in ipairs(array) do
-		sum = sum + x
-	end
-	return sum
-end
-
 local function factorial(x)
 	if x <= 1 then return 1 end
 	return x * factorial(x-1)
@@ -789,9 +791,6 @@ local function percentile(numSuccesses, numTrials, p)
 	return cumulativeBinDistrib(numSuccesses, numTrials, p) - 
 			binomialDistrib(numSuccesses, numTrials, p)/2
 end
-
-
-
 
 
 
@@ -867,24 +866,10 @@ function unitObj:levelUpProcs_string(HP_RN_i)
 	return seq
 end
 
--- works for levels too
-function unitObj:statsGained(stat_i)
-	return self.stats[stat_i] - self.bases[stat_i]
-end
-
--- if growth rate needed to cap is less than growth rate, reduce proportional to weight
--- ranges from 1, when no stats capped and growth = 100, to 0
-function unitObj:expValueFactor()
-	if sumArray(self.growthWeights) == 0 then return 0 end
-	
-	return (self.avgLevelValue/self.perfLevelValue) 
-		 * (sumArray(self.dynamicWeights)/sumArray(self.growthWeights))
-end
-
 -- gets score for level up starting at rns index HP_RN_i
 -- scored such that average level is 0, empty level is -100 exp
 -- empty level wipes out value of exp used to level up
-function unitObj:statProcScore(HP_RN_i)
+function unitObj:levelScoreInExp(HP_RN_i)
 	if self.avgLevelValue == 0 then return 0 end
 	
 	local procs = self:willLevelStats(HP_RN_i)
@@ -900,6 +885,17 @@ function unitObj:statProcScore(HP_RN_i)
 	score = score - self.avgLevelValue -- score now ranges [-avg, perf-avg]
 	
 	return 100*score/self.avgLevelValue
+end
+
+-- if growth rate needed to cap is less than growth rate, reduce proportional to weight
+-- ranges from 1, when no stats capped and growth = 100, to 0
+function unitObj:expValueFactor()
+	return self.avgLevelValue/EXP_VALUE_FACTOR_SCALE
+end
+
+-- works for levels too
+function unitObj:statsGained(stat_i)
+	return self.stats[stat_i] - self.bases[stat_i]
 end
 
 function unitObj:statAverage(stat_i)
@@ -1019,7 +1015,7 @@ function unitObj:setDynamicWeights()
 	local levelsTil20 = 20 - self.stats[LEVEL_I]
 	if levelsTil20 <= 0 then return end
 	
-	for stat_i = 1, 7 do	
+	for stat_i = 1, 7 do
 		local procsTilStatCap = classes.CAPS[self.class][stat_i] - self.stats[stat_i]
 		
 		-- multiply by 1 - P(reaching/exceeding cap even if not gaining stat this level)
@@ -1062,7 +1058,6 @@ function unitObj:setStats()
 	for i = 1, 7 do
 		self.avgLevelValue = self.avgLevelValue + self.growths[i]*self.dynamicWeights[i]
 	end
-	self.perfLevelValue = 100 * sumArray(self.dynamicWeights)
 end
 
 function unitObj:new(unit_i)

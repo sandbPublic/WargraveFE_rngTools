@@ -31,7 +31,7 @@ local rnEventObj = {}
 
 function rnEventObj:setStats()
 	self.unit:setStats()
-	self.stats = self.unit.stats
+	self.maxHP = self.unit.stats[1]
 	self.mExpValueFactor = self.unit:expValueFactor()
 end
 
@@ -62,7 +62,7 @@ function rnEventObj:new(batParams, sel_Unit_i)
 	o.dig = false
 	
 	-- as units ram their caps (or have the potential to), the value of their levels drops
-	o.mExpValueFactor = o.unit:expValueFactor(o.stats)
+	o.mExpValueFactor = o.unit:expValueFactor()
 	o.combatWeight = 1
 	
 	o.enemyID = 0 -- for units attacking the same enemyID
@@ -135,10 +135,7 @@ function rnEventObj:diagnostic()
 	print(self.comesAfter)
 	
 	print("stats")
-	print(self.stats)
-	print(string.format("avglvl  %8.2f", self.unit.avgLevelValue))
-	print(string.format("perflvl %8.2f", self.unit.perfLevelValue))
-	print(string.format("mExpValueFactor %4.2f", self.mExpValueFactor))
+	print(self.unit.stats)
 end
 
 -- assumes first index returns a table
@@ -290,11 +287,11 @@ function rnEventObj:levelDetected()
 end
 
 function rnEventObj:levelScore()
-	return self.unit:statProcScore(self.postCombatRN_i, self.stats)
+	return self.unit:levelScoreInExp(self.postCombatRN_i)
 end
 
 function rnEventObj:digSucceed()
-	return rns.rng1:getRN(self.nextRN_i - 1) <= self.stats[7]
+	return rns.rng1:getRN(self.nextRN_i - 1) <= self.unit.stats[7]
 	-- luck+1% chance, therefore even 0 luck has 1% chance, confirmed luck 8 succeeds with rn = 8
 end
 
@@ -305,7 +302,7 @@ function rnEventObj:resultString()
 	end
 	if self:levelDetected() then
 		rString = rString .. string.format(" %s %3d",
-			self.unit:levelUpProcs_string(self.postCombatRN_i, self.stats),
+			self.unit:levelUpProcs_string(self.postCombatRN_i),
 			self:levelScore())
 	end
 	if self.dig then
@@ -359,11 +356,11 @@ function rnEventObj:headerString(rnEvent_i)
 end
 
 function rnEventObj:healable()
-	if self.hasCombat and self.mHitSeq.pHP < self.stats[1] then
+	if self.hasCombat and self.mHitSeq.pHP < self.maxHP then
 		return true
 	end
 	return self:levelDetected() 
-		and self.unit:willLevelStats(self.postCombatRN_i, self.stats)[1] >= 1
+		and self.unit:willLevelStats(self.postCombatRN_i)[1] >= 1
 end
 
 -- the most important point of hp is the last;
@@ -400,11 +397,11 @@ function rnEventObj:evaluation_fn(printV)
 			local eHPendFrac = self.mHitSeq.eHP/self.batParams:getMaxHP(false)
 			local lossInEnemyValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
 			
-			local pHPstartFrac = self.batParams:getHP("isPlayer")/self.stats[1]
-			local pHPendFrac = self.mHitSeq.pHP/self.stats[1]
+			local pHPstartFrac = self.batParams:getHP("isPlayer")/self.maxHP
+			local pHPendFrac = self.mHitSeq.pHP/self.maxHP
 			local lossInPlayerValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
 			
-			score = score + 50*lossInEnemyValue - 100*lossInPlayerValue 
+			score = score + (50*lossInEnemyValue - 100*lossInPlayerValue) * self.combatWeight
 				+ self.mHitSeq.expGained*self.mExpValueFactor
 			
 			printStr = printStr .. string.format(
@@ -418,8 +415,6 @@ function rnEventObj:evaluation_fn(printV)
 				self.mHitSeq.expGained, 
 				self.mExpValueFactor)
 		end
-		
-		score = score * self.combatWeight
 	end
 		
 	if self:levelDetected() then

@@ -760,51 +760,41 @@ local function sumArray(array)
 	return sum
 end
 
-
-
-
-local unitObj = {}
-
-function unitObj:new(unit_i)
-	local o = {}
-	setmetatable(o, self)
-	self.__index = self
-	
-	o.name = NAMES[unit_i]
-	o.growths = GROWTHS[unit_i]
-	o.growthWeights = GROWTH_WEIGHTS[unit_i]
-	o.stats = statsInRAM()
-	
-	-- units with low growths or growths in bad areas have less value in gaining exp
-	-- events are scored based on exp gained
-	-- in terms of exp, average level is worth 100, blank level 0
-	-- average level is worth some fraction of a perfect level, so 1 exp is worth 100th of that
-	o.avgLevelValue = 0
-	o.weightTotal = sumArray(o.growthWeights)
-	for i = 1, 7 do
-		o.avgLevelValue = o.avgLevelValue + o.growths[i]*o.growthWeights[i]
-	end
-	o.perfLevelValue = 100 * o.weightTotal
-	
-	o.bases = BASE_STATS[unit_i]
-	for i, boost in ipairs(BOOSTERS[unit_i]) do
-		o.bases[i] = o.bases[i] + boost
-	end
-
-	o.class = CLASSES[unit_i]
-	o.promotion = PROMOTIONS[unit_i]
-	if PROMOTED_AT[unit_i] > 0 then
-		o.class = o.promotion
-		for i, gain in ipairs(classes.PROMO_GAINS[o.promotion]) do
-			o.bases[i] = o.bases[i] + gain
-		end
-		o.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
-	end
-	o.canPromote = o.class ~= o.promotion
-	o.hasAfas = (unit_i == AFAS_I)
-	
-	return o
+local function factorial(x)
+	if x <= 1 then return 1 end
+	return x * factorial(x-1)
 end
+
+local function binomialDistrib(numSuccesses, numTrials, p)
+	local numFails = numTrials - numSuccesses
+	
+	local choose = factorial(numTrials)/(factorial(numSuccesses)*factorial(numFails))
+	
+	return choose * (p^numSuccesses) * (1-p)^numFails
+end
+
+-- probability of S or fewer successes in T attempts
+local function cumulativeBinDistrib(numSuccesses, numTrials, p)
+	if numSuccesses >= numTrials then return 1 end
+
+	local ret = 0
+	for i = 0, numSuccesses do
+		ret = ret + binomialDistrib(i, numTrials, p)
+	end	
+	return ret
+end
+
+local function percentile(numSuccesses, numTrials, p)
+	-- treat half of same number of successes as below and half as above
+	return cumulativeBinDistrib(numSuccesses, numTrials, p) - 
+			binomialDistrib(numSuccesses, numTrials, p)/2
+end
+
+
+
+
+
+
 
 local selectedUnit_i = 1
 local deployedUnits = {}
@@ -827,27 +817,12 @@ function P.nextUnit()
 	return deployedUnits[P.nextDeployed_i()]
 end
 
-for unit_i = 1, #NAMES do
-	if DEPLOYED[unit_i] then
-		table.insert(deployedUnits, unitObj:new(unit_i))
-	end
-end
 
-function unitObj:toggleAfas()
-	local str = "Afa's "
-	if GAME_VERSION == 8 then
-		str = "Metis "
-	end
 
-	if self.hasAfas then
-		str = str .. "removed from "
-	else
-		str = str .. "applied to "
-	end
-	print(str .. self.name)
-	
-	self.hasAfas = not self.hasAfas
-end
+
+-- non modifying functions
+
+local unitObj = {}
 
 function unitObj:willLevelStats(HP_RN_i)
 	ret = {}
@@ -897,44 +872,152 @@ function unitObj:statsGained(stat_i)
 	return self.stats[stat_i] - self.bases[stat_i]
 end
 
-local function factorial(x)
-	if x <= 1 then return 1 end
-	return x * factorial(x-1)
-end
-
-local function binomialDistrib(numSuccesses, numTrials, p)
-	local numFails = numTrials - numSuccesses
+-- if growth rate needed to cap is less than growth rate, reduce proportional to weight
+-- ranges from 1, when no stats capped and growth = 100, to 0
+function unitObj:expValueFactor()
+	if sumArray(self.growthWeights) == 0 then return 0 end
 	
-	local choose = factorial(numTrials)/(factorial(numSuccesses)*factorial(numFails))
+	return (self.avgLevelValue/self.perfLevelValue) 
+		 * (sumArray(self.dynamicWeights)/sumArray(self.growthWeights))
+end
+
+-- gets score for level up starting at rns index HP_RN_i
+-- scored such that average level is 0, empty level is -100 exp
+-- empty level wipes out value of exp used to level up
+function unitObj:statProcScore(HP_RN_i)
+	if self.avgLevelValue == 0 then return 0 end
 	
-	return choose * (p^numSuccesses) * (1-p)^numFails
+	local procs = self:willLevelStats(HP_RN_i)
+	
+	local score = 0
+	for stat_i = 1, 7 do
+		if procs[stat_i] > 0 then
+			score = score + self.dynamicWeights[stat_i]
+		end
+	end
+	score = score * 100
+	
+	score = score - self.avgLevelValue -- score now ranges [-avg, perf-avg]
+	
+	return 100*score/self.avgLevelValue
 end
 
--- probability of S or fewer successes in T attempts
-local function cumulativeBinDistrib(numSuccesses, numTrials, p)
-	if numSuccesses >= numTrials then return 1 end
-
-	local ret = 0
-	for i = 0, numSuccesses do
-		ret = ret + binomialDistrib(i, numTrials, p)
-	end	
-	return ret
+function unitObj:statAverage(stat_i)
+	return self.bases[stat_i] + self:statsGained(LEVEL_I)*self.growths[stat_i]/100
 end
 
-local function percentile(numSuccesses, numTrials, p)
-	-- treat half of same number of successes as below and half as above
-	return cumulativeBinDistrib(numSuccesses, numTrials, p) - 
-			binomialDistrib(numSuccesses, numTrials, p)/2
+function unitObj:statDeviation(stat_i)
+	return self.stats[stat_i] - self:statAverage(stat_i)
+end
+
+-- how many sigma's off from average
+function unitObj:statStdDev(stat_i)
+	local growthProb = self.growths[stat_i]/100
+	
+	local stdDev = (self:statsGained(LEVEL_I)*growthProb*(1-growthProb))^0.5
+	
+	if stdDev == 0 then return 0 end
+	
+	return self:statDeviation(stat_i)/stdDev
+end
+
+function unitObj:effectiveGrowthRate(stat_i)
+	if self:statsGained(LEVEL_I) == 0 then return 0 end
+	
+	return 100*self:statsGained(stat_i)/self:statsGained(LEVEL_I)
+end
+
+function unitObj:statData_strings(showPromo)
+	showPromo = (showPromo and self.canPromote)
+	
+	local statHeader = string.format("%-10.10s      Hp St Sk Sp Df Rs Lk", self.name)
+	
+	local baseStr       = "Base + boost   "
+	local statStr       = "Stat at " .. string.format("%2d.%02d  ", self.stats[LEVEL_I], self.stats[EXP_I])
+	if self.stats[EXP_I] == 255 then
+		statStr         = "Stat at " .. string.format("%2d.--  ", self.stats[LEVEL_I])
+	end
+	local capStr        = "Cap            "
+	if showPromo then
+		statStr         = "Stat at PROMO  "
+		capStr          = "Cap     PROMO  "
+	end
+	
+	local weightStr     = "Weight   " .. string.format(" x%4.2f", self:expValueFactor())
+	local growthStr     = "Growth         "
+	if self.hasAfas then
+		growthStr       = "Growth +Afa's  "
+	end
+	local trueGrowthStr = "Actual Growth  "
+	local percentileStr = "Percentile     "
+	local stndDevStr    = "Standard Dev   "
+	
+	local twoDigits = " %02d"
+	for stat_i = 1, 7 do
+		baseStr = baseStr .. twoDigits:format(self.bases[stat_i])
+		
+		if showPromo then
+			statStr = statStr .. twoDigits:format(self.stats[stat_i] 
+					+ classes.PROMO_GAINS[self.promotion][stat_i])
+			capStr = capStr .. twoDigits:format(classes.CAPS[self.promotion][stat_i])
+		else
+			statStr = statStr .. twoDigits:format(self.stats[stat_i])
+			capStr = capStr .. twoDigits:format(classes.CAPS[self.class][stat_i])
+		end
+		
+		weightStr = weightStr .. twoDigits:format(self.dynamicWeights[stat_i])
+		
+		if self:effectiveGrowthRate(stat_i) < 100 then
+			trueGrowthStr = trueGrowthStr .. twoDigits:format(self:effectiveGrowthRate(stat_i))
+		else
+			trueGrowthStr = trueGrowthStr .. " A0"
+		end
+		
+		local growth = self.growths[stat_i]
+		if self.hasAfas then
+			growth = growth + 5
+		end
+		
+		growthStr = growthStr .. twoDigits:format(growth)
+		
+		percentileStr = percentileStr .. twoDigits:format(
+			100*percentile(self:statsGained(stat_i), self:statsGained(LEVEL_I), growth/100))
+		
+		local stdDv = self:statStdDev(stat_i)
+		stndDevStr = stndDevStr .. string.format("%+03d", 10*stdDv)
+	end
+	
+	return {statHeader, baseStr, statStr, capStr, weightStr, growthStr, trueGrowthStr, percentileStr}
+end
+
+
+
+
+
+-- modifying functions
+
+function unitObj:toggleAfas()
+	local str = "Afa's "
+	if GAME_VERSION == 8 then
+		str = "Metis "
+	end
+
+	if self.hasAfas then
+		str = str .. "removed from "
+	else
+		str = str .. "applied to "
+	end
+	print(str .. self.name)
+	
+	self.hasAfas = not self.hasAfas
 end
 
 -- adjusts preset stat weights downward when stat is likely to cap
-function unitObj:dynamicStatWeights()
-	local ret = {}
+function unitObj:setDynamicWeights()
+	self.dynamicWeights = {0, 0, 0, 0, 0, 0, 0}
 	
 	local levelsTil20 = 20 - self.stats[LEVEL_I]
-	if levelsTil20 <= 0 then
-		return {0, 0, 0, 0, 0, 0, 0}
-	end
+	if levelsTil20 <= 0 then return end
 	
 	for stat_i = 1, 7 do	
 		local procsTilStatCap = classes.CAPS[self.class][stat_i] - self.stats[stat_i]
@@ -966,147 +1049,57 @@ function unitObj:dynamicStatWeights()
 			end
 		end
 		
-		ret[stat_i] = self.growthWeights[stat_i] * probCapUnreachableIfNotProcing
+		self.dynamicWeights[stat_i] = self.growthWeights[stat_i] * probCapUnreachableIfNotProcing
 	end
-	
-	return ret
 end
-
--- if growth rate needed to cap is less than growth rate, reduce proportional to weight
--- ranges from 1, when no stats capped and growth = 100, to 0
-function unitObj:expValueFactor()
-	if self.weightTotal == 0 then return 0 end
-	
-	return (self.avgLevelValue/self.perfLevelValue) 
-		 * (sumArray(self:dynamicStatWeights())/self.weightTotal)
-end
-
--- gets score for level up starting at rns index HP_RN_i
--- scored such that average level is 0, empty level is -100 exp
--- empty level wipes out value of exp used to level up
-function unitObj:statProcScore(HP_RN_i)
-	if self.avgLevelValue == 0 then return 0 end
-	
-	local procs = self:willLevelStats(HP_RN_i)
-	local dsw = self:dynamicStatWeights()
-	
-	local score = 0
-	for stat_i = 1, 7 do
-		if procs[stat_i] > 0 then
-			score = score + dsw[stat_i]
-		end
-	end
-	score = score * 100
-	
-	score = score - self.avgLevelValue -- score now ranges [-avg, perf-avg]
-	
-	return 100*score/self.avgLevelValue
-end
-
-function unitObj:statAverageAt(stat_i)
-	return self.bases[stat_i] + self:statsGained(LEVEL_I)*self.growths[stat_i]/100
-end
-
-function unitObj:statDeviation(stat_i, charStat, charLevel)
-	charStat = charStat or self.stats[stat_i]
-	charLevel = charLevel or self.stats[LEVEL_I]
-	
-	return charStat - self:statAverageAt(stat_i, charLevel)
-end
-
--- how many sigma's off from average
-function unitObj:statStdDev(stat_i)
-	local growthProb = self.growths[stat_i]/100
-	
-	local stdDev = (self:statsGained(LEVEL_I)*growthProb*(1-growthProb))^0.5
-	
-	if stdDev == 0 then return 0 end
-	
-	return self:statDeviation(stat_i, self.stats[stat_i])/stdDev
-end
-
-function unitObj:effectiveGrowthRate(stat_i)
-	if self:statsGained(LEVEL_I) == 0 then return 0 end
-	
-	return 100*self:statsGained(stat_i)/self:statsGained(LEVEL_I)
-end
-
-
-
 
 function unitObj:setStats()
 	self.stats = statsInRAM()
 	
+	self:setDynamicWeights()
+	
 	self.avgLevelValue = 0
-	local dsw = self:dynamicStatWeights()
 	for i = 1, 7 do
-		self.avgLevelValue = self.avgLevelValue + self.growths[i]*dsw[i]
+		self.avgLevelValue = self.avgLevelValue + self.growths[i]*self.dynamicWeights[i]
 	end
-	self.perfLevelValue = 100 * sumArray(dsw)
+	self.perfLevelValue = 100 * sumArray(self.dynamicWeights)
 end
 
-function unitObj:statData_strings(showPromo)
-	showPromo = (showPromo and self.canPromote)
+function unitObj:new(unit_i)
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
 	
-	local statHeader = string.format("%-10.10s      Hp St Sk Sp Df Rs Lk", self.name)
+	o.name = NAMES[unit_i]
+	o.growths = GROWTHS[unit_i]
+	o.growthWeights = GROWTH_WEIGHTS[unit_i]
 	
-	local baseStr       = "Base + boost   "
-	local statStr       = "Stat at " .. string.format("%2d.%02d  ", self.stats[LEVEL_I], self.stats[EXP_I])
-	if self.stats[EXP_I] == 255 then
-		statStr         = "Stat at " .. string.format("%2d.--  ", self.stats[LEVEL_I])
+	o.bases = BASE_STATS[unit_i]
+	for i, boost in ipairs(BOOSTERS[unit_i]) do
+		o.bases[i] = o.bases[i] + boost
 	end
-	local capStr        = "Cap            "
-	if showPromo then
-		statStr         = "Stat at PROMO  "
-		capStr          = "Cap     PROMO  "
-	end
-	
-	local weightStr     = "Weight   " .. string.format(" x%4.2f", self:expValueFactor())
-	local growthStr     = "Growth         "
-	if self.hasAfas then
-		growthStr       = "Growth +Afa's  "
-	end
-	local trueGrowthStr = "Actual Growth  "
-	local percentileStr = "Percentile     "
-	local stndDevStr    = "Standard Dev   "
-	
-	local dsw = self:dynamicStatWeights()
-	local twoDigits = " %02d"
-	for stat_i = 1, 7 do
-		baseStr = baseStr .. twoDigits:format(self.bases[stat_i])
-		
-		if showPromo then
-			statStr = statStr .. twoDigits:format(self.stats[stat_i] 
-					+ classes.PROMO_GAINS[self.promotion][stat_i])
-			capStr = capStr .. twoDigits:format(classes.CAPS[self.promotion][stat_i])
-		else
-			statStr = statStr .. twoDigits:format(self.stats[stat_i])
-			capStr = capStr .. twoDigits:format(classes.CAPS[self.class][stat_i])
+
+	o.class = CLASSES[unit_i]
+	o.promotion = PROMOTIONS[unit_i]
+	if PROMOTED_AT[unit_i] > 0 then
+		o.class = o.promotion
+		for i, gain in ipairs(classes.PROMO_GAINS[o.promotion]) do
+			o.bases[i] = o.bases[i] + gain
 		end
-		
-		weightStr = weightStr .. twoDigits:format(dsw[stat_i])
-		
-		if self:effectiveGrowthRate(stat_i) < 100 then
-			trueGrowthStr = trueGrowthStr .. twoDigits:format(self:effectiveGrowthRate(stat_i))
-		else
-			trueGrowthStr = trueGrowthStr .. " A0"
-		end
-		
-		local growth = self.growths[stat_i]
-		if self.hasAfas then
-			growth = growth + 5
-		end
-		
-		growthStr = growthStr .. twoDigits:format(growth)
-		
-		percentileStr = percentileStr .. twoDigits:format(
-			100*percentile(self:statsGained(stat_i), self:statsGained(LEVEL_I), growth/100))
-		
-		local stdDv = self:statStdDev(stat_i)
-		stndDevStr = stndDevStr .. string.format("%+03d", 10*stdDv)
+		o.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
 	end
+	o.canPromote = o.class ~= o.promotion
+	o.hasAfas = (unit_i == AFAS_I)
 	
-	return {statHeader, baseStr, statStr, capStr, weightStr, growthStr, trueGrowthStr, percentileStr}
+	o:setStats()
+	
+	return o
+end
+
+for unit_i = 1, #NAMES do
+	if DEPLOYED[unit_i] then
+		table.insert(deployedUnits, unitObj:new(unit_i))
+	end
 end
 
 return unitData

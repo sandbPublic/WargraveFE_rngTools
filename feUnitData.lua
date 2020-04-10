@@ -778,7 +778,7 @@ end
 
 local function percentile(numSuccesses, numTrials, p)
 	-- treat half of same number of successes as below and half as above
-	return cumulativeBinDistrib(numSuccesses, numTrials, p) - 
+	return cumulativeBinDistrib(numSuccesses - 1, numTrials, p) +
 			binomialDistrib(numSuccesses, numTrials, p)/2
 end
 

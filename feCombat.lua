@@ -26,7 +26,6 @@ local EXP_I     = 10 -- for level up detection
 local HP_I      = 11 -- current HP
 local NUM_ADDRS = 11
 
-
 local ATTACKER_BASE_ADDR = {0x02039200, 0x0203A400, 0x0203A500} 
 ATTACKER_BASE_ADDR = ATTACKER_BASE_ADDR[GAME_VERSION - 5]
 
@@ -40,6 +39,16 @@ BATTLE_ADDR_OFFSETS = {{0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x
                        {  -2, 0x0A, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}}
 BATTLE_ADDR_OFFSETS = BATTLE_ADDR_OFFSETS[GAME_VERSION - 5]
 
+local function battleAddrs(isAttacker, index)
+	if isAttacker then
+		return ATTACKER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]		
+	end
+	return DEFENDER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]
+end
+
+function P.printStat(i)
+	print(memory.readbyte((battleAddrs(true, i))))
+end
 
 -- note that staff hit only updates in animation, not in preview
 -- in preview, p/e crit and p hit are set to 255 as well
@@ -49,20 +58,21 @@ BATTLE_ADDR_OFFSETS = BATTLE_ADDR_OFFSETS[GAME_VERSION - 5]
 
 
 
--- TODO determine weapon codes for each game
 -- TODO devil damage incorrectly capped by enemy current hp?
-local BRAVE_S_ID   = {0,0,0,0,0,0,0,0}
-local BRAVE_L_ID   = {0,0,0,0,0,0,0,0}
-local BRAVE_A_ID   = {0,0,0,0,0,0,0,0}
-local BRAVE_B_ID   = {0,0,0,0,0,0,0,0}
-local DEVIL_A_ID   = {0,0,0,0,0,0,0,0}
-local NOSFERATU_ID = {0,0,0,0,0,0,0,0}
-local ECLIPSE_ID   = {0,0,0,0,0,0,0,0}
-local POISON_S_ID  = {0,0,0,0,0,0,0,0}
-local POISON_L_ID  = {0,0,0,0,0,0,0,0}
-local POISON_A_ID  = {0,0,0,0,0,0,0,0}
-local POISON_B_ID  = {0,0,0,0,0,0,0,0}
-local STONE_ID     = {0,0,0,0,0,0,0,0}
+local BRAVE_S_ID   = {0,0,0,0,0,07,11,18}
+local BRAVE_L_ID   = {0,0,0,0,0,21,25,25}
+local BRAVE_A_ID   = {0,0,0,0,0,31,35,35}
+local BRAVE_B_ID   = {0,0,0,0,0,44,49,50}
+local DEVIL_A_ID   = {0,0,0,0,0,37,39,39}
+local NOSFERATU_ID = {0,0,0,0,0,64,70,71}
+local ECLIPSE_ID   = {0,0,0,0,0,65,71,72}
+local POISON_S_ID  = {0,0,0,0,0,-1,08,08}
+local POISON_L_ID  = {0,0,0,0,0,-1,24,24}
+local POISON_A_ID  = {0,0,0,0,0,30,34,34} -- only poison item in FE6?
+local POISON_B_ID  = {0,0,0,0,0,-1,47,48}
+local POISON_CLAW_ID  = 175  -- FE8 only
+local POISON_TALON_ID  = 176  -- FE8 only
+local STONE_ID     = 181 -- FE8 only
 
 -- special weapon types
 local NORMAL = 1
@@ -75,23 +85,28 @@ local STONE  = 7 -- treated as 999 dmg
 
 P.WEAPON_TYPE_STRINGS = {"normal", "brave", "devil", "drain", "halve", "poison", "stone"}
 
-
-
-
-local ATTACKER = true
-local DEFENDER = false
-local PLAYER = true
-local ENEMY = false
-
-local function battleAddrs(isAttacker, index)
-	if isAttacker then
-		return ATTACKER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]		
+local function weaponIdToType(id)
+	if (id == BRAVE_S_ID[GAME_VERSION] 
+	 or id == BRAVE_L_ID[GAME_VERSION] 
+	 or id == BRAVE_A_ID[GAME_VERSION] 
+	 or id == BRAVE_B_ID[GAME_VERSION]) then
+		return BRAVE
+	elseif id == DEVIL_A_ID[GAME_VERSION] then
+		return DEVIL
+	elseif id == NOSFERATU_ID[GAME_VERSION] then
+		return DRAIN
+	elseif id == ECLIPSE_ID[GAME_VERSION] then
+		return HALVE
+	elseif (id == POISON_S_ID[GAME_VERSION] 
+		 or id == POISON_L_ID[GAME_VERSION] 
+		 or id == POISON_A_ID[GAME_VERSION] 
+		 or id == POISON_B_ID[GAME_VERSION]
+		 or id == POISON_CLAW_ID
+		 or id == POISON_TALON_ID) then
+		return POISON
+	elseif id == STONE_ID then
+		return STONE
 	end
-	return DEFENDER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]
-end
-
-function P.printStat(i)
-	print(memory.readbyte((battleAddrs(true, i))))
 end
 
 
@@ -153,30 +168,8 @@ function P.combatObj:set()
 		self.defender[i] = memory.readbyte(battleAddrs(false, i))
 	end
 	
-	local function setSpecialWeapon(who)
-		if (who[WEAPON_I] == BRAVE_S_ID[GAME_VERSION] 
-		 or who[WEAPON_I] == BRAVE_L_ID[GAME_VERSION] 
-		 or who[WEAPON_I] == BRAVE_A_ID[GAME_VERSION] 
-		 or who[WEAPON_I] == BRAVE_B_ID[GAME_VERSION]) then
-			who.weaponType = BRAVE
-		elseif who[WEAPON_I] == DEVIL_A_ID[GAME_VERSION] then
-			who.weaponType = DEVIL
-		elseif who[WEAPON_I] == NOSFERATU_ID[GAME_VERSION] then
-			who.weaponType = DRAIN
-		elseif who[WEAPON_I] == ECLIPSE_ID[GAME_VERSION] then
-			who.weaponType = HALVE
-		elseif (who[WEAPON_I] == POISON_S_ID[GAME_VERSION] 
-		     or who[WEAPON_I] == POISON_L_ID[GAME_VERSION] 
-		     or who[WEAPON_I] == POISON_A_ID[GAME_VERSION] 
-		     or who[WEAPON_I] == POISON_B_ID[GAME_VERSION]) then
-			who.weaponType = POISON
-		elseif who[WEAPON_I] == STONE_ID[GAME_VERSION] then
-			who.weaponType = STONE
-		end
-	end
-	
-	setSpecialWeapon(self.attacker)
-	setSpecialWeapon(self.defender)
+	self.attacker.weaponType = weaponIdToType(self.attacker[WEAPON_I])
+	self.defender.weaponType = weaponIdToType(self.defender[WEAPON_I])
 	
 	self.player.class = unitData.selectedUnit().class
 	self.name = unitData.selectedUnit().name
@@ -530,7 +523,7 @@ end
 
 -- variable number of events, 1 to 6
 -- X hit events, expGained, lvlUp, totalRNsConsumed, pHP, eHP
--- can carry enemies hp from previous combat
+-- can carry enemy's hp from previous combat
 function P.combatObj:hitSeq(index, carriedEnemyHP)
 	local rHitSeq = {} -- numeric keys are hit events
 	local isAttackers = {} -- unnecessary to return with current functionality

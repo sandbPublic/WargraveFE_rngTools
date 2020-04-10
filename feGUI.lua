@@ -343,15 +343,10 @@ function P.selRect()
 end
 
 -- 0,0 is upper left
-local CURSOR_X_ADDR = {}
-CURSOR_X_ADDR[6] = 0x0202AA1C -- also ...20
-CURSOR_X_ADDR[7] = 0x0202BBCC -- also ...D0
-CURSOR_X_ADDR[8] = 0x0202BCC4 -- also ...C8
+local CURSOR_X_ADDR = {0x0202AA1C, 0x0202BBCC, 0x0202BCC4} -- also at +4
+CURSOR_X_ADDR = CURSOR_X_ADDR[GAME_VERSION - 5]
 
-local CURSOR_Y_ADDR = {}
-CURSOR_Y_ADDR[6] = CURSOR_X_ADDR[6] + 2 -- also +4
-CURSOR_Y_ADDR[7] = CURSOR_X_ADDR[7] + 2 -- also +4
-CURSOR_Y_ADDR[8] = CURSOR_X_ADDR[8] + 2 -- also +4
+local CURSOR_Y_ADDR = CURSOR_X_ADDR + 2 -- also at +4
 
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
@@ -366,8 +361,7 @@ function P.drawRects()
 	
 	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings("isColored")
 	P.rects[P.COORD_I].strings = {string.format("%02d,%02d", 
-				memory.readbyte(CURSOR_X_ADDR[GAME_VERSION]), 
-				memory.readbyte(CURSOR_Y_ADDR[GAME_VERSION]))}
+		memory.readbyte(CURSOR_X_ADDR), memory.readbyte(CURSOR_Y_ADDR))}
 	
 	for _, rect in ipairs(P.rects) do
 		rect:draw()

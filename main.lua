@@ -89,21 +89,16 @@ end
 local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
 
-local FOG_ADDR = {}
-FOG_ADDR[6] = 0x0202AA55
-FOG_ADDR[7] = 0x0202BC05
-FOG_ADDR[8] = 0x0202BCFD
+local FOG_ADDR = {0x0202AA55, 0x0202BC05, 0x0202BCFD}
+FOG_ADDR = FOG_ADDR[GAME_VERSION - 5]
 local savedFog = 0
 
-local TURN_ADDR = {}
-TURN_ADDR[6] = 0x0202AA58
-TURN_ADDR[7] = 0x0202BC08
-TURN_ADDR[8] = 0x0202BD00
+local TURN_ADDR = FOG_ADDR + 3
 local currTurn = 0
 
 while true do
-	if currTurn ~= memory.readbyte(TURN_ADDR[GAME_VERSION]) then
-		currTurn = memory.readbyte(TURN_ADDR[GAME_VERSION])
+	if currTurn ~= memory.readbyte(TURN_ADDR) then
+		currTurn = memory.readbyte(TURN_ADDR)
 		print("Turn " .. currTurn)
 	end
 	
@@ -252,12 +247,12 @@ while true do
 		
 		if pressed(5) then -- toggle fog
 			if savedFog > 0 then
-				memory.writebyte(FOG_ADDR[GAME_VERSION], savedFog)
+				memory.writebyte(FOG_ADDR, savedFog)
 				print("fog set to " .. savedFog)
 				savedFog = 0
 			else
-				savedFog = memory.readbyte(FOG_ADDR[GAME_VERSION])
-				memory.writebyte(FOG_ADDR[GAME_VERSION], 0)
+				savedFog = memory.readbyte(FOG_ADDR)
+				memory.writebyte(FOG_ADDR, 0)
 				print("fog set to 0")
 			end
 		end

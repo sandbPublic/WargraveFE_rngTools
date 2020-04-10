@@ -9,10 +9,8 @@ require("feUnitData")
 local P = {}
 combat = P
 
-local battleSimBase = {} 
-battleSimBase[6] = 0x02039200
-battleSimBase[7] = 0x0203A400
-battleSimBase[8] = 0x0203A500
+
+
 
 -- in the order they appear in RAM
 local MAX_HP_I  = 1 -- for drain
@@ -28,37 +26,43 @@ local EXP_I     = 10 -- for level up detection
 local HP_I      = 11 -- current HP
 local NUM_ADDRS = 11
 
-local relativeBattleAddrs = {}
---						  mxHP  weap  atk   def    AS   hit  luck  crit   lvl    xp    hp
---						         +12 +0x3C    +2    +2    +6    +4    +2  +6/4    +1    +1
-relativeBattleAddrs[6] = {0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82}
-relativeBattleAddrs[7] = {0x02, 0x0E, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62}
-relativeBattleAddrs[8] = {  -2, 0x0A, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}
 
-local defenderBattleAddrs = {}
-defenderBattleAddrs[6] = 0x7C -- -4
-defenderBattleAddrs[7] = 0x80
-defenderBattleAddrs[8] = 0x80
+local ATTACKER_BASE_ADDR = {0x02039200, 0x0203A400, 0x0203A500} 
+ATTACKER_BASE_ADDR = ATTACKER_BASE_ADDR[GAME_VERSION - 5]
+
+local DEFENDER_BASE_ADDR = {0x0203927C, 0x0203A480, 0x0203A580} -- FE6 -4 from others
+DEFENDER_BASE_ADDR = DEFENDER_BASE_ADDR[GAME_VERSION - 5]
+
+--                      mxHP  weap  atk   def    AS   hit  luck  crit   lvl    xp    hp
+--                             +12 +0x3C    +2    +2    +6    +4    +2  +6/4    +1    +1
+BATTLE_ADDR_OFFSETS = {{0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82},
+                       {0x02, 0x0E, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62},
+                       {  -2, 0x0A, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}}
+BATTLE_ADDR_OFFSETS = BATTLE_ADDR_OFFSETS[GAME_VERSION - 5]
+
 
 -- note that staff hit only updates in animation, not in preview
 -- in preview, p/e crit and p hit are set to 255 as well
 -- therefore, normal combat can be set in preview or after RNs used
 -- staff can only be set after RN used
 
--- TODO determine weapon codes for each game
-local BRAVE_S_ID = {0,0,0,0,0,0,0,0}
-local BRAVE_L_ID = {0,0,0,0,0,0,0,0}
-local BRAVE_A_ID = {0,0,0,0,0,0,0,0}
-local BRAVE_B_ID = {0,0,0,0,0,0,0,0}
-local DEVIL_A_ID = {0,0,0,0,0,0,0,1}
-local NOSFERATU_ID = {0,0,0,0,0,0,0,20}
-local ECLIPSE_ID = {0,0,0,0,0,0,0,0}
-local POISON_S_ID = {0,0,0,0,0,0,0,0}
-local POISON_L_ID = {0,0,0,0,0,0,0,0}
-local POISON_A_ID = {0,0,0,0,0,0,0,0}
-local POISON_B_ID = {0,0,0,0,0,0,0,0}
-local STONE_ID = {0,0,0,0,0,0,0,0}
 
+
+
+-- TODO determine weapon codes for each game
+-- TODO devil damage incorrectly capped by enemy current hp?
+local BRAVE_S_ID   = {0,0,0,0,0,0,0,0}
+local BRAVE_L_ID   = {0,0,0,0,0,0,0,0}
+local BRAVE_A_ID   = {0,0,0,0,0,0,0,0}
+local BRAVE_B_ID   = {0,0,0,0,0,0,0,0}
+local DEVIL_A_ID   = {0,0,0,0,0,0,0,0}
+local NOSFERATU_ID = {0,0,0,0,0,0,0,0}
+local ECLIPSE_ID   = {0,0,0,0,0,0,0,0}
+local POISON_S_ID  = {0,0,0,0,0,0,0,0}
+local POISON_L_ID  = {0,0,0,0,0,0,0,0}
+local POISON_A_ID  = {0,0,0,0,0,0,0,0}
+local POISON_B_ID  = {0,0,0,0,0,0,0,0}
+local STONE_ID     = {0,0,0,0,0,0,0,0}
 
 -- special weapon types
 local NORMAL = 1
@@ -71,6 +75,9 @@ local STONE  = 7 -- treated as 999 dmg
 
 P.WEAPON_TYPE_STRINGS = {"normal", "brave", "devil", "drain", "halve", "poison", "stone"}
 
+
+
+
 local ATTACKER = true
 local DEFENDER = false
 local PLAYER = true
@@ -78,15 +85,17 @@ local ENEMY = false
 
 local function battleAddrs(isAttacker, index)
 	if isAttacker then
-		return battleSimBase[GAME_VERSION] + relativeBattleAddrs[GAME_VERSION][index]		
+		return ATTACKER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]		
 	end
-	return battleSimBase[GAME_VERSION] + relativeBattleAddrs[GAME_VERSION][index] 
-	                                   + defenderBattleAddrs[GAME_VERSION]
+	return DEFENDER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]
 end
 
 function P.printStat(i)
 	print(memory.readbyte((battleAddrs(true, i))))
 end
+
+
+
 
 P.combatObj = {}
 

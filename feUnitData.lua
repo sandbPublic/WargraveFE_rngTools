@@ -731,36 +731,23 @@ P.HEALER_DEPLOYED = true
 local AFAS_I = 0
 
 
-
-
-local statMaxHpAddr = {}
-statMaxHpAddr[6] = 0x02039224
-statMaxHpAddr[7] = 0x0203A402
-statMaxHpAddr[8] = 0x0203A4FE
-local statScreenBase = {}
-statScreenBase[6] = 0x02039226
-statScreenBase[7] = 0x0203A404
-statScreenBase[8] = 0x0203A500
+ 
 
 -- compare to the addresses in feCombat
-local statLevelAddr = {}
-statLevelAddr[6] = 0x0203921C
-statLevelAddr[7] = 0x0203A3F8
-statLevelAddr[8] = 0x0203A4F4
-local statExpAddr = {} 
-statExpAddr[6] = 0x0203921D
-statExpAddr[7] = 0x0203A3F9
-statExpAddr[8] = 0x0203A4F5
+local LEVEL_ADDR = {0x0203921C, 0x0203A3F8, 0x0203A4F4}
+LEVEL_ADDR = LEVEL_ADDR[GAME_VERSION - 5]
+local EXP_ADDR = LEVEL_ADDR + 1
+local MAX_HP_ADDR = EXP_ADDR + 9
 
 local function statsInRAM()
 	local stats = {}
 	
-	stats[1] = memory.readbyte(statMaxHpAddr[GAME_VERSION])
+	stats[1] = memory.readbyte(MAX_HP_ADDR)
 	for stat_i = 2, 7 do
-		stats[stat_i] = memory.readbyte(statScreenBase[GAME_VERSION] + stat_i - 2)
+		stats[stat_i] = memory.readbyte(MAX_HP_ADDR + stat_i)  -- at +1 is current hp
 	end
-	stats[LEVEL_I] = memory.readbyte(statLevelAddr[GAME_VERSION])
-	stats[EXP_I] = memory.readbyte(statExpAddr[GAME_VERSION])
+	stats[LEVEL_I] = memory.readbyte(LEVEL_ADDR)
+	stats[EXP_I] = memory.readbyte(EXP_ADDR)
 	
 	return stats
 end

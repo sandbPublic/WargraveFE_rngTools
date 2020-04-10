@@ -90,15 +90,15 @@ local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
 
 local FOG_ADDR = {}
-FOG_ADDR[6] = 0x202AA55
-FOG_ADDR[7] = 0x202BC05
-FOG_ADDR[8] = 0x202BCFD
+FOG_ADDR[6] = 0x0202AA55
+FOG_ADDR[7] = 0x0202BC05
+FOG_ADDR[8] = 0x0202BCFD
 local savedFog = 0
 
 local TURN_ADDR = {}
-TURN_ADDR[6] = 0x202AA58
-TURN_ADDR[7] = 0x202BC08
-TURN_ADDR[8] = 0x202BD00
+TURN_ADDR[6] = 0x0202AA58
+TURN_ADDR[7] = 0x0202BC08
+TURN_ADDR[8] = 0x0202BD00
 local currTurn = 0
 
 while true do

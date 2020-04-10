@@ -46,16 +46,30 @@ defenderBattleAddrs[8] = 0x80
 -- staff can only be set after RN used
 
 -- TODO determine weapon codes for each game
--- special weapon types
-NORMAL = 1
-BRAVE  = 2
-DEVIL  = 3
-DRAIN  = 4
-HALVE  = 5 -- prevents doubling. damage unimplemented
-STONE  = 6 -- treated as 999 dmg
---POISON = 7 -- unimplemented, value of opportunity to restore vs minor hp loss
+local BRAVE_S_ID = {0,0,0,0,0,0,0,0}
+local BRAVE_L_ID = {0,0,0,0,0,0,0,0}
+local BRAVE_A_ID = {0,0,0,0,0,0,0,0}
+local BRAVE_B_ID = {0,0,0,0,0,0,0,0}
+local DEVIL_A_ID = {0,0,0,0,0,0,0,1}
+local NOSFERATU_ID = {0,0,0,0,0,0,0,20}
+local ECLIPSE_ID = {0,0,0,0,0,0,0,0}
+local POISON_S_ID = {0,0,0,0,0,0,0,0}
+local POISON_L_ID = {0,0,0,0,0,0,0,0}
+local POISON_A_ID = {0,0,0,0,0,0,0,0}
+local POISON_B_ID = {0,0,0,0,0,0,0,0}
+local STONE_ID = {0,0,0,0,0,0,0,0}
 
-P.WEAPON_TYPE_STRINGS = {"normal", "brave", "devil", "drain", "halve", "stone"}
+
+-- special weapon types
+local NORMAL = 1
+local BRAVE  = 2
+local DEVIL  = 3
+local DRAIN  = 4
+local HALVE  = 5 -- prevents doubling. damage unimplemented. in FE6 all but 1 hp
+local POISON = 6 -- unimplemented, value of opportunity to restore vs minor hp loss
+local STONE  = 7 -- treated as 999 dmg
+
+P.WEAPON_TYPE_STRINGS = {"normal", "brave", "devil", "drain", "halve", "poison", "stone"}
 
 local ATTACKER = true
 local DEFENDER = false
@@ -129,6 +143,31 @@ function P.combatObj:set()
 		self.attacker[i] = memory.readbyte(battleAddrs(true, i))
 		self.defender[i] = memory.readbyte(battleAddrs(false, i))
 	end
+	
+	local function setSpecialWeapon(who)
+		if (who[WEAPON_I] == BRAVE_S_ID[GAME_VERSION] 
+		 or who[WEAPON_I] == BRAVE_L_ID[GAME_VERSION] 
+		 or who[WEAPON_I] == BRAVE_A_ID[GAME_VERSION] 
+		 or who[WEAPON_I] == BRAVE_B_ID[GAME_VERSION]) then
+			who.weaponType = BRAVE
+		elseif who[WEAPON_I] == DEVIL_A_ID[GAME_VERSION] then
+			who.weaponType = DEVIL
+		elseif who[WEAPON_I] == NOSFERATU_ID[GAME_VERSION] then
+			who.weaponType = DRAIN
+		elseif who[WEAPON_I] == ECLIPSE_ID[GAME_VERSION] then
+			who.weaponType = HALVE
+		elseif (who[WEAPON_I] == POISON_S_ID[GAME_VERSION] 
+		     or who[WEAPON_I] == POISON_L_ID[GAME_VERSION] 
+		     or who[WEAPON_I] == POISON_A_ID[GAME_VERSION] 
+		     or who[WEAPON_I] == POISON_B_ID[GAME_VERSION]) then
+			who.weaponType = POISON
+		elseif who[WEAPON_I] == STONE_ID[GAME_VERSION] then
+			who.weaponType = STONE
+		end
+	end
+	
+	setSpecialWeapon(self.attacker)
+	setSpecialWeapon(self.defender)
 	
 	self.player.class = unitData.selectedUnit().class
 	self.name = unitData.selectedUnit().name

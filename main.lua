@@ -289,7 +289,7 @@ while true do
 			end
 		end	
 		
-		if pressed(10) then combat.printStat(4) end -- 2 atk, 4 AS
+		if pressed(10) then combat.printStat(2) end -- 2 weapon code, 3 atk, 5 AS
 			
 		if pressed(11) then
 			if currentRNG.isPrimary then

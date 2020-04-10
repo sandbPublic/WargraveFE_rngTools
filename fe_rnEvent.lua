@@ -335,12 +335,12 @@ function rnEventObj:headerString(rnEvent_i)
 
 	if self.batParams:isWeaponSpecial("isPlayer") then
 		specialStringEvents = specialStringEvents .. " " 
-			.. combat.WEAPON_TYPE_STRINGS[self.batParams.player.weapon]:upper()
+			.. combat.WEAPON_TYPE_STRINGS[self.batParams.player.weaponType]:upper()
 	end
 	
 	if self.batParams:isWeaponSpecial(false) then
 		specialStringEvents = specialStringEvents .. " " 
-			.. combat.WEAPON_TYPE_STRINGS[self.batParams.enemy.weapon]
+			.. combat.WEAPON_TYPE_STRINGS[self.batParams.enemy.weaponType]
 	end
 	
 	if self.batParams.enemy.class ~= classes.LORD then

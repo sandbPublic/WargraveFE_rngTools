@@ -19,6 +19,7 @@ local BOOSTERS = {}
 local CLASSES = {}
 local PROMOTIONS = {}
 local PROMOTED_AT = {}
+local WILL_PROMOTE_AT = {} -- for dynamic stat weights, some units will not promote at 10
 
 local DEFAULT_GROWTH_WEIGHTS = {20, 40, 20, 50, 30, 10, 10} 
 -- speed>str>def>skl=hp>res=luck
@@ -36,6 +37,7 @@ local function initializeCommonValues()
 		GROWTH_WEIGHTS[unit_i] = DEFAULT_GROWTH_WEIGHTS
 		BOOSTERS[unit_i] = {0, 0, 0, 0, 0, 0, 0}
 		PROMOTED_AT[unit_i] = 0
+		WILL_PROMOTE_AT[unit_i] = 10
 	end
 end
 
@@ -719,8 +721,9 @@ if GAME_VERSION == 8 then
 	DEPLOYED[INDEX_OF_NAME["Cormag"]] = true
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Lute"]] = {20, 60, 20, 40, 30, 10, 10} -- prioritize warp range
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
-	PROMOTED_AT[INDEX_OF_NAME["Lute"]] = 12
 	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
+	PROMOTED_AT[INDEX_OF_NAME["Lute"]] = 12
+	WILL_PROMOTE_AT[INDEX_OF_NAME["Ephraim"]] = 20
 end
 
 -- determine if healer is present manually
@@ -806,7 +809,7 @@ end
 
 function P.setToNextDeployed()
 	selectedUnit_i = P.nextDeployed_i()
-end 
+end
 
 function P.selectedUnit()
 	return deployedUnits[selectedUnit_i]
@@ -887,8 +890,6 @@ function unitObj:levelScoreInExp(HP_RN_i)
 	return 100*score/self.avgLevelValue
 end
 
--- if growth rate needed to cap is less than growth rate, reduce proportional to weight
--- ranges from 1, when no stats capped and growth = 100, to 0
 function unitObj:expValueFactor()
 	return self.avgLevelValue/EXP_VALUE_FACTOR_SCALE
 end
@@ -1035,7 +1036,7 @@ function unitObj:setDynamicWeights()
 				- self.stats[stat_i] - classes.PROMO_GAINS[self.promotion][stat_i]
 			
 			-- may need levels to even reach promotion
-			local levelsTil20_P = 19 + math.max(10 - self.stats[LEVEL_I], 0)
+			local levelsTil20_P = 19 + math.max(self.willPromoteAt - self.stats[LEVEL_I], 0)
 			
 			probCapUnreachableIfNotProcing_P = 
 				cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, self.growths[stat_i]/100)
@@ -1084,6 +1085,7 @@ function unitObj:new(unit_i)
 		o.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
 	end
 	o.canPromote = o.class ~= o.promotion
+	o.willPromoteAt = WILL_PROMOTE_AT[unit_i]
 	o.hasAfas = (unit_i == AFAS_I)
 	
 	o:setStats()

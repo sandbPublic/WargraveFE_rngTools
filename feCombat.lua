@@ -16,23 +16,24 @@ battleSimBase[8] = 0x0203A500
 
 -- in the order they appear in RAM
 local MAX_HP_I  = 1 -- for drain
-local ATTACK_I  = 2 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
-local DEF_I     = 3 -- includes terrain bonus
-local AS_I      = 4 -- attack speed
-local HIT_I     = 5 -- if can't attack, 0xFF
-local LUCK_I    = 6 -- for devil axe in fe7/8
-local CRIT_I    = 7 
-local LEVEL_I   = 8 -- for Great Shield, Pierce, Sure Strike, and exp cap at level 19
-local EXP_I     = 9 -- for level up detection
-local HP_I      = 10 -- current HP
-local NUM_ADDRS = 10
+local WEAPON_I  = 2 -- weapon code
+local ATTACK_I  = 3 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
+local DEF_I     = 4 -- includes terrain bonus
+local AS_I      = 5 -- attack speed
+local HIT_I     = 6 -- if can't attack, 0xFF
+local LUCK_I    = 7 -- for devil axe in fe7/8
+local CRIT_I    = 8 
+local LEVEL_I   = 9 -- for Great Shield, Pierce, Sure Strike, and exp cap at level 19
+local EXP_I     = 10 -- for level up detection
+local HP_I      = 11 -- current HP
+local NUM_ADDRS = 11
 
 local relativeBattleAddrs = {}
---						  mxHP   atk   def    AS   hit  luck  crit   lvl    xp    hp
---						       +0x48    +2    +2    +6    +4    +2  +6/4    +1    +1
-relativeBattleAddrs[6] = {0x24, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82}
-relativeBattleAddrs[7] = {0x02, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62}
-relativeBattleAddrs[8] = {  -2, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}
+--						  mxHP  weap  atk   def    AS   hit  luck  crit   lvl    xp    hp
+--						         +12 +0x3C    +2    +2    +6    +4    +2  +6/4    +1    +1
+relativeBattleAddrs[6] = {0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82}
+relativeBattleAddrs[7] = {0x02, 0x0E, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62}
+relativeBattleAddrs[8] = {  -2, 0x0A, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}
 
 local defenderBattleAddrs = {}
 defenderBattleAddrs[6] = 0x7C -- -4
@@ -44,6 +45,7 @@ defenderBattleAddrs[8] = 0x80
 -- therefore, normal combat can be set in preview or after RNs used
 -- staff can only be set after RN used
 
+-- TODO determine weapon codes for each game
 -- special weapon types
 NORMAL = 1
 BRAVE  = 2
@@ -79,14 +81,14 @@ function P.combatObj:new()
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	o.attacker.class = classes.LORD
-	o.attacker.weapon = NORMAL
+	o.attacker.weaponType = NORMAL
 	o.name = "no name"
 	
-	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	o.defender.class = classes.LORD
-	o.defender.weapon = NORMAL
+	o.defender.weaponType = NORMAL
 	
 	o.player = o.attacker -- alias, sometimes one description makes more sense
 	o.enemy = o.defender
@@ -110,9 +112,9 @@ function P.combatObj:copy()
 	o.name = self.name
 	
 	o.attacker.class  = self.attacker.class
-	o.attacker.weapon = self.attacker.weapon
+	o.attacker.weaponType = self.attacker.weaponType
 	o.defender.class  = self.defender.class
-	o.defender.weapon = self.defender.weapon
+	o.defender.weaponType = self.defender.weaponType
 	
 	o.player = o.attacker
 	o.enemy = o.defender
@@ -149,8 +151,8 @@ function P.combatObj:getMaxHP(isPlayer)
 end
 
 function P.combatObj:isWeaponSpecial(isPlayer)
-	if isPlayer then return self.player.weapon ~= NORMAL end
-	return self.enemy.weapon ~= NORMAL
+	if isPlayer then return self.player.weaponType ~= NORMAL end
+	return self.enemy.weaponType ~= NORMAL
 end
 
 function P.combatObj:data(isAttacker)
@@ -171,10 +173,10 @@ end
 
 function P.combatObj:doubles(isAttacker)
 	return (self.attacker[AS_I] >= self.defender[AS_I] + 4 
-			and isAttacker and self.attacker.weapon ~= HALVE) 
+			and isAttacker and self.attacker.weaponType ~= HALVE) 
 		   or 
 		   (self.defender[AS_I] >= self.attacker[AS_I] + 4 
-		    and not isAttacker and self.defender.weapon ~= HALVE)
+		    and not isAttacker and self.defender.weaponType ~= HALVE)
 end
 
 function P.combatObj:togglePromo(isAttacker)
@@ -182,12 +184,12 @@ function P.combatObj:togglePromo(isAttacker)
 end
 
 function P.combatObj:cycleWeapon(isAttacker)
-	self:data(isAttacker).weapon = self:data(isAttacker).weapon + 1
-	if self:data(isAttacker).weapon > #P.WEAPON_TYPE_STRINGS then
-		self:data(isAttacker).weapon = 1
+	self:data(isAttacker).weaponType = self:data(isAttacker).weaponType + 1
+	if self:data(isAttacker).weaponType > #P.WEAPON_TYPE_STRINGS then
+		self:data(isAttacker).weaponType = 1
 	end
 	
-	print(P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weapon])
+	print(P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weaponType])
 end
 
 function P.combatObj:cycleEnemyClass()
@@ -232,8 +234,8 @@ function P.combatObj:toStrings()
 		if self:doubles(isAttacker) then rLine = rLine .. "x2" 
 		else rLine = rLine .. "  " end	
 		
-		if self:data(isAttacker).weapon ~= NORMAL then
-			rLine = rLine .. " " .. P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weapon]
+		if self:data(isAttacker).weaponType ~= NORMAL then
+			rLine = rLine .. " " .. P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weaponType]
 		end
 		return rLine
 	end
@@ -365,12 +367,12 @@ function P.combatObj:hitEvent(index, isAttacker)
 	retHitEv.RNsConsumed = 0
 	retHitEv.dmg = self:dmg(isAttacker)
 	
-	if self:data(isAttacker).weapon == STONE then
+	if self:data(isAttacker).weaponType == STONE then
 		retHitEv.dmg = 999
 	end
 	
 	-- todo, only matters if eclipse happens after the target is damaged by another unit
-	--if self:data(isAttacker).weapon == HALVE then
+	--if self:data(isAttacker).weaponType == HALVE then
 		--retHitEv.dmg = 999 
 	--end
 	
@@ -444,7 +446,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 			end
 			
 			-- crit/devil priority?
-			if self:data(isAttacker).weapon == DEVIL then
+			if self:data(isAttacker).weaponType == DEVIL then
 				local devilRN = nextRn()
 			
 				if ((31 - self:data(isAttacker)[LUCK_I] > devilRN) and (GAME_VERSION >= 7)) or 
@@ -505,7 +507,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	
 	local function setNext(isAttacker)
 		table.insert(isAttackers, isAttacker)
-		if self:data(isAttacker).weapon == BRAVE then
+		if self:data(isAttacker).weaponType == BRAVE then
 			table.insert(isAttackers, isAttacker)
 		end
 	end
@@ -533,7 +535,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		if isAttacker then
 			hE.dmg = math.min(hE.dmg, rHitSeq.eHP)
 			
-			if self.attacker.weapon == DRAIN then
+			if self.attacker.weaponType == DRAIN then
 				rHitSeq.pHP = math.min(rHitSeq.pHP + hE.dmg, self.attacker[MAX_HP_I])
 			end
 			
@@ -555,7 +557,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		else
 			hE.dmg = math.min(hE.dmg, rHitSeq.pHP)
 			
-			if self.defender.weapon == DRAIN then
+			if self.defender.weaponType == DRAIN then
 				rHitSeq.eHP = math.min(rHitSeq.eHP + hE.dmg, self.defender[MAX_HP_I])
 			end
 			

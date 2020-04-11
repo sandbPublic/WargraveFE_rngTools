@@ -788,22 +788,21 @@ end
 local selectedUnit_i = 1
 local deployedUnits = {}
 
-function P.nextDeployed_i()
-	local next_i = selectedUnit_i + 1
-	if next_i > #deployedUnits then next_i = 1 end
-	return next_i
-end
-
-function P.setToNextDeployed()
-	selectedUnit_i = P.nextDeployed_i()
-end
-
 function P.selectedUnit()
 	return deployedUnits[selectedUnit_i]
 end
 
-function P.nextUnit()
-	return deployedUnits[P.nextDeployed_i()]
+function P.setToNextDeployed(increment)
+	selectedUnit_i = selectedUnit_i + increment
+	
+	while selectedUnit_i > #deployedUnits do
+		selectedUnit_i = selectedUnit_i - #deployedUnits
+	end
+	while selectedUnit_i < 1 do
+		selectedUnit_i = selectedUnit_i + #deployedUnits
+	end
+	
+	print(string.format("Selected %s", P.selectedUnit().name))
 end
 
 

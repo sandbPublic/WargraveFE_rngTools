@@ -38,12 +38,18 @@ local LEVEL_UP_COLORS = {
 	0xFF00FFFF  -- hue 300 magenta
 }
 
-P.selRect_i = P.RN_EVENT_I
-function P.advanceDisplay()
-	P.selRect_i = P.selRect_i + 1 
-	if P.selRect_i > #P.rects then P.selRect_i = 1 end
+local selRect_i = P.RN_EVENT_I
+function P.advanceDisplay(increment)
+	selRect_i = selRect_i + increment
 	
-	print("selecting display: " .. RECT_STRINGS[P.selRect_i])
+	while selRect_i > #P.rects do 
+		selRect_i = selRect_i - #P.rects
+	end
+	while selRect_i < 1 do 
+		selRect_i = selRect_i + #P.rects
+	end
+	
+	print("selecting display: " .. RECT_STRINGS[selRect_i])
 end
 
 P.rectShiftMode = false
@@ -53,7 +59,7 @@ function P.canAlter_rnEvent()
 end
 
 function P.lookingAt(rect_i)
-	return (P.selRect_i == rect_i) and (P.rects[rect_i].opacity > 0)
+	return (selRect_i == rect_i) and (P.rects[rect_i].opacity > 0)
 end
 
 local CHAR_PIXELS = 4
@@ -180,7 +186,7 @@ end
 -- drawing functions are opacity agnostic; set gui.opacity before calling
 function rectObj:drawBackgroundBox()
 	local outlineColor = self.color
-	if (self.ID == P.selRect_i) and P.rectShiftMode then
+	if (self.ID == selRect_i) and P.rectShiftMode then
 		outlineColor = P.flashcolor(outlineColor) -- selected and visible, flash outline
 	end
 	
@@ -339,14 +345,13 @@ function rectObj:draw()
 end
 
 function P.selRect()
-	return P.rects[P.selRect_i]
+	return P.rects[selRect_i]
 end
 
 -- 0,0 is upper left
 local CURSOR_X_ADDR = {0x0202AA1C, 0x0202BBCC, 0x0202BCC4} -- also at +4
 CURSOR_X_ADDR = CURSOR_X_ADDR[GAME_VERSION - 5]
-
-local CURSOR_Y_ADDR = CURSOR_X_ADDR + 2 -- also at +4
+local CURSOR_Y_ADDR = CURSOR_X_ADDR + 2
 
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)

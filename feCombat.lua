@@ -12,6 +12,11 @@ combat = P
 
 
 
+local ATTACKER = true
+local DEFENDER = false
+local PLAYER = true
+local ENEMY = false
+
 -- in the order they appear in RAM
 local MAX_HP_I  = 1 -- for drain
 local WEAPON_I  = 2 -- weapon code
@@ -107,6 +112,8 @@ local function weaponIdToType(id)
 	elseif id == STONE_ID then
 		return STONE
 	end
+	
+	return NORMAL
 end
 
 
@@ -114,27 +121,7 @@ end
 
 P.combatObj = {}
 
-function P.combatObj:new()
-	local o = {}
-	setmetatable(o, self)
-	self.__index = self
-	
-	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	o.attacker.class = classes.LORD
-	o.attacker.weaponType = NORMAL
-	o.name = "no name"
-	
-	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	o.defender.class = classes.LORD
-	o.defender.weaponType = NORMAL
-	
-	o.player = o.attacker -- alias, sometimes one description makes more sense
-	o.enemy = o.defender
-	
-	o.bonusExp = 0 -- 20 for killing thief, 40 for killing boss
-	
-	return o
-end
+-- non modifying functions
 
 function P.combatObj:copy()
 	local o = {}
@@ -162,25 +149,6 @@ function P.combatObj:copy()
 	return o
 end
 
-function P.combatObj:set()
-	for i = 1, NUM_ADDRS do
-		self.attacker[i] = memory.readbyte(battleAddrs(true, i))
-		self.defender[i] = memory.readbyte(battleAddrs(false, i))
-	end
-	
-	self.attacker.weaponType = weaponIdToType(self.attacker[WEAPON_I])
-	self.defender.weaponType = weaponIdToType(self.defender[WEAPON_I])
-	
-	self.player.class = unitData.selectedUnit().class
-	self.name = unitData.selectedUnit().name
-	
-	if classes.PROMOTED[self.player.class] then
-		self:togglePromo(PLAYER)
-	end
-	
-	self.bonusExp = 0
-end
-
 function P.combatObj:getHP(isPlayer)
 	if isPlayer then return self.player[HP_I] end
 	return self.enemy[HP_I]
@@ -201,7 +169,7 @@ function P.combatObj:data(isAttacker)
 	return self.defender
 end
 
-function P.combatObj:staff()
+function P.combatObj:isUsingStaff()
 	return self.attacker[ATTACK_I] == 0xFF -- healing only?
 end
 
@@ -220,28 +188,6 @@ function P.combatObj:doubles(isAttacker)
 		    and not isAttacker and self.defender.weaponType ~= HALVE)
 end
 
-function P.combatObj:togglePromo(isAttacker)
-	self:data(isAttacker)[LEVEL_I] = (self:data(isAttacker)[LEVEL_I] + 19) % 40 + 1
-end
-
-function P.combatObj:cycleWeapon(isAttacker)
-	self:data(isAttacker).weaponType = self:data(isAttacker).weaponType + 1
-	if self:data(isAttacker).weaponType > #P.WEAPON_TYPE_STRINGS then
-		self:data(isAttacker).weaponType = 1
-	end
-	
-	print(P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weaponType])
-end
-
-function P.combatObj:cycleEnemyClass()
-	self.enemy.class = classes.nextRelevantEnemyClass(self.enemy.class)
-end
-
-function P.combatObj:toggleBonusExp()
-	self.bonusExp = (self.bonusExp + 20) % 60
-	print(string.format("bonus xp: %d", self.bonusExp)) 
-end
-
 local function hitToString(hit)
 	if hit <= 100 then return string.format("%3d", hit) end
 	return string.format("%02X", hit)
@@ -250,7 +196,7 @@ end
 function P.combatObj:toStrings()
 	local rStrings = {}
 	rStrings[1] = "          LV.XP Hit Crt HP Dmg"
-	if self:staff() then 
+	if self:isUsingStaff() then 
 		rStrings[1] = "STAFF     LV.XP Hit Crt HP Dmg" 
 	end
 	
@@ -539,7 +485,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 		return rHitSeq
 	end
 	
-	if self:staff() then
+	if self:isUsingStaff() then
 		rHitSeq[1] = self:staffHitEvent(index)
 		isAttackers[1] = true
 		rHitSeq.totalRNsConsumed = 1
@@ -637,6 +583,77 @@ end
 function P.combatObj:RNsConsumedAt(index)
 	return self:hitSeq(index).totalRNsConsumed
 end
+
+
+
+
+-- modifying functions
+
+function P.combatObj:togglePromo(isAttacker)
+	self:data(isAttacker)[LEVEL_I] = (self:data(isAttacker)[LEVEL_I] + 19) % 40 + 1
+end
+
+function P.combatObj:cycleWeapon(isAttacker)
+	self:data(isAttacker).weaponType = self:data(isAttacker).weaponType + 1
+	if self:data(isAttacker).weaponType > #P.WEAPON_TYPE_STRINGS then
+		self:data(isAttacker).weaponType = 1
+	end
+	
+	print(P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weaponType])
+end
+
+function P.combatObj:cycleEnemyClass()
+	self.enemy.class = classes.nextRelevantEnemyClass(self.enemy.class)
+end
+
+function P.combatObj:toggleBonusExp()
+	self.bonusExp = (self.bonusExp + 20) % 60
+	print(string.format("bonus xp: %d", self.bonusExp)) 
+end
+
+function P.combatObj:new()
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
+	
+	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	o.attacker.class = classes.LORD
+	o.attacker.weaponType = NORMAL
+	o.name = "no name"
+	
+	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	o.defender.class = classes.LORD
+	o.defender.weaponType = NORMAL
+	
+	o.player = o.attacker -- alias, sometimes one description makes more sense
+	o.enemy = o.defender
+	
+	o.bonusExp = 0 -- 20 for killing thief, 40 for killing boss
+	
+	return o
+end
+
+function P.combatObj:set()
+	for i = 1, NUM_ADDRS do
+		self.attacker[i] = memory.readbyte(battleAddrs(true, i))
+		self.defender[i] = memory.readbyte(battleAddrs(false, i))
+	end
+	
+	self.attacker.weaponType = weaponIdToType(self.attacker[WEAPON_I])
+	self.defender.weaponType = weaponIdToType(self.defender[WEAPON_I])
+	
+	self.player.class = unitData.selectedUnit().class
+	self.name = unitData.selectedUnit().name
+	
+	if classes.PROMOTED[self.player.class] then
+		self:togglePromo(PLAYER)
+	end
+	
+	self.bonusExp = 0
+end
+
+
+
 
 P.currBattleParams = combat.combatObj:new()
 

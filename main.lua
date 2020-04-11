@@ -86,6 +86,16 @@ local function pressed(key, ctrl)
 	return ctrl.thisFrame[key] and not ctrl.lastFrame[key]
 end
 
+local function held(key, ctrl)
+	ctrl = ctrl or keybCtrl
+	
+	if type(key) == "number" then
+		key = hotkeys[key].key
+	end
+	
+	return ctrl.thisFrame[key]
+end
+
 local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
 
@@ -181,10 +191,13 @@ while true do
 
 		if pressed(6) then rnEvent.suggestedPermutation() end
 		
-		if pressed(8) then -- advance to next deployed
-			unitData.setToNextDeployed()
-			print(string.format("Selected %-10.10s (next %s)", unitData.selectedUnit().name, 
-				unitData.nextUnit().name))
+		if held(8) then -- hold down, press left/right
+			if pressed("left", gameCtrl) then
+				unitData.setToNextDeployed(-1)
+			end
+			if pressed("right", gameCtrl) then
+				unitData.setToNextDeployed(1)
+			end
 		end
 		
 		if pressed(9) then -- quick toggle visibility
@@ -195,7 +208,14 @@ while true do
 			end
 		end
 		
-		if pressed(10) then feGUI.advanceDisplay() end
+		if held(10) then -- hold down, then press left/right
+			if pressed("left", gameCtrl) then
+				feGUI.advanceDisplay(-1) 
+			end
+			if pressed("right", gameCtrl) then
+				feGUI.advanceDisplay(1) 
+			end
+		end
 				
 		if pressed(11) then rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass) end
 		
@@ -209,7 +229,7 @@ while true do
 			printStringArray(unitData.selectedUnit():statData_strings())
 		end
 		
-		if keybCtrl.thisFrame[hotkeys[13].key] then -- hold down, then press direction
+		if held(13) then -- hold down, then press direction
 			if pressed("left", gameCtrl) then
 				currentRNG:moveRNpos(-rnStepSize)
 				rnEvent.update_rnEvents(1)
@@ -259,7 +279,7 @@ while true do
 	
 		if pressed(6) then rnEvent.searchFutureOutcomes() end
 	
-		if keybCtrl.thisFrame[hotkeys[8].key] then -- hold down, then press L/R
+		if held(8) then -- hold down, then press L/R
 			if pressed("L", gameCtrl) then
 				rnEvent.adjustCombatWeight(-0.5)
 			end		

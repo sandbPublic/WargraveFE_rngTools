@@ -3,7 +3,7 @@ delete last rnEvent
 undo rnEvent deletion
 Y
 register new rnEvent
-cycle weapon type (hold B for enemy)
+cycle weapon type, hold B for enemy
 U
 toggle rnEvent.combat
 toggle rnEvent.lvlUp
@@ -20,13 +20,13 @@ H
 switch to 2ndary functions
 switch to primary functions
 J
-select next deployed unit
+hold, <> change selected unit
 hold, L/R change combat weight
 K
 toggle window visibility
 move window (<^v>LR)
 L
-next display mode
+hold, <> display mode
 print battle stat
 B
 cycle enemy class

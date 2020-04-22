@@ -29,11 +29,11 @@ L
 hold, <> display mode
 print battle stat
 B
-cycle enemy class
+change afa/metis
 switch RNG to 2ndary
 N
 save stats
 print rnEvent diagnostic
 M
 hold, <> move rn, ^v change step
-change afa/metis
+cycle enemy class

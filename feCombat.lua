@@ -64,12 +64,13 @@ end
 
 
 -- TODO devil damage incorrectly capped by enemy current hp?
-local BRAVE_S_ID   = {0,0,0,0,0,07,11,18}
+local BRAVE_S_ID   = {0,0,0,0,0,07,11,18} -- 18 lancereaver??
 local BRAVE_L_ID   = {0,0,0,0,0,21,25,25}
 local BRAVE_A_ID   = {0,0,0,0,0,31,35,35}
 local BRAVE_B_ID   = {0,0,0,0,0,44,49,50}
 local DEVIL_A_ID   = {0,0,0,0,0,37,39,39}
 local NOSFERATU_ID = {0,0,0,0,0,64,70,71}
+local RUNESWORD_ID = {0,0,0,0,0,00,00,17} -- TODO look up in FE6/FE7
 local ECLIPSE_ID   = {0,0,0,0,0,65,71,72}
 local POISON_S_ID  = {0,0,0,0,0,-1,08,08}
 local POISON_L_ID  = {0,0,0,0,0,-1,24,24}
@@ -98,7 +99,7 @@ local function weaponIdToType(id)
 		return BRAVE
 	elseif id == DEVIL_A_ID[GAME_VERSION] then
 		return DEVIL
-	elseif id == NOSFERATU_ID[GAME_VERSION] then
+	elseif id == NOSFERATU_ID[GAME_VERSION] or id == RUNESWORD_ID[GAME_VERSION] then
 		return DRAIN
 	elseif id == ECLIPSE_ID[GAME_VERSION] then
 		return HALVE

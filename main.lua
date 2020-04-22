@@ -217,7 +217,7 @@ while true do
 			end
 		end
 				
-		if pressed(11) then rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass) end
+		if pressed(11) then unitData.selectedUnit():toggleAfas() end
 		
 		if pressed(12) then -- save battle params & stats
 			combat.currBattleParams:set()
@@ -317,7 +317,7 @@ while true do
 		
 		if pressed(12) then rnEvent.diagnostic() end
 		
-		if pressed(13) then unitData.selectedUnit():toggleAfas() end
+		if pressed(13) then rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass) end
 	end
 	
 	feGUI.drawRects()

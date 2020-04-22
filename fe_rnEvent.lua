@@ -306,10 +306,11 @@ function rnEventObj:resultString()
 			self:levelScore())
 	end
 	if self.dig then
+		rString = rString .. string.format(" dig %02s ", self.unit.stats[7])
 		if self:digSucceed() then -- luck > rn
-			rString = rString .. " dig success!"
+			rString = rString .. "success!"
 		else 
-			rString = rString .. " dig fail"
+			rString = rString .. "fail"
 		end
 	end
 	return rString
@@ -385,13 +386,15 @@ end
 -- if healing exp is relevant, +5 if player hp is less than max
 function rnEventObj:evaluation_fn(printV)
 	local score = 0
-	local printStr = string.format("  %2d:", self.ID)
+	local printStr = string.format(" %2d:", self.ID)
 	
 	-- could have empty combat if enemy HP == 0 e.g. another unit killed this enemy this phase
 	if self.hasCombat and self.mHitSeq[1] then 
 		if self.mHitSeq[1].action == "STF-X" then
-			score = score + 50
-			if printV then printStr = printStr .. " staff hit" end
+			local hitValue = 50*self.combatWeight + 15*self.mExpValueFactor -- exp depends on staff
+			score = score + hitValue
+			self.mHitSeq.expGained = 0
+			if printV then printStr = printStr .. string.format(" staff hit %02d", hitValue) end
 		else			
 			local eHPstartFrac = self.enemyHPstart/self.batParams:getMaxHP(false)
 			local eHPendFrac = self.mHitSeq.eHP/self.batParams:getMaxHP(false)
@@ -405,7 +408,7 @@ function rnEventObj:evaluation_fn(printV)
 				+ self.mHitSeq.expGained*self.mExpValueFactor
 			
 			printStr = printStr .. string.format(
-				" eHP %d%%->%d%% (nonlinear %d%%), pHP %d%%->%d%% (nonlinear %d%%), exp %dx%.2f", 
+				" eHP %d%%->%d%% nl %d%%, pHP %d%%->%d%% nl %d%%, exp %dx%.2f", 
 				eHPstartFrac * 100, 
 				eHPendFrac * 100,
 				-lossInEnemyValue * 100,
@@ -727,6 +730,12 @@ end
 
 function P.setToPerm(p_index)
 	local currPerm = perms[p_index]
+	if not currPerm then
+		print("setToPerm failed")
+		print(p_index)
+		return
+	end
+	
 	local count = #eventList
 	
 	local lowestSwap = count+1 -- don't need to update from 1 to lSwap-1

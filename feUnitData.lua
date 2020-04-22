@@ -20,9 +20,10 @@ local CLASSES = {}
 local PROMOTIONS = {}
 local PROMOTED_AT = {}
 local WILL_PROMOTE_AT = {} -- for dynamic stat weights, some units will not promote at 10
+local WILL_END_AT = {} -- for dynamic stat weights, units may not reach lvl 20 by endgame
 
-local DEFAULT_GROWTH_WEIGHTS = {20, 40, 20, 50, 30, 10, 10} 
--- speed>str>def>skl=hp>res=luck
+local DEFAULT_GROWTH_WEIGHTS = {20, 45, 15, 60, 30, 10, 10} 
+-- speed>str>def>hp>skl>res=luck
 -- these values are not normalized: weights of {2, 4, 2, 5, 3, 1, 1} 
 -- make a unit's levels considered 10% as important
 -- this set of values are used to scale avgLevelValue for expValueFactor()
@@ -38,6 +39,7 @@ local function initializeCommonValues()
 		BOOSTERS[unit_i] = {0, 0, 0, 0, 0, 0, 0}
 		PROMOTED_AT[unit_i] = 0
 		WILL_PROMOTE_AT[unit_i] = 10
+		WILL_END_AT[unit_i] = 20
 	end
 end
 
@@ -719,16 +721,34 @@ if GAME_VERSION == 8 then
 	DEPLOYED[INDEX_OF_NAME["Ephraim"]] = true
 	DEPLOYED[INDEX_OF_NAME["Forde"]] = true
 	DEPLOYED[INDEX_OF_NAME["Cormag"]] = true
-	GROWTH_WEIGHTS[INDEX_OF_NAME["Lute"]] = {20, 60, 20, 40, 30, 10, 10} -- prioritize warp range
+	DEPLOYED[INDEX_OF_NAME["L\'Arachel"]] = true
+	DEPLOYED[INDEX_OF_NAME["Ewan"]] = true
+	DEPLOYED[INDEX_OF_NAME["Tethys"]] = true
+	DEPLOYED[INDEX_OF_NAME["Syrene"]] = true
+	
+	GROWTH_WEIGHTS[INDEX_OF_NAME["L\'Arachel"]] = {30, 60, 05, 19, 30, 10, 10}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
+	
 	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
+	BOOSTERS[INDEX_OF_NAME["Neimi"]] = {0, 0, 0, 0, 2, 0, 2}
+	BOOSTERS[INDEX_OF_NAME["Cormag"]] = {7, 0, 2, 2, 2, 2, 0}
+	
 	PROMOTED_AT[INDEX_OF_NAME["Lute"]] = 12
-	WILL_PROMOTE_AT[INDEX_OF_NAME["Ephraim"]] = 20
+	PROMOTED_AT[INDEX_OF_NAME["Neimi"]] = 10
+	PROMOTED_AT[INDEX_OF_NAME["Cormag"]] = 16
+	PROMOTED_AT[INDEX_OF_NAME["Forde"]] = 16
+	PROMOTED_AT[INDEX_OF_NAME["Ephraim"]] = 18
+	
+	WILL_END_AT[INDEX_OF_NAME["Neimi"]] = 10
+	WILL_END_AT[INDEX_OF_NAME["Lute"]] = 15
+	WILL_END_AT[INDEX_OF_NAME["Ephraim"]] = 10	
+	WILL_END_AT[INDEX_OF_NAME["Forde"]] = 15
+	WILL_END_AT[INDEX_OF_NAME["L\'Arachel"]] = 5
 end
 
 -- determine if healer is present manually
-P.HEALER_DEPLOYED = true
-local AFAS_I = 0
+P.HEALER_DEPLOYED = false
+local AFAS_I = INDEX_OF_NAME["Cormag"] -- INDEX_OF_NAME["Ewan"]
 
 
  
@@ -821,6 +841,8 @@ function unitObj:willLevelStats(HP_RN_i)
 			ret[stat_i] = 1 -- stat grows without afa's
 		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and self.hasAfas then
 			ret[stat_i] = 2 -- stat grows because of afa's
+		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and AFAS_I == 0 then
+			ret[stat_i] = -2 -- stat would grow with afa's
 		else
 			ret[stat_i] = 0 -- stat doesn't grow
 		end
@@ -840,6 +862,8 @@ function unitObj:levelUpProcs_string(HP_RN_i)
 		elseif proc == 2 then
 			seq = seq .. "!" -- grows this stat because of Afa's
 			noStatWillRise = false
+		elseif proc == -2 then
+			seq = seq .. "?" -- stat would grow with afa's
 		elseif proc == -1 then
 			seq = seq .. "_" -- can't grow stat
 			noStatIsCapped = false
@@ -987,8 +1011,10 @@ function unitObj:toggleAfas()
 
 	if self.hasAfas then
 		str = str .. "removed from "
+		AFAS_I = 0
 	else
 		str = str .. "applied to "
+		AFAS_I = INDEX_OF_NAME[self.name]
 	end
 	print(str .. self.name)
 	
@@ -998,41 +1024,44 @@ end
 -- adjusts preset stat weights downward when stat is likely to cap
 function unitObj:setDynamicWeights()
 	self.dynamicWeights = {0, 0, 0, 0, 0, 0, 0}
+	if self.stats[LEVEL_I] >= 20 then return end
 	
-	local levelsTil20 = 20 - self.stats[LEVEL_I]
-	if levelsTil20 <= 0 then return end
+	local levelsTilEnd = self.willEndAt - self.stats[LEVEL_I]
+	if self.canPromote then
+		levelsTilEnd = self.willPromoteAt - self.stats[LEVEL_I]
+	end
 	
 	for stat_i = 1, 7 do
-		local procsTilStatCap = classes.CAPS[self.class][stat_i] - self.stats[stat_i]
+		local gainsTilStatCap = classes.CAPS[self.class][stat_i] - self.stats[stat_i]
 		
 		-- multiply by 1 - P(reaching/exceeding cap even if not gaining stat this level)
 		-- if no chance to reach cap if not leveling, full weight
 		-- if 100% chance (ie at cap), no weight
 		
 		-- 1 - P(reaching/exceeding cap | not gaining stat this level) =
-		-- 1 - (1 - P(less than cap | gained levelsTil20 - 1 levels)) =
-		-- P(less than cap | gained levelsTil20 - 1 levels)
+		-- 1 - (1 - P(less than cap | gained levelsTilEnd - 1 levels)) =
+		-- P(less than cap | gained levelsTilEnd - 1 levels)
 		
-		local probCapUnreachableIfNotProcing = 
-			cumulativeBinDistrib(procsTilStatCap-1, levelsTil20-1, self.growths[stat_i]/100)
+		local probWontReachCapIfNotGaining = 
+			cumulativeBinDistrib(gainsTilStatCap-1, levelsTilEnd-1, self.growths[stat_i]/100)
 		
 		-- if more likely to hit promoted class cap than unpromoted, use that probability
 		if self.canPromote then
-			local procsTilStatCap_P = classes.CAPS[self.promotion][stat_i] 
+			local gainsTilStatCap_P = classes.CAPS[self.promotion][stat_i] 
 				- self.stats[stat_i] - classes.PROMO_GAINS[self.promotion][stat_i]
 			
 			-- may need levels to even reach promotion
-			local levelsTil20_P = 19 + math.max(self.willPromoteAt - self.stats[LEVEL_I], 0)
+			local levelsTilEnd_P = self.willEndAt - 1 + math.max(self.willPromoteAt - self.stats[LEVEL_I], 0)
 			
-			probCapUnreachableIfNotProcing_P = 
-				cumulativeBinDistrib(procsTilStatCap_P-1, levelsTil20_P-1, self.growths[stat_i]/100)
+			local probWontReachCapIfNotGaining_P = 
+				cumulativeBinDistrib(gainsTilStatCap_P-1, levelsTilEnd_P-1, self.growths[stat_i]/100)
 				
-			if probCapUnreachableIfNotProcing > probCapUnreachableIfNotProcing_P then
-				probCapUnreachableIfNotProcing = probCapUnreachableIfNotProcing_P
+			if probWontReachCapIfNotGaining > probWontReachCapIfNotGaining_P then
+				probWontReachCapIfNotGaining = probWontReachCapIfNotGaining_P
 			end
 		end
 		
-		self.dynamicWeights[stat_i] = self.growthWeights[stat_i] * probCapUnreachableIfNotProcing
+		self.dynamicWeights[stat_i] = self.growthWeights[stat_i] * probWontReachCapIfNotGaining
 	end
 end
 
@@ -1072,6 +1101,7 @@ function unitObj:new(unit_i)
 	end
 	o.canPromote = o.class ~= o.promotion
 	o.willPromoteAt = WILL_PROMOTE_AT[unit_i]
+	o.willEndAt = WILL_END_AT[unit_i]
 	o.hasAfas = (unit_i == AFAS_I)
 	
 	o:setStats()

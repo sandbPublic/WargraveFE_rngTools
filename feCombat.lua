@@ -63,7 +63,6 @@ end
 
 
 
--- TODO devil damage incorrectly capped by enemy current hp?
 local BRAVE_S_ID   = {0,0,0,0,0, 07, 11, 11}
 local BRAVE_L_ID   = {0,0,0,0,0, 21, 25, 25}
 local BRAVE_A_ID   = {0,0,0,0,0, 31, 35, 35}
@@ -76,8 +75,8 @@ local POISON_S_ID  = {0,0,0,0,0, -1, 08, 08}
 local POISON_L_ID  = {0,0,0,0,0, -1, 24, 24}
 local POISON_A_ID  = {0,0,0,0,0, 30, 34, 34} -- only poison item in FE6?
 local POISON_B_ID  = {0,0,0,0,0, -1, 47, 48}
-local POISON_CLAW_ID  = 175  -- FE8 only
-local POISON_TALON_ID = 176  -- FE8 only
+local POISON_CLAW_ID  = 175 -- FE8 only
+local POISON_TALON_ID = 176 -- FE8 only
 local STONE_ID        = 181 -- FE8 only
 
 -- special weapon types
@@ -471,7 +470,7 @@ end
 -- variable number of events, 1 to 6
 -- X hit events, expGained, lvlUp, totalRNsConsumed, pHP, eHP
 -- can carry enemy's hp from previous combat
-function P.combatObj:hitSeq(index, carriedEnemyHP)
+function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 	local rHitSeq = {} -- numeric keys are hit events
 	local isAttackers = {} -- unnecessary to return with current functionality
 	rHitSeq.expGained = 1
@@ -487,7 +486,7 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	end
 	
 	if self:isUsingStaff() then
-		rHitSeq[1] = self:staffHitEvent(index)
+		rHitSeq[1] = self:staffHitEvent(rnOffset)
 		isAttackers[1] = true
 		rHitSeq.totalRNsConsumed = 1
 		return rHitSeq
@@ -514,23 +513,23 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 	end
 	
 	for ev_i, isAttacker in ipairs(isAttackers) do
-		local hE = self:hitEvent(index, isAttacker)
+		local hE = self:hitEvent(rnOffset, isAttacker)
 		
 		rHitSeq[ev_i] = hE
-		index = index + hE.RNsConsumed
+		rnOffset = rnOffset + hE.RNsConsumed
 		rHitSeq.totalRNsConsumed = rHitSeq.totalRNsConsumed + hE.RNsConsumed
 		
 		if isAttacker then
-			hE.dmg = math.min(hE.dmg, rHitSeq.eHP)
+			if hE.action ~= "DEV" then
+				hE.dmg = math.min(hE.dmg, rHitSeq.eHP)
+				rHitSeq.eHP = rHitSeq.eHP - hE.dmg
+			else
+				hE.dmg = math.min(hE.dmg, rHitSeq.pHP)
+				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
+			end
 			
 			if self.attacker.weaponType == DRAIN then
 				rHitSeq.pHP = math.min(rHitSeq.pHP + hE.dmg, self.attacker[MAX_HP_I])
-			end
-			
-			if hE.action == "DEV" then
-				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
-			else
-				rHitSeq.eHP = rHitSeq.eHP - hE.dmg
 			end
 			
 			if rHitSeq.eHP <= 0 then  -- enemy died, combat over
@@ -543,18 +542,18 @@ function P.combatObj:hitSeq(index, carriedEnemyHP)
 				rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
 			end	
 		else
-			hE.dmg = math.min(hE.dmg, rHitSeq.pHP)
+			if hE.action ~= "DEV" then
+				hE.dmg = math.min(hE.dmg, rHitSeq.pHP)
+				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
+			else
+				hE.dmg = math.min(hE.dmg, rHitSeq.eHP)
+				rHitSeq.eHP = rHitSeq.eHP - hE.dmg
+			end
 			
 			if self.defender.weaponType == DRAIN then
 				rHitSeq.eHP = math.min(rHitSeq.eHP + hE.dmg, self.defender[MAX_HP_I])
 			end
-			
-			if hE.action == "DEV" then
-				rHitSeq.eHP = rHitSeq.eHP - hE.dmg
-			else
-				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
-			end
-			
+
 			rHitSeq[ev_i].action = hE.action:lower()
 			
 			if rHitSeq.pHP <= 0 then  -- player died, combat over
@@ -581,8 +580,8 @@ function P.hitSeq_string(argHitSeq)
 	return hitString
 end
 
-function P.combatObj:RNsConsumedAt(index)
-	return self:hitSeq(index).totalRNsConsumed
+function P.combatObj:RNsConsumedAt(rnOffset)
+	return self:hitSeq(rnOffset).totalRNsConsumed
 end
 
 

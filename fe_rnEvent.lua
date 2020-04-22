@@ -108,8 +108,8 @@ function rnEventObj:diagnostic()
 		end
 		
 		print(str)
-		print(string.format("expGained=%2d eHP=%2d pHP=%2d", 
-			self.mHitSeq.expGained, self.mHitSeq.eHP, self.mHitSeq.pHP))
+		print(string.format("expGained=%2d pHP=%2d eHP=%2d", 
+			self.mHitSeq.expGained, self.mHitSeq.pHP, self.mHitSeq.eHP))
 			
 		strA = ""
 		strD = ""

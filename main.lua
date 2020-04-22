@@ -16,7 +16,7 @@ local function printStringArray(array)
 	end
 end
 
-local primaryFunctions = true
+local usingPrimaryFunctions = true
 
 -- TYUIOP
 --   HJKL
@@ -50,7 +50,7 @@ local function printHelp()
 	print("")
 
 	for _, hotkey in ipairs(hotkeys) do
-		if primaryFunctions then
+		if usingPrimaryFunctions then
 			print(hotkey.message1)
 		else
 			print(hotkey.message2)
@@ -74,6 +74,14 @@ gameCtrl.lastFrame = {}
 local function updateCtrl(ctrl, currFrame)
 	ctrl.lastFrame = ctrl.thisFrame
 	ctrl.thisFrame = currFrame
+	
+	ctrl.anythingHeld = false
+	for _, hotkey in ipairs(hotkeys) do
+		if ctrl.thisFrame[hotkey.key] then
+			ctrl.anythingHeld = true
+			return
+		end
+	end
 end
 
 local function pressed(key, ctrl)
@@ -128,7 +136,9 @@ while true do
 		if gameCtrl.thisFrame.R 	then feGUI.selRect():shift(0, 0,  0.04) end
 	end
 	
-	if feGUI.canAlter_rnEvent() then -- alter burns, selected, swap, toggle swapping
+	-- alter burns, selected, swap, toggle swapping
+	-- disable if using a keyboard hotkey which may combine with game controls 
+	if feGUI.canAlter_rnEvent() and not keybCtrl.anythingHeld then
 		-- change burns
 		if pressed("left", gameCtrl) then
 			rnEvent.changeBurns(-rnStepSize)
@@ -157,17 +167,18 @@ while true do
 			rnEvent.swap() -- updates self
 		end
 		
+		-- create/remove dependency
 		if pressed("start", gameCtrl) then
 			rnEvent.toggleDependency()
 		end
 	end
 	
 	if pressed(7) then -- print help, switch functions
-		primaryFunctions = not primaryFunctions
+		usingPrimaryFunctions = not usingPrimaryFunctions
 		printHelp()
 	end
 	
-	if primaryFunctions then
+	if usingPrimaryFunctions then
 		if pressed(1) then rnEvent.deleteLastEvent() end
 		
 		if pressed(2) then

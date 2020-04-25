@@ -1,10 +1,5 @@
--- consists of combat, level-up, and/or dig preceded by burns
+-- consists of combat, level-up, and/or FE8 dig preceded by burns
 -- rnEvents are registered and manipulated (+/-burns and swapping) to seek outcomes
-
--- Enemy phase behavior no longer supported.
--- Value provided doesn't justify maintaining feature,
--- as enemy phase events can't be permuted and the burns are unpredictable.
--- Instead implement rn advancing to enable fast enemy phase trials.
 
 require("feCombat")
 
@@ -30,264 +25,29 @@ local function limitSel_rnEvent_i()
 	if sel_rnEvent_i < 1 then sel_rnEvent_i = 1 end 
 end
 
-local rnEventObj = {}
-
-function rnEventObj:setStats()
-	self.unit:setStats()
-	self.maxHP = self.unit.stats[1]
-	self.mExpValueFactor = self.unit:expValueFactor()
-end
-
 local DEFAULT_PHP_WEIGHT = 100
 local DEFAULT_EHP_WEIGHT = 50
 
--- INDEX FROM 1
-function rnEventObj:new(batParams, sel_Unit_i)
-	batParams = batParams or combat.currBattleParams
-	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
-	
-	local o = {}
-	setmetatable(o, self)
-	self.__index = self
-	 
-	o.ID = #eventList+1 -- order in which rnEvents were registered
-	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
-	
-	o.unit = unitData.selectedUnit()
-	o:setStats() -- todo do we get enemy stats on EP?
-	o.batParams = batParams:copy()
-	
-	o.hasCombat = true -- most rnEvents will be combats without levels or digs
-	o.lvlUp = false
-	
-	if classes.isNoncombat(o.unit.class) then
-		o.hasCombat = false
-		o.lvlUp = true
-	end
-	
-	o.dig = false
-	
-	-- as units ram their caps (or have the potential to), the value of their levels drops
-	o.mExpValueFactor = o.unit:expValueFactor()
-	o.pHPweight = DEFAULT_PHP_WEIGHT
-	o.eHPweight = DEFAULT_EHP_WEIGHT
-	
-	o.enemyID = 0 -- for units attacking the same enemyID
-	o.enemyHPstart = 0 -- if a previous unit has damaged this enemy. HP at start of this rnEvent
-	o.enemyHPend = 0 -- HP at end of this rnEvent
-	-- TODO player HP (from multi combat due to dance, or EP)
-	
-	o.burns = 0
-	o.startRN_i = 0
-	o.postBurnsRN_i = 0
-	o.mHitSeq = {} -- avoid confusion between member variable and function in combatObj
-	o.postCombatRN_i = 0
-	o.nextRN_i = 0
-	o.length = 0
-	o.eval = 0
-	
-	-- cache length and eval
-	-- use this for optimized fast updates when searching outcomes
-	-- cache indexed by *postBurnsRN_i* rn_i, not startRN_i
-	-- 2nd index is enemyHP at start so eHP passing will work
-	o.cache = nil
-	
-	return o
+
+
+
+-- non modifying functions
+
+function P.get(index)
+	index = index or sel_rnEvent_i
+	return eventList[index]
 end
 
-function P.diagnostic()
-	if #eventList > 0 then
-		P.get():diagnostic()
-	end
-end
-
-function rnEventObj:diagnostic()
-	print()
-	print(string.format("Diagnosis of rnEvent %d", self.ID))
-	
-	if self.hasCombat then
-		for _, str_ in ipairs(self.batParams:toStrings()) do print(str_) end
-		
-		local str = ""
-		for _, hitEvent in ipairs(self.mHitSeq) do
-			local event = hitEvent
-			str = str .. hitEvent.action .. string.format(" %2d dmg, ", hitEvent.dmg)
-		end
-		
-		print(str)
-		print(string.format("expGained=%2d pHP=%2d eHP=%2d", 
-			self.mHitSeq.expGained, self.mHitSeq.pHP, self.mHitSeq.eHP))
-			
-		strH = ""
-		strA = ""
-		strD = ""
-		for data_i, str_ in ipairs(combat.COMBAT_RAM_FIELD_NAMES) do
-			strH = strH .. str_ .. " "
-			strA = strA .. string.format("%3d ", self.batParams.attacker[data_i])
-			strD = strD .. string.format("%3d ", self.batParams.defender[data_i])
-		end
-		print(strH)
-		print(strA)
-		print(strD)
-	end
-	
-	print(string.format("Eval %5.2f", self.eval))
-	
-	if self.cache then
-		for c_i = self.cache.min_i, self.cache.max_i do
-			if self.cache[c_i] and self.cache[c_i][self.enemyHPstart] then
-				--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHPstart].eval))
-			end
+function P.getByID(vID)
+	for _, event in ipairs(eventList) do
+		if event.ID == vID then
+			return event
 		end
 	end
-	
-	print("dependencies, stats")
-	print(self.comesAfter)
-	print(self.unit.stats)
+	print("ID not found: " .. tostring(vID))
 end
 
--- assumes first index returns a table
-function rnEventObj:writeToCache()
-	self.cache.count = self.cache.count + 1
-	if self.cache.min_i > self.postBurnsRN_i then
-		self.cache.min_i = self.postBurnsRN_i
-	end
-	if self.cache.max_i < self.postBurnsRN_i then
-		self.cache.max_i = self.postBurnsRN_i
-	end
-	
-	self.cache[self.postBurnsRN_i][self.enemyHPstart] = {}
-	self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength = self.length - self.burns
-	self.cache[self.postBurnsRN_i][self.enemyHPstart].eval = self.eval
-	self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend = self.enemyHPend
-end
-
-function rnEventObj:printCache()
-	print()
-	print(string.format("%2d cache, size: %d, %4d - %4d", 
-		self.ID, self.cache.count, self.cache.min_i, self.cache.max_i))
-	
-	if self.cache.count == 0 then return end
-	
-	for c_i = self.cache.min_i, self.cache.max_i do
-		if self.cache[c_i] then
-			for eHP = 0, 60 do
-				if self.cache[c_i][eHP] then
-					
-					if eHP == 0 then
-						print(string.format("%4d-%4d  eHP 0",
-							c_i, c_i+self.cache[c_i][eHP].postBurnLength))
-					else
-						print(string.format("%4d-%4d  eval %3d  eHP %2d  eHPend %2d",
-							c_i, c_i+self.cache[c_i][eHP].postBurnLength,
-							self.cache[c_i][eHP].eval, eHP,
-							self.cache[c_i][eHP].enemyHPend))
-					end
-				end
-			end
-		end
-	end
-end
-
-function rnEventObj:readFromCache()
-	self.length = self.burns + self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength
-	self.nextRN_i = self.startRN_i + self.length
-	self.eval = self.cache[self.postBurnsRN_i][self.enemyHPstart].eval
-	self.enemyHPend = self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend
-end
-
-function rnEventObj:setStart(rnEvent_i)
-	if rnEvent_i == 1 then 
-		self.startRN_i = rns.rng1.pos
-	else
-		self.startRN_i = eventList[rnEvent_i-1].nextRN_i
-	end
-end
-
-function rnEventObj:setEnemyHP(rnEvent_i)
-	if not self.hasCombat then 
-		self.enemyHPstart = 0 
-		return 
-	end
-
-	self.enemyHPstart = self.batParams:getHP(false)
-		
-	-- check eHP from previous combat(s) if applicable
-	if self.enemyID ~= 0 then
-		for prevCombat_i = rnEvent_i-1, 1, -1 do
-			local prior_rnEvent = eventList[prevCombat_i]
-		
-			if prior_rnEvent.enemyID == self.enemyID and prior_rnEvent.hasCombat then
-				self.enemyHPstart = prior_rnEvent.enemyHPend
-				return
-			end
-		end
-	end
-end
-
--- assumes previous rnEvents have updates for optimization
-function rnEventObj:updateFull()
-	if self.hasCombat then
-		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
-		
-		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
-		
-		self.enemyHPend = self.mHitSeq.eHP
-	else
-		self.postCombatRN_i = self.postBurnsRN_i
-	end
-	self.length = self.postCombatRN_i - self.startRN_i
-	
-	if self:levelDetected() then
-		self.length = self.length + 7 -- IF EMPTY LEVEL REROLLS, MORE THAN 7!!
-	end
-	
-	if self.dig then
-		self.length = self.length + 1 -- FE8, 6&7 use secondary rn
-	end
-	
-	self.nextRN_i = self.startRN_i + self.length
-	
-	self.eval = self:evaluation_fn()
-end
-
--- uses cache if valid
--- skip reconstructing combat, eval, etc
-function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
-	if rnEvent_i then -- if no ordering given, do not update startRN_i, used for searchFutureOutcomes
-		self:setStart(rnEvent_i)
-	else 
-		rnEvent_i = 1
-	end
-	
-	self.postBurnsRN_i = self.startRN_i + self.burns
-	self:setEnemyHP(rnEvent_i)
-	
-	if cacheUpdateOnly then
-		if self.cache[self.postBurnsRN_i] then
-			if self.cache[self.postBurnsRN_i][self.enemyHPstart] then
-				self:readFromCache()
-			else
-				self:updateFull()
-				self:writeToCache()
-			end
-		else
-			self:updateFull()
-			self.cache[self.postBurnsRN_i] = {}
-			self:writeToCache()
-		end
-	else
-		self:updateFull()
-	end
-end
-
-function P.update_rnEvents(start_i, cacheUpdateOnly)
-	start_i = start_i or sel_rnEvent_i
-	
-	for rnEvent_i = start_i, #eventList do
-		eventList[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
-	end
-end
+local rnEventObj = {}
 
 -- auto-detected via experience gain, but can be set to true manually
 function rnEventObj:levelDetected()
@@ -449,6 +209,14 @@ function rnEventObj:evaluation_fn(printV)
 	return score
 end
 
+function P.totalEvaluation()
+	local score = 0	
+	for _, event in ipairs(eventList) do
+		score = score + event.eval
+	end
+	return score
+end
+
 -- quickly find how many burns needed to improve result of selected rnEvent
 -- for rn burning gameplay
 function P.searchFutureOutcomes(event_i)
@@ -488,6 +256,234 @@ function P.searchFutureOutcomes(event_i)
 	P.update_rnEvents(1)
 end
 
+function P.diagnostic()
+	if #eventList > 0 then
+		P.get():diagnostic()
+	end
+end
+
+function rnEventObj:diagnostic()
+	print()
+	print(string.format("Diagnosis of rnEvent %d", self.ID))
+	
+	if self.hasCombat then
+		for _, str_ in ipairs(self.batParams:toStrings()) do print(str_) end
+		
+		local str = ""
+		for _, hitEvent in ipairs(self.mHitSeq) do
+			local event = hitEvent
+			str = str .. hitEvent.action .. string.format(" %2d dmg, ", hitEvent.dmg)
+		end
+		
+		print(str)
+		print(string.format("expGained=%2d pHP=%2d eHP=%2d", 
+			self.mHitSeq.expGained, self.mHitSeq.pHP, self.mHitSeq.eHP))
+			
+		strH = ""
+		strA = ""
+		strD = ""
+		for data_i, str_ in ipairs(combat.COMBAT_RAM_FIELD_NAMES) do
+			strH = strH .. str_ .. " "
+			strA = strA .. string.format("%3d ", self.batParams.attacker[data_i])
+			strD = strD .. string.format("%3d ", self.batParams.defender[data_i])
+		end
+		print(strH)
+		print(strA)
+		print(strD)
+	end
+	
+	print(string.format("Eval %5.2f", self.eval))
+	
+	if self.cache then
+		for c_i = self.cache.min_i, self.cache.max_i do
+			if self.cache[c_i] and self.cache[c_i][self.enemyHPstart] then
+				--print(string.format("Cache eval %5.2f", self.cache[c_i][self.enemyHPstart].eval))
+			end
+		end
+	end
+	
+	print("dependencies, stats")
+	print(self.comesAfter)
+	print(self.unit.stats)
+end
+
+function rnEventObj:printCache()
+	print()
+	print(string.format("%2d cache, size: %d, %4d - %4d", 
+		self.ID, self.cache.count, self.cache.min_i, self.cache.max_i))
+	
+	if self.cache.count == 0 then return end
+	
+	for c_i = self.cache.min_i, self.cache.max_i do
+		if self.cache[c_i] then
+			for eHP = 0, 60 do
+				if self.cache[c_i][eHP] then
+					
+					if eHP == 0 then
+						print(string.format("%4d-%4d  eHP 0",
+							c_i, c_i+self.cache[c_i][eHP].postBurnLength))
+					else
+						print(string.format("%4d-%4d  eval %3d  eHP %2d  eHPend %2d",
+							c_i, c_i+self.cache[c_i][eHP].postBurnLength,
+							self.cache[c_i][eHP].eval, eHP,
+							self.cache[c_i][eHP].enemyHPend))
+					end
+				end
+			end
+		end
+	end
+end
+
+-- rns blank to be colorized
+function P.toStrings(isColored)
+	local rStrings = {}
+	
+	if #eventList <= 0 then
+		rStrings[1] = "rnEvents empty"
+		return rStrings
+	end
+	
+	for rnEvent_i, event in ipairs(eventList) do
+		table.insert(rStrings, event:headerString(rnEvent_i))
+		local prefix = string.format("%5d ", event.startRN_i % 100000)
+		if isColored then
+			table.insert(rStrings, prefix)
+		else
+			table.insert(rStrings, prefix .. rns.rng1:rnSeqString(event.startRN_i, event.length))
+		end
+	end
+	return rStrings
+end
+
+
+
+
+
+
+-- modifying functions
+
+function rnEventObj:setStats()
+	self.unit:setStats()
+	self.maxHP = self.unit.stats[1]
+	self.mExpValueFactor = self.unit:expValueFactor()
+end
+
+-- assumes first index returns a table
+function rnEventObj:writeToCache()
+	self.cache.count = self.cache.count + 1
+	if self.cache.min_i > self.postBurnsRN_i then
+		self.cache.min_i = self.postBurnsRN_i
+	end
+	if self.cache.max_i < self.postBurnsRN_i then
+		self.cache.max_i = self.postBurnsRN_i
+	end
+	
+	self.cache[self.postBurnsRN_i][self.enemyHPstart] = {}
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength = self.length - self.burns
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].eval = self.eval
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend = self.enemyHPend
+end
+
+function rnEventObj:readFromCache()
+	self.length = self.burns + self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength
+	self.nextRN_i = self.startRN_i + self.length
+	self.eval = self.cache[self.postBurnsRN_i][self.enemyHPstart].eval
+	self.enemyHPend = self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend
+end
+
+function rnEventObj:setStart(rnEvent_i)
+	if rnEvent_i == 1 then 
+		self.startRN_i = rns.rng1.pos
+	else
+		self.startRN_i = eventList[rnEvent_i-1].nextRN_i
+	end
+end
+
+function rnEventObj:setEnemyHP(rnEvent_i)
+	if not self.hasCombat then 
+		self.enemyHPstart = 0 
+		return 
+	end
+
+	self.enemyHPstart = self.batParams:getHP(false)
+		
+	-- check eHP from previous combat(s) if applicable
+	if self.enemyID ~= 0 then
+		for prevCombat_i = rnEvent_i-1, 1, -1 do
+			local prior_rnEvent = eventList[prevCombat_i]
+		
+			if prior_rnEvent.enemyID == self.enemyID and prior_rnEvent.hasCombat then
+				self.enemyHPstart = prior_rnEvent.enemyHPend
+				return
+			end
+		end
+	end
+end
+
+-- assumes previous rnEvents have updates for optimization
+function rnEventObj:updateFull()
+	if self.hasCombat then
+		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
+		
+		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
+		
+		self.enemyHPend = self.mHitSeq.eHP
+	else
+		self.postCombatRN_i = self.postBurnsRN_i
+	end
+	self.length = self.postCombatRN_i - self.startRN_i
+	
+	if self:levelDetected() then
+		self.length = self.length + 7 -- IF EMPTY LEVEL REROLLS, MORE THAN 7!!
+	end
+	
+	if self.dig then
+		self.length = self.length + 1 -- FE8, 6&7 use secondary rn
+	end
+	
+	self.nextRN_i = self.startRN_i + self.length
+	
+	self.eval = self:evaluation_fn()
+end
+
+-- uses cache if valid
+-- skip reconstructing combat, eval, etc
+function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
+	if rnEvent_i then -- if no ordering given, do not update startRN_i, used for searchFutureOutcomes
+		self:setStart(rnEvent_i)
+	else 
+		rnEvent_i = 1
+	end
+	
+	self.postBurnsRN_i = self.startRN_i + self.burns
+	self:setEnemyHP(rnEvent_i)
+	
+	if cacheUpdateOnly then
+		if self.cache[self.postBurnsRN_i] then
+			if self.cache[self.postBurnsRN_i][self.enemyHPstart] then
+				self:readFromCache()
+			else
+				self:updateFull()
+				self:writeToCache()
+			end
+		else
+			self:updateFull()
+			self.cache[self.postBurnsRN_i] = {}
+			self:writeToCache()
+		end
+	else
+		self:updateFull()
+	end
+end
+
+function P.update_rnEvents(start_i, cacheUpdateOnly)
+	start_i = start_i or sel_rnEvent_i
+	
+	for rnEvent_i = start_i, #eventList do
+		eventList[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
+	end
+end
+
 function P.addEvent(event)
 	event = event or rnEventObj:new()
 	
@@ -516,7 +512,7 @@ function P.deleteLastEvent()
 	end
 end
 
--- sets a new ID at end of table, doesn't restore dependencies
+-- sets a new ID at end of table, doesn't restore dependencies because ids may have changed
 function P.undoDelete()
 	if #deletedEventsStack > 0 then
 		P.addEvent(table.remove(deletedEventsStack))
@@ -524,40 +520,6 @@ function P.undoDelete()
 	else
 		print("No deletion to undo.")
 	end
-end
-
--- rns blank to be colorized
-function P.toStrings(isColored)
-	local rStrings = {}
-	
-	if #eventList <= 0 then
-		rStrings[1] = "rnEvents empty"
-		return rStrings
-	end
-	
-	for rnEvent_i, event in ipairs(eventList) do
-		table.insert(rStrings, event:headerString(rnEvent_i))
-		local prefix = string.format("%5d ", event.startRN_i % 100000)
-		if isColored then
-			table.insert(rStrings, prefix)
-		else
-			table.insert(rStrings, prefix .. rns.rng1:rnSeqString(event.startRN_i, event.length))
-		end
-	end
-	return rStrings
-end
-
-function P.get(index)
-	index = index or sel_rnEvent_i
-	return eventList[index]
-end
-function P.getByID(vID)
-	for _, event in ipairs(eventList) do
-		if event.ID == vID then
-			return event
-		end
-	end
-	print("ID not found: " .. tostring(vID))
 end
 
 function P.changeBurns(amount)
@@ -616,6 +578,7 @@ function P.adjustHPweight(amount, isPlayer)
 	end
 end
 
+
 -- functions that invalidate cache
 function P.toggleBatParam(func, var)
 	if #eventList > 0 then
@@ -630,7 +593,6 @@ function P.updateStats()
 		P.get().cache = nil
 	end
 end
-
 function P.changeEnemyID(amount)
 	if #eventList > 0 then
 		P.get().enemyID = P.get().enemyID + amount
@@ -661,13 +623,64 @@ function P.toggleDig()
 	end
 end
 
-function P.totalEvaluation()
-	local score = 0	
-	for _, event in ipairs(eventList) do
-		score = score + event.eval
+
+function rnEventObj:new(batParams, sel_Unit_i)
+	batParams = batParams or combat.currBattleParams
+	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
+	
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
+	 
+	o.ID = #eventList+1 -- order in which rnEvents were registered
+	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
+	
+	o.unit = unitData.selectedUnit()
+	o:setStats() -- todo do we get enemy stats on EP?
+	o.batParams = batParams:copy()
+	
+	o.hasCombat = true -- most rnEvents will be combats without levels or digs
+	o.lvlUp = false
+	
+	if classes.isNoncombat(o.unit.class) then
+		o.hasCombat = false
+		o.lvlUp = true
 	end
-	return score
+	
+	o.dig = false
+	
+	-- as units ram their caps (or have the potential to), the value of their levels drops
+	o.mExpValueFactor = o.unit:expValueFactor()
+	o.pHPweight = DEFAULT_PHP_WEIGHT
+	o.eHPweight = DEFAULT_EHP_WEIGHT
+	
+	o.enemyID = 0 -- for units attacking the same enemyID
+	o.enemyHPstart = 0 -- if a previous unit has damaged this enemy. HP at start of this rnEvent
+	o.enemyHPend = 0 -- HP at end of this rnEvent
+	-- TODO player HP (from multi combat due to dance, or EP)
+	
+	o.burns = 0
+	o.startRN_i = 0
+	o.postBurnsRN_i = 0
+	o.mHitSeq = {} -- avoid confusion between member variable and function in combatObj
+	o.postCombatRN_i = 0
+	o.nextRN_i = 0
+	o.length = 0
+	o.eval = 0
+	
+	-- cache length and eval
+	-- use this for optimized fast updates when searching outcomes
+	-- cache indexed by *postBurnsRN_i* rn_i, not startRN_i
+	-- 2nd index is enemyHP at start so eHP passing will work
+	o.cache = nil
+	
+	return o
 end
+
+
+
+
+-- permutation functions
 
 local MEM_LIMIT = 500000
 

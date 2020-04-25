@@ -182,12 +182,12 @@ function rnStreamObj:update()
 		
 		local rnPosDelta = self.pos - self.prevPos
 		
-		local str = string.format("rng pos %4d -> %4d, %+d", self.prevPos, self.pos, rnPosDelta)
+		local str = string.format("RNG position %4d -> %4d, %+d", self.prevPos, self.pos, rnPosDelta)
 		if not self.isPrimary then
 			print("2ndary " .. str)
 			local str2 = "Next"
-			self:getRN(self.pos + 35)
-			for rn2_i = self.pos, self.pos + 35 do -- next 36 will fit on one line
+			self:getRN(self.pos + WINDOW_WIDTH - 4)
+			for rn2_i = self.pos, self.pos + WINDOW_WIDTH - 4 do
 				if self[rn2_i] then
 					str2 = str2 .. "!"
 				else
@@ -201,7 +201,7 @@ function rnStreamObj:update()
 		-- print what was consumed if not a large jump
 		if rnPosDelta == 1 then -- print single rns on same line
 			print(self.strings[self.pos - 1] .. " " .. str)
-		elseif 0 < rnPosDelta and rnPosDelta <= 26 then -- can fit 26 on 2 40 char lines
+		elseif 0 < rnPosDelta and rnPosDelta <= 2*WINDOW_WIDTH/3 then -- print on up to 2 lines, need 3 chars per rn
 			print(self:rnSeqString(self.pos-rnPosDelta, rnPosDelta))
 			print("   " .. str)
 		else

@@ -21,7 +21,7 @@ switch to 2ndary functions
 switch to primary functions
 J
 hold, <> change selected unit
-hold, L/R change combat weight
+hold, <^v> change hp weight
 K
 toggle window visibility
 move window (<^v>LR)

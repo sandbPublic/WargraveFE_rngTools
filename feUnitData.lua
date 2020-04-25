@@ -584,7 +584,7 @@ if GAME_VERSION == 8 then
 	{25, 09, 06, 03, 09, 03, 03, 04}, --Gilliam
 	{20, 04, 06, 09, 02, 05, 01, 03}, --Moulder
 	{17, 05, 07, 11, 06, 05, 04, 01}, --Vanessa
-	{15, 05, 02, 03, 03, 00, 08, 01}, --Ross
+	{15, 05, 02, 03, 03, 00, 08, 01}, --Ross	set base level to -9 after trainee promotion
 	{28, 08, 07, 07, 05, 01, 03, 04}, --Garcia
 	{17, 04, 05, 06, 03, 02, 04, 01}, --Neimi
 	{18, 04, 04, 10, 03, 01, 08, 02}, --Colm
@@ -596,7 +596,7 @@ if GAME_VERSION == 8 then
 	{24, 07, 08, 08, 08, 02, 07, 06}, --Forde
 	{25, 09, 06, 07, 09, 01, 06, 05}, --Kyle
 	{20, 07, 09, 13, 06, 07, 08, 04}, --Tana
-	{16, 04, 03, 04, 02, 03, 06, 01}, --Amelia
+	{16, 04, 03, 04, 02, 03, 06, 01}, --Amelia	set base level to -9 after trainee promotion
 	{31, 14, 13, 15, 10, 09, 14, 01}, --Innes
 	{32, 14, 13, 13, 10, 04, 08, 10}, --Gerik
 	{18, 01, 02, 12, 05, 04, 10, 01}, --Tethys
@@ -604,7 +604,7 @@ if GAME_VERSION == 8 then
 	{18, 06, 06, 10, 05, 08, 12, 03}, --L’Arachel
 	{43, 16, 11, 09, 11, 06, 04, 01}, --Dozla
 	{30, 16, 18, 14, 08, 13, 11, 01}, --Saleh
-	{15, 03, 02, 05, 00, 03, 05, 01}, --Ewan
+	{15, 03, 02, 05, 00, 03, 05, -9}, --Ewan	set base level to -9 after trainee promotion
 	{30, 14, 09, 10, 12, 02, 04, 09}, --Cormag
 	{28, 10, 16, 17, 09, 11, 05, 01}, --Rennac
 	{41, 17, 12, 12, 17, 09, 08, 08}, --Duessel
@@ -649,7 +649,7 @@ if GAME_VERSION == 8 then
 	classes.TROUBADOUR,			--L’Arachel
 	classes.BERSERKER,			--Dozla
 	classes.SAGE_M,				--Saleh
-	classes.PUPIL,				--Ewan
+	classes.MAGE,				--Ewan PUPIL
 	classes.WYVERN_RIDER,		--Cormag
 	classes.ROGUE,				--Rennac
 	classes.GREAT_KNIGHT_M,		--Duessel 
@@ -730,7 +730,8 @@ if GAME_VERSION == 8 then
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
 	
 	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
-	BOOSTERS[INDEX_OF_NAME["Neimi"]] = {0, 0, 0, 0, 2, 0, 2}
+	BOOSTERS[INDEX_OF_NAME["Neimi"]] = {0, 0, 0, 0, 0, 0, 2}
+	BOOSTERS[INDEX_OF_NAME["Ewan"]] = {1, 0, 1, 2, 1, 2, 0} -- Mage promo, set base lvl to -9
 	BOOSTERS[INDEX_OF_NAME["Cormag"]] = {7, 0, 2, 2, 2, 2, 0}
 	
 	PROMOTED_AT[INDEX_OF_NAME["Lute"]] = 12
@@ -741,14 +742,16 @@ if GAME_VERSION == 8 then
 	
 	WILL_END_AT[INDEX_OF_NAME["Neimi"]] = 10
 	WILL_END_AT[INDEX_OF_NAME["Lute"]] = 15
-	WILL_END_AT[INDEX_OF_NAME["Ephraim"]] = 10	
-	WILL_END_AT[INDEX_OF_NAME["Forde"]] = 15
+	WILL_END_AT[INDEX_OF_NAME["Ephraim"]] = 10
+	WILL_END_AT[INDEX_OF_NAME["Forde"]] = 10
 	WILL_END_AT[INDEX_OF_NAME["L\'Arachel"]] = 5
+	WILL_END_AT[INDEX_OF_NAME["Tethys"]] = 5
+	WILL_END_AT[INDEX_OF_NAME["Syrene"]] = 5
 end
 
 -- determine if healer is present manually
 P.HEALER_DEPLOYED = false
-local AFAS_I = INDEX_OF_NAME["Cormag"] -- INDEX_OF_NAME["Ewan"]
+local AFAS_I = INDEX_OF_NAME["Cormag"]
 
 
  

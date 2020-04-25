@@ -30,6 +30,7 @@ local LEVEL_I   = 9 -- for Great Shield, Pierce, Sure Strike, and exp cap at lev
 local EXP_I     = 10 -- for level up detection
 local HP_I      = 11 -- current HP
 local NUM_ADDRS = 11
+P.COMBAT_RAM_FIELD_NAMES = {"mHP", "wep", "atk", "def", "AS ", "hit", "lck", "crt", "lvl", "exp", "cHP"}
 
 local ATTACKER_BASE_ADDR = {0x02039200, 0x0203A400, 0x0203A500} 
 ATTACKER_BASE_ADDR = ATTACKER_BASE_ADDR[GAME_VERSION - 5]
@@ -52,7 +53,7 @@ local function battleAddrs(isAttacker, index)
 end
 
 function P.printStat(i)
-	print(memory.readbyte((battleAddrs(true, i))))
+	print(string.format("%s %d", P.COMBAT_RAM_FIELD_NAMES[i], memory.readbyte(battleAddrs(true, i))))
 end
 
 -- note that staff hit only updates in animation, not in preview

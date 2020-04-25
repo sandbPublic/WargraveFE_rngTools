@@ -22,7 +22,11 @@ local usingPrimaryFunctions = true
 --   HJKL
 --  BNM
 
-print("1234567890123456789012345678901234567890") -- to align window width, 40 chars
+local windowWidthString = ""
+for i = 1, WINDOW_WIDTH do
+	windowWidthString = windowWidthString .. (i % 10)
+end
+print(windowWidthString)
 print("Game version " .. GAME_VERSION)
 
 local hotkeys = {}
@@ -290,12 +294,18 @@ while true do
 	
 		if pressed(6) then rnEvent.searchFutureOutcomes() end
 	
-		if held(8) then -- hold down, then press L/R
-			if pressed("L", gameCtrl) then
-				rnEvent.adjustCombatWeight(-0.5)
-			end		
-			if pressed("R", gameCtrl) then
-				rnEvent.adjustCombatWeight(0.5)
+		if held(8) then -- hold down, then press <^v>
+			if pressed("up", gameCtrl) then
+				rnEvent.adjustHPweight(25, "isPlayer")
+			end
+			if pressed("down", gameCtrl) then
+				rnEvent.adjustHPweight(-25, "isPlayer")
+			end
+			if pressed("left", gameCtrl) then
+				rnEvent.adjustHPweight(-25)
+			end
+			if pressed("right", gameCtrl) then
+				rnEvent.adjustHPweight(25)
 			end
 		end
 		

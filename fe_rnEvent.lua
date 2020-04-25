@@ -35,6 +35,9 @@ function rnEventObj:setStats()
 	self.mExpValueFactor = self.unit:expValueFactor()
 end
 
+local DEFAULT_PHP_WEIGHT = 100
+local DEFAULT_EHP_WEIGHT = 50
+
 -- INDEX FROM 1
 function rnEventObj:new(batParams, sel_Unit_i)
 	batParams = batParams or combat.currBattleParams
@@ -63,7 +66,8 @@ function rnEventObj:new(batParams, sel_Unit_i)
 	
 	-- as units ram their caps (or have the potential to), the value of their levels drops
 	o.mExpValueFactor = o.unit:expValueFactor()
-	o.combatWeight = 1
+	o.pHPweight = DEFAULT_PHP_WEIGHT
+	o.eHPweight = DEFAULT_EHP_WEIGHT
 	
 	o.enemyID = 0 -- for units attacking the same enemyID
 	o.enemyHPstart = 0 -- if a previous unit has damaged this enemy. HP at start of this rnEvent
@@ -111,15 +115,17 @@ function rnEventObj:diagnostic()
 		print(string.format("expGained=%2d pHP=%2d eHP=%2d", 
 			self.mHitSeq.expGained, self.mHitSeq.pHP, self.mHitSeq.eHP))
 			
+		strH = ""
 		strA = ""
 		strD = ""
-		for data_i = 1, #self.batParams.attacker do
-			strA = strA .. string.format("%2d ", self.batParams.attacker[data_i])
-			strD = strD .. string.format("%2d ", self.batParams.defender[data_i])
+		for data_i, str_ in ipairs(combat.COMBAT_RAM_FIELD_NAMES) do
+			strH = strH .. str_ .. " "
+			strA = strA .. string.format("%3d ", self.batParams.attacker[data_i])
+			strD = strD .. string.format("%3d ", self.batParams.defender[data_i])
 		end
+		print(strH)
 		print(strA)
 		print(strD)
-		
 	end
 	
 	print(string.format("Eval %5.2f", self.eval))
@@ -132,9 +138,8 @@ function rnEventObj:diagnostic()
 		end
 	end
 	
+	print("dependencies, stats")
 	print(self.comesAfter)
-	
-	print("stats")
 	print(self.unit.stats)
 end
 
@@ -348,8 +353,9 @@ function rnEventObj:headerString(rnEvent_i)
 		specialStringEvents = specialStringEvents .. " class " .. tostring(self.batParams.enemy.class)
 	end
 	
-	if self.combatWeight ~= 1 then
-		specialStringEvents = specialStringEvents .. " cmb x" .. tostring(self.combatWeight)
+	if self.pHPweight ~= DEFAULT_PHP_WEIGHT or self.eHPweight ~= DEFAULT_EHP_WEIGHT then
+		specialStringEvents = specialStringEvents .. 
+			string.format(" hpw %d %d", self.pHPweight, self.eHPweight)
 	end
 	
 	return hString .. string.format("%2d %s%s%s",
@@ -391,30 +397,31 @@ function rnEventObj:evaluation_fn(printV)
 	-- could have empty combat if enemy HP == 0 e.g. another unit killed this enemy this phase
 	if self.hasCombat and self.mHitSeq[1] then 
 		if self.mHitSeq[1].action == "STF-X" then
-			local hitValue = 50*self.combatWeight + 15*self.mExpValueFactor -- exp depends on staff
+			local hitValue = self.eHPweight + 15*self.mExpValueFactor -- exp depends on staff
 			score = score + hitValue
 			self.mHitSeq.expGained = 0
 			if printV then printStr = printStr .. string.format(" staff hit %02d", hitValue) end
 		else			
 			local eHPstartFrac = self.enemyHPstart/self.batParams:getMaxHP(false)
 			local eHPendFrac = self.mHitSeq.eHP/self.batParams:getMaxHP(false)
-			local lossInEnemyValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
+			local eLostValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
 			
 			local pHPstartFrac = self.batParams:getHP("isPlayer")/self.maxHP
 			local pHPendFrac = self.mHitSeq.pHP/self.maxHP
-			local lossInPlayerValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
+			local pLostValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
 			
-			score = score + (50*lossInEnemyValue - 100*lossInPlayerValue) * self.combatWeight
-				+ self.mHitSeq.expGained*self.mExpValueFactor
+			score = score + self.eHPweight * eLostValue 
+			              - self.pHPweight * pLostValue
+			              + self.mHitSeq.expGained * self.mExpValueFactor
 			
 			printStr = printStr .. string.format(
 				" eHP %d%%->%d%% nl %d%%, pHP %d%%->%d%% nl %d%%, exp %dx%.2f", 
 				eHPstartFrac * 100, 
 				eHPendFrac * 100,
-				-lossInEnemyValue * 100,
+				-eLostValue * 100,
 				pHPstartFrac * 100, 
 				pHPendFrac * 100,
-				-lossInPlayerValue * 100,
+				-pLostValue * 100,
 				self.mHitSeq.expGained, 
 				self.mExpValueFactor)
 		end
@@ -596,10 +603,13 @@ function P.toggleDependency()
 		permsNeedUpdate = true
 	end
 end
-function P.adjustCombatWeight(amount)
+function P.adjustHPweight(amount, isPlayer)
 	if #eventList > 0 then
-		P.get().combatWeight = P.get().combatWeight + amount
-		print("combatWeight: x" .. P.get().combatWeight)
+		if isPlayer then
+			P.get().pHPweight = P.get().pHPweight + amount
+		else
+			P.get().eHPweight = P.get().eHPweight + amount
+		end
 	end
 end
 

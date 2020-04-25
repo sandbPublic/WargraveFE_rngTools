@@ -3,6 +3,9 @@ require("fe_rnEvent")
 local P = {}
 feGUI = P
 
+
+
+
 P.rects = {}
 P.RN_EVENT_I 		= 1
 P.RN_STREAM_I		= 2
@@ -27,7 +30,6 @@ local RECT_STRINGS = {
 	"compact btl params",
 	"cursor coordinates",
 }
-
 local LEVEL_UP_COLORS = {
 	0xFF8080FF, -- hue   0 pink
 	0xFFAA00FF, -- hue  40 orange
@@ -37,6 +39,13 @@ local LEVEL_UP_COLORS = {
 	0x0000FFFF, -- hue 240 blue
 	0xFF00FFFF  -- hue 300 magenta
 }
+local CHAR_PIXELS = 4
+-- for the rnStream rect's colorized rns
+local RNS_PER_LINE = 15
+local NUM_RN_LINES = 15
+
+
+
 
 local selRect_i = P.RN_EVENT_I
 function P.advanceDisplay(increment)
@@ -52,43 +61,57 @@ function P.advanceDisplay(increment)
 	print("selecting display: " .. RECT_STRINGS[selRect_i])
 end
 
-P.rectShiftMode = false
-
-function P.canAlter_rnEvent()
-	return (not P.rectShiftMode) and P.lookingAt(P.RN_EVENT_I)
+function P.selRect()
+	return P.rects[selRect_i]
 end
+
+P.rectShiftMode = false
 
 function P.lookingAt(rect_i)
 	return (selRect_i == rect_i) and (P.rects[rect_i].opacity > 0)
 end
 
-local CHAR_PIXELS = 4
--- for the rnStream rect's colorized rns
-local RNS_PER_LINE = 15
-local NUM_RN_LINES = 15
+function P.canAlter_rnEvent()
+	return (not P.rectShiftMode) and P.lookingAt(P.RN_EVENT_I)
+end
+
+-- syncs with fire emblem animation cycle
+-- units animate on a 48 == 8 * 6 frame cycle when highlighted
+-- 72 == 8 * 9 frame cycle when not
+-- cursor has 32 == 8 * 4 frame cycle
+local function isPulsePhase(cycle)
+	cycle = cycle or 48
+	
+	return (vba.framecount() % cycle) < (cycle/2)
+end
+
+-- alternates between color1 and color2 (or inverse of color1) based on pulse phase
+local function pulseColor(color1, color2)
+	color1 = color1 or "white"
+	if isPulsePhase() then 
+		return color1
+	else
+		if color2 then return color2 end
+		
+		local r, g, b, a = gui.parsecolor(color1)
+		local inverse = {}
+		inverse.r = 0xFF - r
+		inverse.g = 0xFF - g
+		inverse.b = 0xFF - b
+		inverse.a = a
+		
+		return inverse
+	end
+end
+
+
+
+
+
 
 local rectObj = {}
-rectObj.ID = 0
-rectObj.Xratio = 0 -- 0 to 1, determine position within the gba window
-rectObj.Yratio = 0
-rectObj.opacity = 0
-rectObj.color = 0
-rectObj.strings = {}
 
-function rectObj:new(ID_p, color_p)
-	color_p = color_p or RECT_COLORS[ID_p]
-	
-	local o = {}
-	setmetatable(o, self)
-	self.__index = self
-	o.ID = ID_p
-	o.color = color_p
-	return o
-end
-
-for rect_i = 1, #RECT_COLORS do
-	table.insert(P.rects, rectObj:new(rect_i))
-end
+-- non modifying functions
 
 -- height of a line
 function rectObj:linePixels()
@@ -140,67 +163,26 @@ function rectObj:top()
 	return ret
 end
 
--- change position or opacity
-function rectObj:shift(x, y, opac)
-	self.Xratio = self.Xratio + x
-	if self.Xratio < 0 then self.Xratio = 0 end
-	if self.Xratio > 1 then self.Xratio = 1 end
-	self.Yratio = self.Yratio + y
-	if self.Yratio < 0 then self.Yratio = 0 end
-	if self.Yratio > 1 then self.Yratio = 1 end
-	self.opacity = self.opacity + opac
-	if self.opacity < 0 then self.opacity = 0 end
-	if self.opacity > 1 then self.opacity = 1 end
-end
 
--- syncs with fire emblem animation cycle
--- units animate on a 48 == 8 * 6 frame cycle when highlighted
--- 72 == 8 * 9 frame cycle when not
--- cursor has 32 == 8 * 4 frame cycle
-function P.pulse(cycle)
-	cycle = cycle or 48
-	
-	return (vba.framecount() % cycle) < (cycle/2)
-end
 
-function P.flashcolor(color, color2)
-	color = color or "white"
-	if P.pulse() then 
-		return color
-	else
-		if color2 then
-			return color2
-		end
-		
-		local r, g, b, a = gui.parsecolor(color)
-		local inverse = {}
-		inverse.r = 0xFF - r
-		inverse.g = 0xFF - g
-		inverse.b = 0xFF - b
-		inverse.a = a
-		
-		return inverse
-	end
-end
 
--- drawing functions are opacity agnostic; set gui.opacity before calling
-function rectObj:drawBackgroundBox()
-	local outlineColor = self.color
-	if (self.ID == selRect_i) and P.rectShiftMode then
-		outlineColor = P.flashcolor(outlineColor) -- selected and visible, flash outline
-	end
-	
-	local r, g, b, a = gui.parsecolor(self.color)
-	local darkColor = {}
-	darkColor.r = r/4
-	darkColor.g = g/4
-	darkColor.b = b/4
-	darkColor.a = a
-	
+-- drawing functions
+-- opacity agnostic; set gui.opacity before calling
+
+function rectObj:drawBackgroundBox()	
 	-- determine placement in window based on rectRatios
 	local x1 = self:left()
 	local y1 = self:top()
-	gui.box(x1, y1, x1+self:width(), y1+self:height(), darkColor, outlineColor)
+	
+	-- if shiftMode and visible, flash outline
+	if (self.ID == selRect_i) and P.rectShiftMode then
+		gui.box(x1, y1, x1+self:width(), y1+self:height(), 
+			pulseColor(self.backgroundColor), pulseColor(self.outlineColor))
+		return
+	end
+	
+	gui.box(x1, y1, x1+self:width(), y1+self:height(), 
+		self.backgroundColor, self.outlineColor)
 end
 
 function rectObj:drawString(line_i, char_offset, str, color, borderColor)
@@ -210,58 +192,6 @@ function rectObj:drawString(line_i, char_offset, str, color, borderColor)
 	gui.text(self:left() + 3 + char_offset*CHAR_PIXELS, 
 			 self:top() + 2 + (line_i - 1)*self:linePixels(), 
 			 str, color, borderColor)
-end
-
--- color code rns
--- 00 = blue
--- 25 = teal
--- 50 = white
--- 75 = yellow
--- 99 = red
-
-local colorMap = {
-	{63,128,255},
-	{63,255,128},
-	{255,255,255},
-	{255,255,0},
-	{255,0,0}
-}
-
-local rnColors = {}
-local rnBorderColors = {}
-local colorStep = 25
-
-local function setRNColor(rnCent)
-	rnColors[rnCent] = {}
-	rnBorderColors[rnCent] = {}
-	rnBorderColors[rnCent].a = 0xFF
-	rnColors[rnCent].a = 0xFF
-	
-	local colorWeight = rnCent % colorStep
-	local colorRange = math.floor(rnCent / colorStep) + 1
-	
-	rnColors[rnCent].r = (colorMap[colorRange][1] * (colorStep - colorWeight)
-		+ colorMap[colorRange+1][1] * colorWeight) / colorStep
-	rnColors[rnCent].g = (colorMap[colorRange][2] * (colorStep - colorWeight)
-		+ colorMap[colorRange+1][2] * colorWeight) / colorStep
-	rnColors[rnCent].b = (colorMap[colorRange][3] * (colorStep - colorWeight)
-		+ colorMap[colorRange+1][3] * colorWeight) / colorStep
-	
-	rnBorderColors[rnCent].r = rnColors[rnCent].r/4
-	rnBorderColors[rnCent].g = rnColors[rnCent].g/4
-	rnBorderColors[rnCent].b = rnColors[rnCent].b/4
-end
-for rnCent = 0, 99 do
-	setRNColor(rnCent)
-end
-
-function rectObj:drawColorizedRNString(line_i, char_offset, RN_start, length)
-	for rn_offset = 0, length-1 do
-		local rn = rns.rng1:getRN(RN_start + rn_offset)
-		
-		self:drawString(line_i, char_offset + 3*rn_offset,
-			rns.rng1.strings[RN_start + rn_offset], rnColors[rn], rnBorderColors[rn])
-	end
 end
 
 function rectObj:drawBox(line_i, char_offset, length, color)
@@ -299,11 +229,63 @@ function rectObj:drawEventBoxes(event, rnEvent_i)
 			if procs[stat_i] == 1 then
 				self:drawBox(line_i, char_start, 3, LEVEL_UP_COLORS[stat_i]) 
 			elseif procs[stat_i] == 2 then -- Afa's provided stat
-				self:drawBox(line_i, char_start, 3, P.flashcolor(LEVEL_UP_COLORS[stat_i], "white")) 
+				self:drawBox(line_i, char_start, 3, pulseColor(LEVEL_UP_COLORS[stat_i], "white")) 
 			elseif procs[stat_i] == -1 then -- capped stat
-				self:drawBox(line_i, char_start, 3, P.flashcolor(0x662222FF, "black"))
+				self:drawBox(line_i, char_start, 3, pulseColor(0x662222FF, "black"))
 			end
 		end
+	end
+end
+
+-- color code rns
+-- 00 = blue
+-- 25 = teal
+-- 50 = white
+-- 75 = yellow
+-- 99 = red
+
+local COLOR_SEGMENTS = {
+	{63,128,255},
+	{63,255,128},
+	{255,255,255},
+	{255,255,0},
+	{255,0,0}
+}
+
+local rnColors = {}
+local rnBorderColors = {}
+local COLOR_SEGMENT_SIZE = 25
+
+local function setRNColor(rnCent)
+	rnColors[rnCent] = {}
+	rnColors[rnCent].a = 0xFF
+	
+	local i = math.floor(rnCent / COLOR_SEGMENT_SIZE) + 1
+	local thisColor = COLOR_SEGMENTS[i]
+	local nextColor = COLOR_SEGMENTS[i+1]
+	local nextColorWeight = (rnCent % COLOR_SEGMENT_SIZE) / COLOR_SEGMENT_SIZE
+	local thisColorWeight = 1 - nextColorWeight
+	
+	rnColors[rnCent].r = thisColor[1] * thisColorWeight + nextColor[1] * nextColorWeight		
+	rnColors[rnCent].g = thisColor[2] * thisColorWeight + nextColor[2] * nextColorWeight		
+	rnColors[rnCent].b = thisColor[3] * thisColorWeight + nextColor[3] * nextColorWeight
+	
+	rnBorderColors[rnCent] = {}
+	rnBorderColors[rnCent].a = 0xFF	
+	rnBorderColors[rnCent].r = rnColors[rnCent].r/4
+	rnBorderColors[rnCent].g = rnColors[rnCent].g/4
+	rnBorderColors[rnCent].b = rnColors[rnCent].b/4
+end
+for rnCent = 0, 99 do
+	setRNColor(rnCent)
+end
+
+function rectObj:drawColorizedRNString(line_i, char_offset, RN_start, length)
+	for rn_offset = 0, length-1 do
+		local rn = rns.rng1:getRN(RN_start + rn_offset)
+		
+		self:drawString(line_i, char_offset + 3*rn_offset,
+			rns.rng1.strings[RN_start + rn_offset], rnColors[rn], rnBorderColors[rn])
 	end
 end
 
@@ -344,10 +326,6 @@ function rectObj:draw()
 	gui.opacity(1)
 end
 
-function P.selRect()
-	return P.rects[selRect_i]
-end
-
 -- 0,0 is upper left
 local CURSOR_X_ADDR = {0x0202AA1C, 0x0202BBCC, 0x0202BCC4} -- also at +4
 CURSOR_X_ADDR = CURSOR_X_ADDR[GAME_VERSION - 5]
@@ -355,7 +333,7 @@ local CURSOR_Y_ADDR = CURSOR_X_ADDR + 2
 
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
-	P.rects[P.STAT_DATA_I].strings = unitData.selectedUnit():statData_strings(P.pulse(480) and P.lookingAt(P.STAT_DATA_I))
+	P.rects[P.STAT_DATA_I].strings = unitData.selectedUnit():statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))
 	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
 	-- don't want to overwrite currBattleParams generally
 	
@@ -371,6 +349,52 @@ function P.drawRects()
 	for _, rect in ipairs(P.rects) do
 		rect:draw()
 	end
+end
+
+
+
+
+-- modifying functions
+
+-- change position or opacity
+function rectObj:shift(x, y, opac)
+	self.Xratio = self.Xratio + x
+	if self.Xratio < 0 then self.Xratio = 0 end
+	if self.Xratio > 1 then self.Xratio = 1 end
+	self.Yratio = self.Yratio + y
+	if self.Yratio < 0 then self.Yratio = 0 end
+	if self.Yratio > 1 then self.Yratio = 1 end
+	self.opacity = self.opacity + opac
+	if self.opacity < 0 then self.opacity = 0 end
+	if self.opacity > 1 then self.opacity = 1 end
+end
+
+function rectObj:new(ID_p, color_p)
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
+	
+	o.ID = 0
+	o.Xratio = 0 -- 0 to 1, determine position within the gba window
+	o.Yratio = 0
+	o.opacity = 0
+	o.strings = {}
+	
+	o.ID = ID_p
+	o.outlineColor = color_p or RECT_COLORS[ID_p]
+	
+	local r, g, b, a = gui.parsecolor(o.outlineColor)
+	o.backgroundColor = {}
+	o.backgroundColor.r = r/4
+	o.backgroundColor.g = g/4
+	o.backgroundColor.b = b/4
+	o.backgroundColor.a = a	
+	
+	return o
+end
+
+for rect_i = 1, #RECT_COLORS do
+	table.insert(P.rects, rectObj:new(rect_i))
 end
 
 return feGUI

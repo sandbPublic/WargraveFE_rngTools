@@ -3,6 +3,9 @@ require("feRandomNumbers")
 local P = {}
 unitData = P
 
+
+
+
 -- luck is in the wrong place relative to what is shown on screen:
 -- HP Str Skl Spd Def Res Lck Lvl Exp
 
@@ -831,9 +834,9 @@ end
 
 
 
--- non modifying functions
-
 local unitObj = {}
+
+-- non modifying functions
 
 function unitObj:willLevelStats(HP_RN_i)
 	ret = {}

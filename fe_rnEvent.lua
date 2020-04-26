@@ -16,14 +16,14 @@ function P.getEventList()
 	return eventList
 end
 
-local perms = {}
-local permsNeedUpdate = false
-
 local sel_rnEvent_i = 1
 local function limitSel_rnEvent_i()
 	if sel_rnEvent_i > #eventList then sel_rnEvent_i = #eventList end
 	if sel_rnEvent_i < 1 then sel_rnEvent_i = 1 end 
 end
+
+local perms = {}
+local permsNeedUpdate = false
 
 local DEFAULT_PHP_WEIGHT = 100
 local DEFAULT_EHP_WEIGHT = 50
@@ -256,13 +256,43 @@ function P.searchFutureOutcomes(event_i)
 	P.update_rnEvents(1)
 end
 
-function P.diagnostic()
-	if #eventList > 0 then
-		P.get():diagnostic()
+function rnEventObj:printCache()
+	print()
+	if not self.cache then 
+		print("no cache")
+		return
+	end
+
+	print(string.format("%2d cache, size: %d, %4d - %4d", 
+		self.ID, self.cache.count, self.cache.min_i, self.cache.max_i))
+	
+	if self.cache.count == 0 then return end
+	
+	for c_i = self.cache.min_i, self.cache.max_i do
+		if self.cache[c_i] then
+			for eHP = 0, 60 do
+				if self.cache[c_i][eHP] then
+					
+					if eHP == 0 then
+						print(string.format("%4d-%4d  eval %3d  eHP 0",
+							c_i, 
+							c_i+self.cache[c_i][eHP].postBurnLength,
+							self.cache[c_i][eHP].eval))
+					else
+						print(string.format("%4d-%4d  eval %3d  eHP %2d  eHPend %2d",
+							c_i, 
+							c_i+self.cache[c_i][eHP].postBurnLength,
+							self.cache[c_i][eHP].eval, 
+							eHP,
+							self.cache[c_i][eHP].enemyHPend))
+					end
+				end
+			end
+		end
 	end
 end
 
-function rnEventObj:diagnostic()
+function rnEventObj:printDiagnostic()
 	print()
 	print(string.format("Diagnosis of rnEvent %d", self.ID))
 	
@@ -305,32 +335,13 @@ function rnEventObj:diagnostic()
 	print("dependencies, stats")
 	print(self.comesAfter)
 	print(self.unit.stats)
+	
+	--self:printCache()
 end
 
-function rnEventObj:printCache()
-	print()
-	print(string.format("%2d cache, size: %d, %4d - %4d", 
-		self.ID, self.cache.count, self.cache.min_i, self.cache.max_i))
-	
-	if self.cache.count == 0 then return end
-	
-	for c_i = self.cache.min_i, self.cache.max_i do
-		if self.cache[c_i] then
-			for eHP = 0, 60 do
-				if self.cache[c_i][eHP] then
-					
-					if eHP == 0 then
-						print(string.format("%4d-%4d  eHP 0",
-							c_i, c_i+self.cache[c_i][eHP].postBurnLength))
-					else
-						print(string.format("%4d-%4d  eval %3d  eHP %2d  eHPend %2d",
-							c_i, c_i+self.cache[c_i][eHP].postBurnLength,
-							self.cache[c_i][eHP].eval, eHP,
-							self.cache[c_i][eHP].enemyHPend))
-					end
-				end
-			end
-		end
+function P.printDiagnostic()
+	if #eventList > 0 then
+		P.get():printDiagnostic()
 	end
 end
 
@@ -358,132 +369,9 @@ end
 
 
 
-
-
 -- modifying functions
 
-function rnEventObj:setStats()
-	self.unit:setStats()
-	self.maxHP = self.unit.stats[1]
-	self.mExpValueFactor = self.unit:expValueFactor()
-end
-
--- assumes first index returns a table
-function rnEventObj:writeToCache()
-	self.cache.count = self.cache.count + 1
-	if self.cache.min_i > self.postBurnsRN_i then
-		self.cache.min_i = self.postBurnsRN_i
-	end
-	if self.cache.max_i < self.postBurnsRN_i then
-		self.cache.max_i = self.postBurnsRN_i
-	end
-	
-	self.cache[self.postBurnsRN_i][self.enemyHPstart] = {}
-	self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength = self.length - self.burns
-	self.cache[self.postBurnsRN_i][self.enemyHPstart].eval = self.eval
-	self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend = self.enemyHPend
-end
-
-function rnEventObj:readFromCache()
-	self.length = self.burns + self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength
-	self.nextRN_i = self.startRN_i + self.length
-	self.eval = self.cache[self.postBurnsRN_i][self.enemyHPstart].eval
-	self.enemyHPend = self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend
-end
-
-function rnEventObj:setStart(rnEvent_i)
-	if rnEvent_i == 1 then 
-		self.startRN_i = rns.rng1.pos
-	else
-		self.startRN_i = eventList[rnEvent_i-1].nextRN_i
-	end
-end
-
-function rnEventObj:setEnemyHP(rnEvent_i)
-	if not self.hasCombat then 
-		self.enemyHPstart = 0 
-		return 
-	end
-
-	self.enemyHPstart = self.batParams:getHP(false)
-		
-	-- check eHP from previous combat(s) if applicable
-	if self.enemyID ~= 0 then
-		for prevCombat_i = rnEvent_i-1, 1, -1 do
-			local prior_rnEvent = eventList[prevCombat_i]
-		
-			if prior_rnEvent.enemyID == self.enemyID and prior_rnEvent.hasCombat then
-				self.enemyHPstart = prior_rnEvent.enemyHPend
-				return
-			end
-		end
-	end
-end
-
--- assumes previous rnEvents have updates for optimization
-function rnEventObj:updateFull()
-	if self.hasCombat then
-		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
-		
-		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
-		
-		self.enemyHPend = self.mHitSeq.eHP
-	else
-		self.postCombatRN_i = self.postBurnsRN_i
-	end
-	self.length = self.postCombatRN_i - self.startRN_i
-	
-	if self:levelDetected() then
-		self.length = self.length + 7 -- IF EMPTY LEVEL REROLLS, MORE THAN 7!!
-	end
-	
-	if self.dig then
-		self.length = self.length + 1 -- FE8, 6&7 use secondary rn
-	end
-	
-	self.nextRN_i = self.startRN_i + self.length
-	
-	self.eval = self:evaluation_fn()
-end
-
--- uses cache if valid
--- skip reconstructing combat, eval, etc
-function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
-	if rnEvent_i then -- if no ordering given, do not update startRN_i, used for searchFutureOutcomes
-		self:setStart(rnEvent_i)
-	else 
-		rnEvent_i = 1
-	end
-	
-	self.postBurnsRN_i = self.startRN_i + self.burns
-	self:setEnemyHP(rnEvent_i)
-	
-	if cacheUpdateOnly then
-		if self.cache[self.postBurnsRN_i] then
-			if self.cache[self.postBurnsRN_i][self.enemyHPstart] then
-				self:readFromCache()
-			else
-				self:updateFull()
-				self:writeToCache()
-			end
-		else
-			self:updateFull()
-			self.cache[self.postBurnsRN_i] = {}
-			self:writeToCache()
-		end
-	else
-		self:updateFull()
-	end
-end
-
-function P.update_rnEvents(start_i, cacheUpdateOnly)
-	start_i = start_i or sel_rnEvent_i
-	
-	for rnEvent_i = start_i, #eventList do
-		eventList[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
-	end
-end
-
+-- functions that may require updating the list of valid permutations
 function P.addEvent(event)
 	event = event or rnEventObj:new()
 	
@@ -522,9 +410,45 @@ function P.undoDelete()
 	end
 end
 
+function P.toggleDependency()
+	if sel_rnEvent_i < #eventList then
+		eventList[sel_rnEvent_i+1].comesAfter[P.get().ID] = 
+			not eventList[sel_rnEvent_i+1].comesAfter[P.get().ID]
+		
+		if eventList[sel_rnEvent_i+1].comesAfter[P.get().ID]	then
+			print(string.format("%d now depends on %d", 
+				eventList[sel_rnEvent_i+1].ID, P.get().ID))
+		else
+			print(string.format("%d no longer depends on %d", 
+				eventList[sel_rnEvent_i+1].ID, P.get().ID))
+		end
+		permsNeedUpdate = true
+	end
+end
+
+
+
+
+
+function P.changeSelection(amount)
+	sel_rnEvent_i = sel_rnEvent_i + amount
+	limitSel_rnEvent_i()
+end
+
+function P.swap()
+	if sel_rnEvent_i < #eventList then
+		if eventList[sel_rnEvent_i+1].comesAfter[P.get().ID] then
+			print(string.format("Can't swap: %d depends on %d; toggle with Start", 
+				eventList[sel_rnEvent_i+1].ID, P.get().ID))
+		else
+			eventList[sel_rnEvent_i], eventList[sel_rnEvent_i+1] = eventList[sel_rnEvent_i+1], eventList[sel_rnEvent_i]
+			P.update_rnEvents()
+		end
+	end
+end
+
 function P.changeBurns(amount)
 	if #eventList > 0 then
-		amount = amount or P.burnAmount
 		P.get().burns = P.get().burns + amount
 		if P.get().burns < 0 then
 			P.get().burns = 0
@@ -533,39 +457,184 @@ function P.changeBurns(amount)
 	end
 end
 
-function P.incSel()
-	sel_rnEvent_i = sel_rnEvent_i + 1
-	limitSel_rnEvent_i()
+function rnEventObj:setStats()
+	self.unit:setStats()
+	self.maxHP = self.unit.stats[1]
+	self.mExpValueFactor = self.unit:expValueFactor()
 end
-function P.decSel()
-	sel_rnEvent_i = sel_rnEvent_i - 1
-	limitSel_rnEvent_i()
-end
-function P.swap()
-	if sel_rnEvent_i < #eventList then
-		if eventList[sel_rnEvent_i+1].comesAfter[P.get().ID] then
-			print(string.format("CAN'T SWAP, %d DEPENDS ON %d, TOGGLE WITH START", 
-				eventList[sel_rnEvent_i+1].ID, P.get().ID))
-		else
-			-- don't use get()?
-			eventList[sel_rnEvent_i], eventList[sel_rnEvent_i+1] = eventList[sel_rnEvent_i+1], eventList[sel_rnEvent_i]
-			P.update_rnEvents()
+
+function rnEventObj:setEnemyHP(rnEvent_i)
+	if not self.hasCombat then 
+		self.enemyHPstart = 0
+		return
+	end
+
+	self.enemyHPstart = self.batParams:getHP(false)
+	
+	if self.enemyID == 0 then return end
+	
+	-- copy eHP from end of earliest previous combat that shares an enemy id if one exists
+	for prevCombat_i = rnEvent_i-1, 1, -1 do
+		local prev_rnEvent = eventList[prevCombat_i]
+	
+		if prev_rnEvent.enemyID == self.enemyID and prev_rnEvent.hasCombat then
+			self.enemyHPstart = prev_rnEvent.enemyHPend
+			return
 		end
 	end
 end
-function P.toggleDependency()
-	if sel_rnEvent_i < #eventList then
-		eventList[sel_rnEvent_i+1].comesAfter[P.get().ID] = 
-			not eventList[sel_rnEvent_i+1].comesAfter[P.get().ID]
+
+-- assumes previous rnEvents have updates for optimization
+-- does not do anything with cached values
+function rnEventObj:updateFull()
+	if self.hasCombat then
+		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
 		
-		if eventList[sel_rnEvent_i+1].comesAfter[P.get().ID]	then
-			print(string.format("%d NOW DEPENDS ON %d", 
-				eventList[sel_rnEvent_i+1].ID, P.get().ID))
+		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
+		
+		self.enemyHPend = self.mHitSeq.eHP
+	else
+		self.postCombatRN_i = self.postBurnsRN_i
+	end
+	self.length = self.postCombatRN_i - self.startRN_i
+	
+	if self:levelDetected() then
+		self.length = self.length + 7 -- IF EMPTY LEVEL REROLLS, MORE THAN 7!!
+	end
+	
+	if self.dig then
+		self.length = self.length + 1 -- FE8, 6&7 use secondary rn
+	end
+	
+	self.nextRN_i = self.startRN_i + self.length
+	
+	self.eval = self:evaluation_fn()
+end
+
+
+
+
+-- cache saves length, score, and possibly enemy HP post combat,
+-- saved by start rn position and possibly enemy HP pre combat.
+-- also saves number of entries and earliest/latest entry position.
+-- used to speed up evaluation when shuffling permutations to skip reconstructing combat and score
+
+function rnEventObj:clearCache()
+	self.cache = {}
+	self.cache.count = 0
+	self.cache.min_i = 999999
+	self.cache.max_i = 0
+end
+
+function rnEventObj:writeToCache()
+	self.cache.count = self.cache.count + 1
+	if self.cache.min_i > self.postBurnsRN_i then
+		self.cache.min_i = self.postBurnsRN_i
+	end
+	if self.cache.max_i < self.postBurnsRN_i then
+		self.cache.max_i = self.postBurnsRN_i
+	end
+	
+	self.cache[self.postBurnsRN_i][self.enemyHPstart] = {}
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength = self.length - self.burns
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].eval = self.eval
+	self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend = self.enemyHPend
+end
+
+function rnEventObj:readFromCache()
+	self.length = self.burns + self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength
+	self.nextRN_i = self.startRN_i + self.length
+	self.eval = self.cache[self.postBurnsRN_i][self.enemyHPstart].eval
+	self.enemyHPend = self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend
+end
+
+-- uses cache if valid, when called from setToPerm()
+function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
+	if rnEvent_i then -- if no ordering given, do not update startRN_i, used for searchFutureOutcomes
+		if rnEvent_i == 1 then 
+			self.startRN_i = rns.rng1.pos
 		else
-			print(string.format("%d NOW DOES NOT DEPEND ON %d", 
-				eventList[sel_rnEvent_i+1].ID, P.get().ID))
+			self.startRN_i = eventList[rnEvent_i-1].nextRN_i
 		end
-		permsNeedUpdate = true
+	else 
+		rnEvent_i = 1
+	end
+	
+	self.postBurnsRN_i = self.startRN_i + self.burns
+	self:setEnemyHP(rnEvent_i)
+	
+	if cacheUpdateOnly then
+		if self.cache[self.postBurnsRN_i] then
+			if self.cache[self.postBurnsRN_i][self.enemyHPstart] then
+				-- neither update nor write is needed
+				self:readFromCache()
+			else
+				self:updateFull()
+				self:writeToCache()
+			end
+		else
+			self:updateFull()
+			self.cache[self.postBurnsRN_i] = {}
+			self:writeToCache()
+		end
+	else
+		self:updateFull()
+	end
+end
+
+function P.update_rnEvents(start_i, cacheUpdateOnly)
+	start_i = start_i or sel_rnEvent_i
+	
+	for rnEvent_i = start_i, #eventList do
+		eventList[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
+	end
+end
+
+
+
+
+-- functions that invalidate cache
+local function invalidateCache()
+	P.get():clearCache()
+	P.update_rnEvents()
+end
+
+function P.updateStats()
+	if #eventList > 0 then
+		P.get():setStats()
+		invalidateCache()
+	end
+end
+function P.toggleCombat()
+	if #eventList > 0 then	
+		P.get().hasCombat = not P.get().hasCombat
+		P.get().enemyID = 0 -- don't want to cause enemyHP to carry
+		invalidateCache()
+	end
+end
+function P.toggleLevel()
+	if #eventList > 0 then	
+		P.get().lvlUp = not P.get().lvlUp
+		invalidateCache()
+	end
+end
+function P.toggleDig()
+	if #eventList > 0 then	
+		P.get().dig = not P.get().dig
+		invalidateCache()
+	end
+end
+
+function P.toggleBatParam(func, var)
+	if #eventList > 0 then
+		func(P.get().batParams, var) -- :func() syntactic for func(self)
+		invalidateCache()
+	end
+end
+function P.changeEnemyID(amount)
+	if #eventList > 0 then
+		P.get().enemyID = P.get().enemyID + amount
+		invalidateCache()
 	end
 end
 function P.adjustHPweight(amount, isPlayer)
@@ -575,53 +644,11 @@ function P.adjustHPweight(amount, isPlayer)
 		else
 			P.get().eHPweight = P.get().eHPweight + amount
 		end
+		invalidateCache()
 	end
 end
 
 
--- functions that invalidate cache
-function P.toggleBatParam(func, var)
-	if #eventList > 0 then
-		func(P.get().batParams, var) -- :func() syntactic for func(self)
-		P.get().cache = nil
-		P.update_rnEvents()
-	end
-end
-function P.updateStats()
-	if #eventList > 0 then
-		P.get():setStats()
-		P.get().cache = nil
-	end
-end
-function P.changeEnemyID(amount)
-	if #eventList > 0 then
-		P.get().enemyID = P.get().enemyID + amount
-		P.get().cache = nil
-		P.update_rnEvents()
-	end
-end
-function P.toggleCombat()
-	if #eventList > 0 then	
-		P.get().hasCombat = not P.get().hasCombat
-		P.get().cache = nil
-		P.get().enemyID = 0 -- don't want to cause enemyHP to carry
-		P.update_rnEvents()
-	end
-end
-function P.toggleLevel()
-	if #eventList > 0 then	
-		P.get().lvlUp = not P.get().lvlUp
-		P.get().cache = nil
-		P.update_rnEvents()
-	end
-end
-function P.toggleDig()
-	if #eventList > 0 then	
-		P.get().dig = not P.get().dig
-		P.get().cache = nil
-		P.update_rnEvents()
-	end
-end
 
 
 function rnEventObj:new(batParams, sel_Unit_i)
@@ -667,12 +694,7 @@ function rnEventObj:new(batParams, sel_Unit_i)
 	o.nextRN_i = 0
 	o.length = 0
 	o.eval = 0
-	
-	-- cache length and eval
-	-- use this for optimized fast updates when searching outcomes
-	-- cache indexed by *postBurnsRN_i* rn_i, not startRN_i
-	-- 2nd index is enemyHP at start so eHP passing will work
-	o.cache = nil
+	o:clearCache()
 	
 	return o
 end
@@ -697,6 +719,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 		if #perms >= MEM_LIMIT then
 			print()
 			print(string.format("MEMORY LIMIT %d REACHED, ABORTING", MEM_LIMIT))
+			print("Delete events or add dependencies to reduce memory use.")
 			print()
 		end
 		return
@@ -754,21 +777,14 @@ function P.permutations()
 	end
 end
 
-function P.setToPerm(p_index)
-	local currPerm = perms[p_index]
-	if not currPerm then
-		print("setToPerm failed")
-		print(p_index)
-		return
-	end
-	
+function P.setToPerm(perm)
 	local count = #eventList
 	
 	local lowestSwap = count+1 -- don't need to update from 1 to lSwap-1
 	-- saves a lot of time because usually only the higher rnEvent are swapped
 	
 	for swapInto_i = 1, count do
-		local perm_ID = currPerm[swapInto_i]
+		local perm_ID = perm[swapInto_i]
 				
 		-- find rnEvent with ID, previous should be in position
 		-- if current (swapInto_i) is in position, doing nothing is OK
@@ -789,6 +805,7 @@ end
 
 -- attempt every valid arrangement and score it
 -- return top three options, first is auto-set
+local TOP_N = 3
 function P.suggestedPermutation()
 	local timeStarted = os.clock()
 
@@ -797,55 +814,43 @@ function P.suggestedPermutation()
 		print(string.format("Time taken: %.2f seconds", os.clock() - timeStarted))
 		timeStarted = os.clock()
 		
-		if permsNeedUpdate then -- memory abort
-			return
-		end
+		if permsNeedUpdate then return end -- memory limit
 	end
 	
-	local topN = 3
-	local topIndicies = {}
 	local topScores = {}
-	for top_i = 1, topN do
-		topIndicies[top_i] = 0
+	local topPerms = {}
+	for top_i = 1, TOP_N do
 		topScores[top_i] = -999
+		topPerms[top_i] = {}
 	end
-	
-	for _, event in ipairs(eventList) do
-		if not event.cache then
-			event.cache = {}
-			event.cache.count = 0
-			event.cache.min_i = 999999
-			event.cache.max_i = 0
-		end
-	end
-	
-	for perm_i = 1, #perms do
+		
+	for perm_i, perm in ipairs(perms) do
 		if perm_i % 5000 == 0 then
 			print(string.format("%7d/%d", perm_i, #perms))
 			emu.frameadvance() -- prevent unresponsiveness
 		end
 	
 		-- swap each rnEvent into position based on ID and perm, and update
-		P.setToPerm(perm_i)
+		P.setToPerm(perm)
 		
 		local score = P.totalEvaluation()
 		
 		-- update top results
 		local replaced = false
-		for top_i = 1, topN do
+		for top_i = 1, TOP_N do
 			if score > topScores[top_i] and not replaced then
-				for shift_k = topN, top_i + 1, -1 do
+				for shift_k = TOP_N, top_i + 1, -1 do
 					topScores[shift_k] = topScores[shift_k-1]
-					topIndicies[shift_k] = topIndicies[shift_k-1]
+					topPerms[shift_k] = topPerms[shift_k-1]
 				end
 				topScores[top_i] = score
-				topIndicies[top_i] = perm_i
+				topPerms[top_i] = perm
 				replaced = true
 			end
 		end
 	end
 	
-	P.setToPerm(topIndicies[1])
+	P.setToPerm(topPerms[1])
 	P.update_rnEvents(1)
 	
 	print()
@@ -854,11 +859,8 @@ function P.suggestedPermutation()
 	end
 	
 	print()
-	for top_i = 1, topN do
-		if not topScores[top_i] then
-			topScores[top_i] = -999
-		end
-		print(perms[topIndicies[top_i]])
+	for top_i = 1, TOP_N do
+		print(topPerms[top_i])
 		print(string.format("%.2f", topScores[top_i]))
 	end
 	

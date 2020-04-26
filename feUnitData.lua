@@ -607,7 +607,7 @@ if GAME_VERSION == 8 then
 	{18, 06, 06, 10, 05, 08, 12, 03}, --L’Arachel
 	{43, 16, 11, 09, 11, 06, 04, 01}, --Dozla
 	{30, 16, 18, 14, 08, 13, 11, 01}, --Saleh
-	{15, 03, 02, 05, 00, 03, 05, -9}, --Ewan	set base level to -9 after trainee promotion
+	{15, 03, 02, 05, 00, 03, 05, -8}, --Ewan	set base level to -9 after trainee promotion
 	{30, 14, 09, 10, 12, 02, 04, 09}, --Cormag
 	{28, 10, 16, 17, 09, 11, 05, 01}, --Rennac
 	{41, 17, 12, 12, 17, 09, 08, 08}, --Duessel
@@ -734,7 +734,7 @@ if GAME_VERSION == 8 then
 	
 	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
 	BOOSTERS[INDEX_OF_NAME["Neimi"]] = {0, 0, 0, 0, 0, 0, 2}
-	BOOSTERS[INDEX_OF_NAME["Ewan"]] = {1, 0, 1, 2, 1, 2, 0} -- Mage promo, set base lvl to -9
+	BOOSTERS[INDEX_OF_NAME["Ewan"]] = {1, 0, 1, 2, 1, 2, 0} -- Mage promo, set base lvl to -8
 	BOOSTERS[INDEX_OF_NAME["Cormag"]] = {7, 0, 2, 2, 2, 2, 0}
 	
 	PROMOTED_AT[INDEX_OF_NAME["Lute"]] = 12
@@ -743,13 +743,16 @@ if GAME_VERSION == 8 then
 	PROMOTED_AT[INDEX_OF_NAME["Forde"]] = 16
 	PROMOTED_AT[INDEX_OF_NAME["Ephraim"]] = 18
 	
-	WILL_END_AT[INDEX_OF_NAME["Neimi"]] = 10
-	WILL_END_AT[INDEX_OF_NAME["Lute"]] = 15
-	WILL_END_AT[INDEX_OF_NAME["Ephraim"]] = 10
-	WILL_END_AT[INDEX_OF_NAME["Forde"]] = 10
-	WILL_END_AT[INDEX_OF_NAME["L\'Arachel"]] = 5
-	WILL_END_AT[INDEX_OF_NAME["Tethys"]] = 5
+	WILL_END_AT[INDEX_OF_NAME["Seth"]] = 17
+	WILL_END_AT[INDEX_OF_NAME["Cormag"]] = 15
+	WILL_END_AT[INDEX_OF_NAME["Lute"]] = 13
+	WILL_END_AT[INDEX_OF_NAME["Ephraim"]] = 8
+	WILL_END_AT[INDEX_OF_NAME["Forde"]] = 5
 	WILL_END_AT[INDEX_OF_NAME["Syrene"]] = 5
+	WILL_END_AT[INDEX_OF_NAME["Neimi"]] = 4
+	WILL_END_AT[INDEX_OF_NAME["Tethys"]] = 4
+	WILL_END_AT[INDEX_OF_NAME["L\'Arachel"]] = 9
+	WILL_END_AT[INDEX_OF_NAME["Ewan"]] = 3
 end
 
 -- determine if healer is present manually

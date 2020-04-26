@@ -160,10 +160,10 @@ while true do
 		
 		-- change selection
 		if pressed("up", gameCtrl) then
-			rnEvent.decSel()
+			rnEvent.changeSelection(-1)
 		end
 		if pressed("down", gameCtrl) then
-			rnEvent.incSel()
+			rnEvent.changeSelection(1)
 		end
 		
 		-- swap with next
@@ -336,7 +336,7 @@ while true do
 			print(string.format("Switching to %s rng", currentRNG:name()))
 		end
 		
-		if pressed(12) then rnEvent.diagnostic() end
+		if pressed(12) then rnEvent.printDiagnostic() end
 		
 		if pressed(13) then rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass) end
 	end

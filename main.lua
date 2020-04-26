@@ -145,17 +145,17 @@ while true do
 	if feGUI.canAlter_rnEvent() and not keybCtrl.anythingHeld then
 		-- change burns
 		if pressed("left", gameCtrl) then
-			rnEvent.changeBurns(-rnStepSize)
+			rnEvent.change("burns", -rnStepSize)
 		end
 		if pressed("right", gameCtrl) then
-			rnEvent.changeBurns(rnStepSize)
+			rnEvent.change("burns", rnStepSize)
 		end
 		
 		if pressed("L", gameCtrl) then
-			rnEvent.changeEnemyID(-1)
+			rnEvent.change("enemyID", -1)
 		end
 		if pressed("R", gameCtrl) then
-			rnEvent.changeEnemyID(1)
+			rnEvent.change("enemyID", 1)
 		end
 		
 		-- change selection
@@ -194,7 +194,7 @@ while true do
 			printStringArray(rnEvent.get().batParams:toStrings())
 		end
 		
-		if pressed(3) then rnEvent.toggleCombat() end
+		if pressed(3) then rnEvent.toggle("hasCombat") end
 		
 		if pressed(4) then
 			rnEvent.toggleBatParam(combat.combatObj.togglePromo)
@@ -276,9 +276,9 @@ while true do
 			end
 		end
 		
-		if pressed(3) then rnEvent.toggleLevel() end
+		if pressed(3) then rnEvent.toggle("lvlUp") end
 		
-		if pressed(4) then rnEvent.toggleDig() end
+		if pressed(4) then rnEvent.toggle("dig") end
 		
 		if pressed(5) then -- toggle fog
 			if savedFog > 0 then
@@ -296,16 +296,16 @@ while true do
 	
 		if held(8) then -- hold down, then press <^v>
 			if pressed("up", gameCtrl) then
-				rnEvent.adjustHPweight(25, "isPlayer")
+				rnEvent.change("pHPweight", 25)
 			end
 			if pressed("down", gameCtrl) then
-				rnEvent.adjustHPweight(-25, "isPlayer")
+				rnEvent.change("pHPweight", -25)
 			end
 			if pressed("left", gameCtrl) then
-				rnEvent.adjustHPweight(-25)
+				rnEvent.change("eHPweight", -25)
 			end
 			if pressed("right", gameCtrl) then
-				rnEvent.adjustHPweight(25)
+				rnEvent.change("eHPweight", 25)
 			end
 		end
 		

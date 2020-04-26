@@ -16,10 +16,10 @@ function P.getEventList()
 	return eventList
 end
 
-local sel_rnEvent_i = 1
+local selectedEvent_i = 1
 local function limitSel_rnEvent_i()
-	if sel_rnEvent_i > #eventList then sel_rnEvent_i = #eventList end
-	if sel_rnEvent_i < 1 then sel_rnEvent_i = 1 end 
+	if selectedEvent_i > #eventList then selectedEvent_i = #eventList end
+	if selectedEvent_i < 1 then selectedEvent_i = 1 end 
 end
 
 local perms = {}
@@ -34,7 +34,7 @@ local DEFAULT_EHP_WEIGHT = 50
 -- non modifying functions
 
 function P.get(index)
-	index = index or sel_rnEvent_i
+	index = index or selectedEvent_i
 	return eventList[index]
 end
 
@@ -86,43 +86,55 @@ end
 
 function rnEventObj:headerString(rnEvent_i)
 	local hString = "  "
-	if rnEvent_i == sel_rnEvent_i then
+	if rnEvent_i == selectedEvent_i then
 		hString = "->" 
 	end
 	
-	local specialStringEvents = ""
+	local detailString = ""
 	
 	if self.burns ~= 0 then
-		specialStringEvents = specialStringEvents .. 
-			string.format(" burns %d", self.burns)
+		detailString = detailString .. string.format(" burns %d", self.burns)
+	end
+	
+	local hasDependencies = false
+	for i = 1, #eventList do
+		if self.comesAfter[i] then
+			hasDependencies = true
+			break
+		end
+	end
+	
+	if hasDependencies then
+		detailString = detailString .. " deps"
+		for i = 1, #eventList do
+			if self.comesAfter[i] then
+				detailString = detailString .. i
+			end
+		end
 	end
 	
 	if self.enemyID ~= 0 then
-		specialStringEvents = specialStringEvents .. 
-			string.format(" eID %d %dhp", self.enemyID, self.enemyHPstart)
+		detailString = detailString .. string.format(" eID %d %dhp", self.enemyID, self.enemyHPstart)
 	end
 
 	if self.batParams:isWeaponSpecial("isPlayer") then
-		specialStringEvents = specialStringEvents .. " " 
-			.. combat.WEAPON_TYPE_STRINGS[self.batParams.player.weaponType]:upper()
+		detailString = detailString .. " " .. combat.WEAPON_TYPE_STRINGS[self.batParams.player.weaponType]:upper()
 	end
 	
 	if self.batParams:isWeaponSpecial(false) then
-		specialStringEvents = specialStringEvents .. " " 
-			.. combat.WEAPON_TYPE_STRINGS[self.batParams.enemy.weaponType]
+		detailString = detailString .. " " .. combat.WEAPON_TYPE_STRINGS[self.batParams.enemy.weaponType]
 	end
 	
 	if self.batParams.enemy.class ~= classes.LORD then
-		specialStringEvents = specialStringEvents .. " class " .. tostring(self.batParams.enemy.class)
+		detailString = detailString .. " class " .. tostring(self.batParams.enemy.class)
 	end
 	
 	if self.pHPweight ~= DEFAULT_PHP_WEIGHT or self.eHPweight ~= DEFAULT_EHP_WEIGHT then
-		specialStringEvents = specialStringEvents .. 
-			string.format(" hpw %d %d", self.pHPweight, self.eHPweight)
+		detailString = detailString .. string.format(" hpw %d %d", self.pHPweight, self.eHPweight)
 	end
 	
 	return hString .. string.format("%2d %s%s%s",
-		self.ID, self.unit.name, self:resultString(), specialStringEvents)
+		self.ID, self.unit.name, self:resultString(), detailString)
 end
 
 function rnEventObj:healable()
@@ -222,7 +234,7 @@ end
 function P.searchFutureOutcomes(event_i)
 	if #eventList < 1 then return end
 	
-	event_i = event_i or sel_rnEvent_i
+	event_i = event_i or selectedEvent_i
 	-- swap to first location
 	eventList[event_i], eventList[1] = eventList[1], eventList[event_i]
 	event = eventList[1]
@@ -340,9 +352,8 @@ function rnEventObj:printDiagnostic()
 end
 
 function P.printDiagnostic()
-	if #eventList > 0 then
-		P.get():printDiagnostic()
-	end
+	if #eventList <= 0 then return end
+	P.get():printDiagnostic()
 end
 
 -- rns blank to be colorized
@@ -376,54 +387,55 @@ function P.addEvent(event)
 	event = event or rnEventObj:new()
 	
 	table.insert(eventList, event)
-	sel_rnEvent_i = #eventList
+	selectedEvent_i = #eventList
 	permsNeedUpdate = true
 	P.update_rnEvents()
 end
 
 -- adjusts IDs, including dependencies
 function P.deleteLastEvent()
-	if #eventList > 0 then
-		local IDremoved = eventList[#eventList].ID
-		for _, event in ipairs(eventList) do
-			if event.ID > IDremoved then
-				event.ID = event.ID - 1 -- dec own ID
-				for rnEvent_j = IDremoved, #eventList do -- dec dependency table after IDremoved
-					event.comesAfter[rnEvent_j] = event.comesAfter[rnEvent_j+1]
-				end
+	if #eventList <= 0 then return end
+	
+	local IDremoved = eventList[#eventList].ID
+	for _, event in ipairs(eventList) do
+		if event.ID > IDremoved then
+			event.ID = event.ID - 1 -- decrement own ID
+			for rnEvent_j = IDremoved, #eventList do -- decrement dependency table after IDremoved
+				event.comesAfter[rnEvent_j] = event.comesAfter[rnEvent_j+1]
 			end
 		end
-		
-		table.insert(deletedEventsStack, table.remove(eventList))
-		permsNeedUpdate = true
-		limitSel_rnEvent_i()
 	end
+	
+	table.insert(deletedEventsStack, table.remove(eventList))
+	permsNeedUpdate = true
+	limitSel_rnEvent_i()
 end
 
--- sets a new ID at end of table, doesn't restore dependencies because ids may have changed
+-- sets a new ID at end of table, clears dependencies because ids may have changed
 function P.undoDelete()
 	if #deletedEventsStack > 0 then
 		P.addEvent(table.remove(deletedEventsStack))
 		eventList[#eventList].ID = #eventList
+		eventList[#eventList].comesAfter = {}
 	else
 		print("No deletion to undo.")
 	end
 end
 
 function P.toggleDependency()
-	if sel_rnEvent_i < #eventList then
-		eventList[sel_rnEvent_i+1].comesAfter[P.get().ID] = 
-			not eventList[sel_rnEvent_i+1].comesAfter[P.get().ID]
-		
-		if eventList[sel_rnEvent_i+1].comesAfter[P.get().ID]	then
-			print(string.format("%d now depends on %d", 
-				eventList[sel_rnEvent_i+1].ID, P.get().ID))
-		else
-			print(string.format("%d no longer depends on %d", 
-				eventList[sel_rnEvent_i+1].ID, P.get().ID))
-		end
-		permsNeedUpdate = true
+	if selectedEvent_i >= #eventList then return end
+	
+	local nextEvent = eventList[selectedEvent_i+1]
+	local selectedID = P.get().ID
+	
+	nextEvent.comesAfter[selectedID] = not nextEvent.comesAfter[selectedID]
+	
+	if nextEvent.comesAfter[selectedID]	then
+		print(string.format("%d now depends on %d", nextEvent.ID, selectedID))
+	else
+		print(string.format("%d no longer depends on %d", nextEvent.ID, selectedID))
 	end
+	permsNeedUpdate = true
 end
 
 
@@ -431,28 +443,20 @@ end
 
 
 function P.changeSelection(amount)
-	sel_rnEvent_i = sel_rnEvent_i + amount
+	selectedEvent_i = selectedEvent_i + amount
 	limitSel_rnEvent_i()
 end
 
 function P.swap()
-	if sel_rnEvent_i < #eventList then
-		if eventList[sel_rnEvent_i+1].comesAfter[P.get().ID] then
-			print(string.format("Can't swap: %d depends on %d; toggle with Start", 
-				eventList[sel_rnEvent_i+1].ID, P.get().ID))
-		else
-			eventList[sel_rnEvent_i], eventList[sel_rnEvent_i+1] = eventList[sel_rnEvent_i+1], eventList[sel_rnEvent_i]
-			P.update_rnEvents()
-		end
-	end
-end
+	if selectedEvent_i >= #eventList then return end
 
-function P.changeBurns(amount)
-	if #eventList > 0 then
-		P.get().burns = P.get().burns + amount
-		if P.get().burns < 0 then
-			P.get().burns = 0
-		end
+	local nextEvent_i = selectedEvent_i+1
+	
+	if eventList[nextEvent_i].comesAfter[P.get().ID] then
+		print(string.format("Can't swap: %d depends on %d; toggle with Start", 
+			eventList[nextEvent_i].ID, P.get().ID))
+	else
+		eventList[selectedEvent_i], eventList[nextEvent_i] = eventList[nextEvent_i], eventList[selectedEvent_i]
 		P.update_rnEvents()
 	end
 end
@@ -583,7 +587,7 @@ function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
 end
 
 function P.update_rnEvents(start_i, cacheUpdateOnly)
-	start_i = start_i or sel_rnEvent_i
+	start_i = start_i or selectedEvent_i
 	
 	for rnEvent_i = start_i, #eventList do
 		eventList[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
@@ -600,52 +604,37 @@ local function invalidateCache()
 end
 
 function P.updateStats()
-	if #eventList > 0 then
-		P.get():setStats()
-		invalidateCache()
-	end
+	if #eventList <= 0 then return end
+	
+	P.get():setStats()
+	invalidateCache()
 end
-function P.toggleCombat()
-	if #eventList > 0 then	
-		P.get().hasCombat = not P.get().hasCombat
-		P.get().enemyID = 0 -- don't want to cause enemyHP to carry
-		invalidateCache()
-	end
+
+-- hasCombat, lvlUp, and dig
+function P.toggle(k)
+	if #eventList <= 0 then return end
+	
+	P.get()[k] = not P.get()[k]
+	invalidateCache()
 end
-function P.toggleLevel()
-	if #eventList > 0 then	
-		P.get().lvlUp = not P.get().lvlUp
-		invalidateCache()
-	end
-end
-function P.toggleDig()
-	if #eventList > 0 then	
-		P.get().dig = not P.get().dig
-		invalidateCache()
-	end
+
+-- burns, enemyID, pHPweight, eHPweight
+-- technically burns do not require a cache invalidation,
+-- and the other fields would be valid as negative, 
+-- but this allows function consolidation
+function P.change(k, amount)
+	if #eventList <= 0 then return end
+	
+	P.get()[k] = P.get()[k] + amount
+	if P.get()[k] < 0 then P.get()[k] = 0 end
+	invalidateCache()
 end
 
 function P.toggleBatParam(func, var)
-	if #eventList > 0 then
-		func(P.get().batParams, var) -- :func() syntactic for func(self)
-		invalidateCache()
-	end
-end
-function P.changeEnemyID(amount)
-	if #eventList > 0 then
-		P.get().enemyID = P.get().enemyID + amount
-		invalidateCache()
-	end
-end
-function P.adjustHPweight(amount, isPlayer)
-	if #eventList > 0 then
-		if isPlayer then
-			P.get().pHPweight = P.get().pHPweight + amount
-		else
-			P.get().eHPweight = P.get().eHPweight + amount
-		end
-		invalidateCache()
-	end
+	if #eventList <= 0 then return end
+	
+	func(P.get().batParams, var) -- :func() syntactic for func(self)
+	invalidateCache()
 end
 
 

@@ -825,16 +825,15 @@ function P.suggestedPermutation()
 		local score = P.totalEvaluation()
 		
 		-- update top results
-		local replaced = false
 		for top_i = 1, TOP_N do
-			if score > topScores[top_i] and not replaced then
+			if score > topScores[top_i] then
 				for shift_k = TOP_N, top_i + 1, -1 do
 					topScores[shift_k] = topScores[shift_k-1]
 					topPerms[shift_k] = topPerms[shift_k-1]
 				end
 				topScores[top_i] = score
 				topPerms[top_i] = perm
-				replaced = true
+				break
 			end
 		end
 	end

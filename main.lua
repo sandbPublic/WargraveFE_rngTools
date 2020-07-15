@@ -30,25 +30,17 @@ print(windowWidthString)
 print("Game version " .. GAME_VERSION)
 
 local hotkeys = {}
-local function loadHotkeys(filename)
-	local f = assert(io.open(filename, "r"))
+local f = assert(io.open("QwertyHotkeys.txt", "r"))
+local c = f:read("*line")
+while c do
+	hotkey = {}
+	hotkey.key = c
+	hotkey.message1 = c .. ": " .. f:read("*line")
+	hotkey.message2 = c:lower() .. ": " ..f:read("*line")
 	
-	local c = f:read("*line")
-	
-	while c do
-		hotkey = {}
-		hotkey.key = c
-		hotkey.message1 = c .. ": " .. f:read("*line")
-		hotkey.message2 = c:lower() .. ": " ..f:read("*line")
-		
-		table.insert(hotkeys, hotkey)
-		
-		c = f:read("*line")
-	end
-	
-	print("loaded hotkeys " .. filename)
+	table.insert(hotkeys, hotkey)
+	c = f:read("*line")
 end
-loadHotkeys("QwertyHotkeys.txt")
 
 local function printHelp()
 	print("")
@@ -325,7 +317,16 @@ while true do
 			end
 		end	
 		
-		if pressed(10) then combat.printStat(2) end -- 2 weapon code, 3 atk, 5 AS
+		if pressed(10) then combat.printStat() end
+		
+		if held(10) then
+			if pressed("left", gameCtrl) then
+				combat.cyclePrintStat(-1)
+			end
+			if pressed("right", gameCtrl) then
+				combat.cyclePrintStat(1)
+			end
+		end
 			
 		if pressed(11) then
 			if currentRNG.isPrimary then

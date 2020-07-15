@@ -27,7 +27,7 @@ toggle window visibility
 move window (<^v>LR)
 L
 hold, <> display mode
-print battle stat
+print stat, hold+<> to change
 B
 change afa/metis
 switch RNG to 2ndary

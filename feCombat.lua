@@ -52,8 +52,17 @@ local function battleAddrs(isAttacker, index)
 	return DEFENDER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]
 end
 
-function P.printStat(i)
-	print(string.format("%s %d", P.COMBAT_RAM_FIELD_NAMES[i], memory.readbyte(battleAddrs(true, i))))
+local printStat_i = AS_I
+
+function P.cyclePrintStat(increment)
+	printStat_i = printStat_i + increment
+	if printStat_i > NUM_ADDRS then printStat_i = 1 end
+	if printStat_i < 1 then printStat_i = NUM_ADDRS end
+	print("now printing stat " .. P.COMBAT_RAM_FIELD_NAMES[printStat_i])
+end
+
+function P.printStat()
+	print(memory.readbyte(battleAddrs(true, printStat_i)))
 end
 
 -- note that staff hit only updates in animation, not in preview

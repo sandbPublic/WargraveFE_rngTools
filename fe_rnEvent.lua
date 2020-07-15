@@ -9,18 +9,9 @@ rnEvent = P
 
 
 
-local eventList = {}
+P.events = {}
+P.events.sel_i = 1
 local deletedEventsStack = {} -- recover deleted rnEvents (except dependencies) in order of deletion
-
-function P.getEventList()
-	return eventList
-end
-
-local selectedEvent_i = 1
-local function limitSel_rnEvent_i()
-	if selectedEvent_i > #eventList then selectedEvent_i = #eventList end
-	if selectedEvent_i < 1 then selectedEvent_i = 1 end 
-end
 
 local perms = {}
 local permsNeedUpdate = false
@@ -33,13 +24,8 @@ local DEFAULT_EHP_WEIGHT = 50
 
 -- non modifying functions
 
-function P.get(index)
-	index = index or selectedEvent_i
-	return eventList[index]
-end
-
 function P.getByID(vID)
-	for _, event in ipairs(eventList) do
+	for _, event in ipairs(P.events) do
 		if event.ID == vID then
 			return event
 		end
@@ -86,7 +72,7 @@ end
 
 function rnEventObj:headerString(rnEvent_i)
 	local hString = "  "
-	if rnEvent_i == selectedEvent_i then
+	if rnEvent_i == P.events.sel_i then
 		hString = "->" 
 	end
 	
@@ -97,7 +83,7 @@ function rnEventObj:headerString(rnEvent_i)
 	end
 	
 	local hasDependencies = false
-	for i = 1, #eventList do
+	for i = 1, #P.events do
 		if self.comesAfter[i] then
 			hasDependencies = true
 			break
@@ -106,7 +92,7 @@ function rnEventObj:headerString(rnEvent_i)
 	
 	if hasDependencies then
 		detailString = detailString .. " deps"
-		for i = 1, #eventList do
+		for i = 1, #P.events do
 			if self.comesAfter[i] then
 				detailString = detailString .. i
 			end
@@ -223,7 +209,7 @@ end
 
 function P.totalEvaluation()
 	local score = 0	
-	for _, event in ipairs(eventList) do
+	for _, event in ipairs(P.events) do
 		score = score + event.eval
 	end
 	return score
@@ -232,12 +218,12 @@ end
 -- quickly find how many burns needed to improve result of selected rnEvent
 -- for rn burning gameplay
 function P.searchFutureOutcomes(event_i)
-	if #eventList < 1 then return end
+	if #P.events < 1 then return end
 	
-	event_i = event_i or selectedEvent_i
+	event_i = event_i or P.events.sel_i
 	-- swap to first location
-	eventList[event_i], eventList[1] = eventList[1], eventList[event_i]
-	event = eventList[1]
+	P.events[event_i], P.events[1] = P.events[1], P.events[event_i]
+	event = P.events[1]
 	event.burns = 0
 	
 	print()
@@ -324,7 +310,7 @@ function rnEventObj:printDiagnostic()
 		strH = ""
 		strA = ""
 		strD = ""
-		for data_i, str_ in ipairs(combat.COMBAT_RAM_FIELD_NAMES) do
+		for data_i, str_ in ipairs(combat.PARAM_NAMES) do
 			strH = strH .. str_ .. " "
 			strA = strA .. string.format("%3d ", self.batParams.attacker[data_i])
 			strD = strD .. string.format("%3d ", self.batParams.defender[data_i])
@@ -352,20 +338,20 @@ function rnEventObj:printDiagnostic()
 end
 
 function P.printDiagnostic()
-	if #eventList <= 0 then return end
-	P.get():printDiagnostic()
+	if #P.events <= 0 then return end
+	selected(P.events):printDiagnostic()
 end
 
 -- rns blank to be colorized
 function P.toStrings(isColored)
 	local rStrings = {}
 	
-	if #eventList <= 0 then
+	if #P.events <= 0 then
 		rStrings[1] = "rnEvents empty"
 		return rStrings
 	end
 	
-	for rnEvent_i, event in ipairs(eventList) do
+	for rnEvent_i, event in ipairs(P.events) do
 		table.insert(rStrings, event:headerString(rnEvent_i))
 		local prefix = string.format("%5d ", event.startRN_i % 100000)
 		if isColored then
@@ -386,47 +372,48 @@ end
 function P.addEvent(event)
 	event = event or rnEventObj:new()
 	
-	table.insert(eventList, event)
-	selectedEvent_i = #eventList
+	table.insert(P.events, event)
+	P.events.sel_i = #P.events
 	permsNeedUpdate = true
 	P.update_rnEvents()
 end
 
 -- adjusts IDs, including dependencies
 function P.deleteLastEvent()
-	if #eventList <= 0 then return end
+	if #P.events <= 0 then return end
 	
-	local IDremoved = eventList[#eventList].ID
-	for _, event in ipairs(eventList) do
+	local IDremoved = P.events[#P.events].ID
+	for _, event in ipairs(P.events) do
 		if event.ID > IDremoved then
 			event.ID = event.ID - 1 -- decrement own ID
-			for rnEvent_j = IDremoved, #eventList do -- decrement dependency table after IDremoved
+			for rnEvent_j = IDremoved, #P.events do -- decrement dependency table after IDremoved
 				event.comesAfter[rnEvent_j] = event.comesAfter[rnEvent_j+1]
 			end
 		end
 	end
 	
-	table.insert(deletedEventsStack, table.remove(eventList))
+	table.insert(deletedEventsStack, table.remove(P.events))
+	if P.events.sel_i > #P.events then P.events.sel_i = #P.events end
+	
 	permsNeedUpdate = true
-	limitSel_rnEvent_i()
 end
 
 -- sets a new ID at end of table, clears dependencies because ids may have changed
 function P.undoDelete()
 	if #deletedEventsStack > 0 then
 		P.addEvent(table.remove(deletedEventsStack))
-		eventList[#eventList].ID = #eventList
-		eventList[#eventList].comesAfter = {}
+		P.events[#P.events].ID = #P.events
+		P.events[#P.events].comesAfter = {}
 	else
 		print("No deletion to undo.")
 	end
 end
 
 function P.toggleDependency()
-	if selectedEvent_i >= #eventList then return end
+	if P.events.sel_i >= #P.events then return end
 	
-	local nextEvent = eventList[selectedEvent_i+1]
-	local selectedID = P.get().ID
+	local nextEvent = P.events[P.events.sel_i+1]
+	local selectedID = selected(P.events).ID
 	
 	nextEvent.comesAfter[selectedID] = not nextEvent.comesAfter[selectedID]
 	
@@ -442,21 +429,16 @@ end
 
 
 
-function P.changeSelection(amount)
-	selectedEvent_i = selectedEvent_i + amount
-	limitSel_rnEvent_i()
-end
-
 function P.swap()
-	if selectedEvent_i >= #eventList then return end
+	if P.events.sel_i >= #P.events then return end
 
-	local nextEvent_i = selectedEvent_i+1
+	local nextEvent_i = P.events.sel_i+1
 	
-	if eventList[nextEvent_i].comesAfter[P.get().ID] then
+	if P.events[nextEvent_i].comesAfter[selected(P.events).ID] then
 		print(string.format("Can't swap: %d depends on %d; toggle with Start", 
-			eventList[nextEvent_i].ID, P.get().ID))
+			P.events[nextEvent_i].ID, selected(P.events).ID))
 	else
-		eventList[selectedEvent_i], eventList[nextEvent_i] = eventList[nextEvent_i], eventList[selectedEvent_i]
+		P.events[P.events.sel_i], P.events[nextEvent_i] = P.events[nextEvent_i], P.events[P.events.sel_i]
 		P.update_rnEvents()
 	end
 end
@@ -479,7 +461,7 @@ function rnEventObj:setEnemyHP(rnEvent_i)
 	
 	-- copy eHP from end of earliest previous combat that shares an enemy id if one exists
 	for prevCombat_i = rnEvent_i-1, 1, -1 do
-		local prev_rnEvent = eventList[prevCombat_i]
+		local prev_rnEvent = P.events[prevCombat_i]
 	
 		if prev_rnEvent.enemyID == self.enemyID and prev_rnEvent.hasCombat then
 			self.enemyHPstart = prev_rnEvent.enemyHPend
@@ -558,7 +540,7 @@ function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
 		if rnEvent_i == 1 then 
 			self.startRN_i = rns.rng1.pos
 		else
-			self.startRN_i = eventList[rnEvent_i-1].nextRN_i
+			self.startRN_i = P.events[rnEvent_i-1].nextRN_i
 		end
 	else 
 		rnEvent_i = 1
@@ -587,10 +569,10 @@ function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
 end
 
 function P.update_rnEvents(start_i, cacheUpdateOnly)
-	start_i = start_i or selectedEvent_i
+	start_i = start_i or P.events.sel_i
 	
-	for rnEvent_i = start_i, #eventList do
-		eventList[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
+	for rnEvent_i = start_i, #P.events do
+		P.events[rnEvent_i]:update(rnEvent_i, cacheUpdateOnly)
 	end
 end
 
@@ -599,22 +581,22 @@ end
 
 -- functions that invalidate cache
 local function invalidateCache()
-	P.get():clearCache()
+	selected(P.events):clearCache()
 	P.update_rnEvents()
 end
 
 function P.updateStats()
-	if #eventList <= 0 then return end
+	if #P.events <= 0 then return end
 	
-	P.get():setStats()
+	selected(P.events):setStats()
 	invalidateCache()
 end
 
 -- hasCombat, lvlUp, and dig
 function P.toggle(k)
-	if #eventList <= 0 then return end
+	if #P.events <= 0 then return end
 	
-	P.get()[k] = not P.get()[k]
+	selected(P.events)[k] = not selected(P.events)[k]
 	invalidateCache()
 end
 
@@ -623,17 +605,17 @@ end
 -- and the other fields would be valid as negative, 
 -- but this allows function consolidation
 function P.change(k, amount)
-	if #eventList <= 0 then return end
+	if #P.events <= 0 then return end
 	
-	P.get()[k] = P.get()[k] + amount
-	if P.get()[k] < 0 then P.get()[k] = 0 end
+	selected(P.events)[k] = selected(P.events)[k] + amount
+	if selected(P.events)[k] < 0 then selected(P.events)[k] = 0 end
 	invalidateCache()
 end
 
 function P.toggleBatParam(func, var)
-	if #eventList <= 0 then return end
+	if #P.events <= 0 then return end
 	
-	func(P.get().batParams, var) -- :func() syntactic for func(self)
+	func(selected(P.events).batParams, var) -- :func() syntactic for func(self)
 	invalidateCache()
 end
 
@@ -648,10 +630,10 @@ function rnEventObj:new(batParams, sel_Unit_i)
 	setmetatable(o, self)
 	self.__index = self
 	 
-	o.ID = #eventList+1 -- order in which rnEvents were registered
+	o.ID = #P.events+1 -- order in which rnEvents were registered
 	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
 	
-	o.unit = unitData.selectedUnit()
+	o.unit = selected(unitData.deployedUnits)
 	o:setStats() -- todo do we get enemy stats on EP?
 	o.batParams = batParams:copy()
 	
@@ -699,7 +681,7 @@ local MEM_LIMIT = 500000
 local function recursivePerm(usedNums, currPerm, currSize)
 	if #perms >= MEM_LIMIT then return end
 
-	local count = #eventList
+	local count = #P.events
 	
 	-- base case
 	if currSize == count then
@@ -708,7 +690,7 @@ local function recursivePerm(usedNums, currPerm, currSize)
 		if #perms >= MEM_LIMIT then
 			print()
 			print(string.format("MEMORY LIMIT %d REACHED, ABORTING", MEM_LIMIT))
-			print("Delete events or add dependencies to reduce memory use.")
+			print("Delete P.events or add dependencies to reduce memory use.")
 			print()
 		end
 		return
@@ -752,7 +734,7 @@ function P.permutations()
 	-- using nil as false doesn't fill table properly, explicitly fill
 	local usedNums = {}
 	local currPerm = {}
-	for i = 1, #eventList do
+	for i = 1, #P.events do
 		usedNums[i] = false
 		currPerm[i] = 0
 	end
@@ -767,7 +749,7 @@ function P.permutations()
 end
 
 function P.setToPerm(perm)
-	local count = #eventList
+	local count = #P.events
 	
 	local lowestSwap = count+1 -- don't need to update from 1 to lSwap-1
 	-- saves a lot of time because usually only the higher rnEvent are swapped
@@ -778,9 +760,9 @@ function P.setToPerm(perm)
 		-- find rnEvent with ID, previous should be in position
 		-- if current (swapInto_i) is in position, doing nothing is OK
 		for swapOutOf_j = swapInto_i+1, count do
-			if eventList[swapOutOf_j].ID == perm_ID then
+			if P.events[swapOutOf_j].ID == perm_ID then
 				-- swap into place
-				eventList[swapOutOf_j], eventList[swapInto_i] = eventList[swapInto_i], eventList[swapOutOf_j]
+				P.events[swapOutOf_j], P.events[swapInto_i] = P.events[swapInto_i], P.events[swapOutOf_j]
 				
 				if lowestSwap > swapInto_i then
 					lowestSwap = swapInto_i
@@ -842,7 +824,7 @@ function P.suggestedPermutation()
 	P.update_rnEvents(1)
 	
 	print()
-	for _, event in ipairs(eventList) do
+	for _, event in ipairs(P.events) do
 		event:evaluation_fn(true)
 	end
 	

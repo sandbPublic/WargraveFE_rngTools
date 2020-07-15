@@ -1,12 +1,15 @@
+require("feMisc")
+
 local P = {}
 classes = P
 
 
 
 
-GAME_VERSION = 8
-HARD_MODE = true
-WINDOW_WIDTH = 45
+-- utility functions
+-- kept here since this is the highest dependency
+
+
 
 local indexer = 0
 local function nextInd()

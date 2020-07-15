@@ -30,7 +30,8 @@ local LEVEL_I   = 9 -- for Great Shield, Pierce, Sure Strike, and exp cap at lev
 local EXP_I     = 10 -- for level up detection
 local HP_I      = 11 -- current HP
 local NUM_ADDRS = 11
-P.COMBAT_RAM_FIELD_NAMES = {"mHP", "wep", "atk", "def", "AS ", "hit", "lck", "crt", "lvl", "exp", "cHP"}
+P.PARAM_NAMES = {"mHP", "wep", "atk", "def", "AS ", "hit", "lck", "crt", "lvl", "exp", "cHP"}
+P.PARAM_NAMES.sel_i = AS_I
 
 local ATTACKER_BASE_ADDR = {0x02039200, 0x0203A400, 0x0203A500} 
 ATTACKER_BASE_ADDR = ATTACKER_BASE_ADDR[GAME_VERSION - 5]
@@ -40,29 +41,17 @@ DEFENDER_BASE_ADDR = DEFENDER_BASE_ADDR[GAME_VERSION - 5]
 
 --                      mxHP  weap  atk   def    AS   hit  luck  crit   lvl    xp    hp
 --                             +12 +0x3C    +2    +2    +6    +4    +2  +6/4    +1    +1
-BATTLE_ADDR_OFFSETS = {{0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82},
-                       {0x02, 0x0E, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62},
-                       {  -2, 0x0A, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}}
+local BATTLE_ADDR_OFFSETS = {{0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82},
+							 {0x02, 0x0E, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62},
+							 {  -2, 0x0A, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}}
 BATTLE_ADDR_OFFSETS = BATTLE_ADDR_OFFSETS[GAME_VERSION - 5]
 
-local function battleAddrs(isAttacker, index)
+function P.paramInRAM(isAttacker, index)
+	index = index or P.PARAM_NAMES.sel_i
 	if isAttacker then
-		return ATTACKER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]		
+		return memory.readbyte(ATTACKER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index])	
 	end
-	return DEFENDER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index]
-end
-
-local printStat_i = AS_I
-
-function P.cyclePrintStat(increment)
-	printStat_i = printStat_i + increment
-	if printStat_i > NUM_ADDRS then printStat_i = 1 end
-	if printStat_i < 1 then printStat_i = NUM_ADDRS end
-	print("now printing stat " .. P.COMBAT_RAM_FIELD_NAMES[printStat_i])
-end
-
-function P.printStat()
-	print(memory.readbyte(battleAddrs(true, printStat_i)))
+	return memory.readbyte(DEFENDER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index])
 end
 
 -- note that staff hit only updates in animation, not in preview
@@ -645,15 +634,15 @@ end
 
 function P.combatObj:set()
 	for i = 1, NUM_ADDRS do
-		self.attacker[i] = memory.readbyte(battleAddrs(true, i))
-		self.defender[i] = memory.readbyte(battleAddrs(false, i))
+		self.attacker[i] = P.paramInRAM(true, i)
+		self.defender[i] = P.paramInRAM(false, i)
 	end
 	
 	self.attacker.weaponType = weaponIdToType(self.attacker[WEAPON_I])
 	self.defender.weaponType = weaponIdToType(self.defender[WEAPON_I])
 	
-	self.player.class = unitData.selectedUnit().class
-	self.name = unitData.selectedUnit().name
+	self.player.class = selected(unitData.deployedUnits).class
+	self.name = selected(unitData.deployedUnits).name
 	
 	if classes.PROMOTED[self.player.class] then
 		self:togglePromo(PLAYER)

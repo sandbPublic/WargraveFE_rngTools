@@ -814,28 +814,8 @@ end
 
 
 
-local selectedUnit_i = 1
-local deployedUnits = {}
-
-function P.selectedUnit()
-	return deployedUnits[selectedUnit_i]
-end
-
-function P.setToNextDeployed(increment)
-	selectedUnit_i = selectedUnit_i + increment
-	
-	while selectedUnit_i > #deployedUnits do
-		selectedUnit_i = selectedUnit_i - #deployedUnits
-	end
-	while selectedUnit_i < 1 do
-		selectedUnit_i = selectedUnit_i + #deployedUnits
-	end
-	
-	print(string.format("Selected %s", P.selectedUnit().name))
-end
-
-
-
+P.deployedUnits = {}
+P.deployedUnits.sel_i = 1
 
 local unitObj = {}
 
@@ -1120,7 +1100,7 @@ end
 
 for unit_i = 1, #NAMES do
 	if DEPLOYED[unit_i] then
-		table.insert(deployedUnits, unitObj:new(unit_i))
+		table.insert(P.deployedUnits, unitObj:new(unit_i))
 	end
 end
 

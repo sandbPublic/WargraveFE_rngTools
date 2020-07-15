@@ -6,6 +6,7 @@
 --         unit
 --           rn
 --             class
+--               misc
 
 require("feGUI")
 
@@ -124,12 +125,12 @@ while true do
 	updateCtrl(gameCtrl, joypad.get(0))
 	
 	if feGUI.rectShiftMode then -- move rects or change opacity
-		if gameCtrl.thisFrame.left 	then feGUI.selRect():shift(-0.02, 0, 0) end
-		if gameCtrl.thisFrame.right then feGUI.selRect():shift( 0.02, 0, 0) end
-		if gameCtrl.thisFrame.up 	then feGUI.selRect():shift(0, -0.02, 0) end
-		if gameCtrl.thisFrame.down 	then feGUI.selRect():shift(0,  0.02, 0) end
-		if gameCtrl.thisFrame.L 	then feGUI.selRect():shift(0, 0, -0.04) end
-		if gameCtrl.thisFrame.R 	then feGUI.selRect():shift(0, 0,  0.04) end
+		if gameCtrl.thisFrame.left 	then selected(feGUI.rects):adjust(-0.02, 0, 0) end
+		if gameCtrl.thisFrame.right then selected(feGUI.rects):adjust( 0.02, 0, 0) end
+		if gameCtrl.thisFrame.up 	then selected(feGUI.rects):adjust(0, -0.02, 0) end
+		if gameCtrl.thisFrame.down 	then selected(feGUI.rects):adjust(0,  0.02, 0) end
+		if gameCtrl.thisFrame.L 	then selected(feGUI.rects):adjust(0, 0, -0.04) end
+		if gameCtrl.thisFrame.R 	then selected(feGUI.rects):adjust(0, 0,  0.04) end
 	end
 	
 	-- alter burns, selected, swap, toggle swapping
@@ -152,10 +153,10 @@ while true do
 		
 		-- change selection
 		if pressed("up", gameCtrl) then
-			rnEvent.changeSelection(-1)
+			changeSelection(rnEvent.events, -1)
 		end
 		if pressed("down", gameCtrl) then
-			rnEvent.changeSelection(1)
+			changeSelection(rnEvent.events, 1)
 		end
 		
 		-- swap with next
@@ -178,12 +179,12 @@ while true do
 		if pressed(1) then rnEvent.deleteLastEvent() end
 		
 		if pressed(2) then
-			unitData.selectedUnit():setStats()
+			selected(unitData.deployedUnits):setStats()
 			rnEvent.addEvent()
-			rnEvent.get().batParams:set()
+			selected(rnEvent.events).batParams:set()
 			rnEvent.update_rnEvents()
 			
-			printStringArray(rnEvent.get().batParams:toStrings())
+			printStringArray(selected(rnEvent.events).batParams:toStrings())
 		end
 		
 		if pressed(3) then rnEvent.toggle("hasCombat") end
@@ -191,7 +192,7 @@ while true do
 		if pressed(4) then
 			rnEvent.toggleBatParam(combat.combatObj.togglePromo)
 			
-			printStringArray(rnEvent.get().batParams:toStrings())
+			printStringArray(selected(rnEvent.events).batParams:toStrings())
 		end	
 		
 		if pressed(5) then rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp) end
@@ -200,40 +201,44 @@ while true do
 		
 		if held(8) then -- hold down, press left/right
 			if pressed("left", gameCtrl) then
-				unitData.setToNextDeployed(-1)
+				changeSelection(unitData.deployedUnits, -1)
+				print(selected(unitData.deployedUnits).name)
 			end
 			if pressed("right", gameCtrl) then
-				unitData.setToNextDeployed(1)
+				changeSelection(unitData.deployedUnits, 1)
+				print(selected(unitData.deployedUnits).name)
 			end
 		end
 		
 		if pressed(9) then -- quick toggle visibility
-			if feGUI.selRect().opacity == 0 then
-				feGUI.selRect().opacity = 0.75
+			if selected(feGUI.rects).opacity == 0 then
+				selected(feGUI.rects).opacity = 0.75
 			else
-				feGUI.selRect().opacity = 0
+				selected(feGUI.rects).opacity = 0
 			end
 		end
 		
 		if held(10) then -- hold down, then press left/right
 			if pressed("left", gameCtrl) then
-				feGUI.advanceDisplay(-1) 
+				changeSelection(feGUI.rects, -1)
+				print("selecting display: " .. selected(feGUI.rects).name)
 			end
 			if pressed("right", gameCtrl) then
-				feGUI.advanceDisplay(1) 
+				changeSelection(feGUI.rects, 1)
+				print("selecting display: " .. selected(feGUI.rects).name)
 			end
 		end
 				
-		if pressed(11) then unitData.selectedUnit():toggleAfas() end
+		if pressed(11) then selected(unitData.deployedUnits):toggleAfas() end
 		
 		if pressed(12) then -- save battle params & stats
 			combat.currBattleParams:set()
 			printStringArray(combat.currBattleParams:toStrings())
 			
-			unitData.selectedUnit():setStats()
+			selected(unitData.deployedUnits):setStats()
 			rnEvent.updateStats()
 			
-			printStringArray(unitData.selectedUnit():statData_strings())
+			printStringArray(selected(unitData.deployedUnits):statData_strings())
 		end
 		
 		if held(13) then -- hold down, then press direction
@@ -309,22 +314,24 @@ while true do
 				print("change display opacity with L and R")
 				print("change display position with D-pad")
 				
-				if feGUI.selRect().opacity == 0 then
-					feGUI.selRect().opacity = 0.5
+				if selected(feGUI.rects).opacity == 0 then
+					selected(feGUI.rects).opacity = 0.5
 				end
 			else
 				print("display shift mode: OFF")
 			end
 		end	
 		
-		if pressed(10) then combat.printStat() end
+		if pressed(10) then print(combat.paramInRAM(true)) end
 		
 		if held(10) then
 			if pressed("left", gameCtrl) then
-				combat.cyclePrintStat(-1)
+				changeSelection(combat.PARAM_NAMES, -1)
+				print("now printing stat " .. selected(combat.PARAM_NAMES))
 			end
 			if pressed("right", gameCtrl) then
-				combat.cyclePrintStat(1)
+				changeSelection(combat.PARAM_NAMES, 1)
+				print("now printing stat " .. selected(combat.PARAM_NAMES))
 			end
 		end
 			

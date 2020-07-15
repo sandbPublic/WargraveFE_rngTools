@@ -47,28 +47,12 @@ local NUM_RN_LINES = 15
 
 
 
-local selRect_i = P.RN_EVENT_I
-function P.advanceDisplay(increment)
-	selRect_i = selRect_i + increment
-	
-	while selRect_i > #P.rects do 
-		selRect_i = selRect_i - #P.rects
-	end
-	while selRect_i < 1 do 
-		selRect_i = selRect_i + #P.rects
-	end
-	
-	print("selecting display: " .. RECT_STRINGS[selRect_i])
-end
-
-function P.selRect()
-	return P.rects[selRect_i]
-end
+P.rects.sel_i = P.RN_EVENT_I
 
 P.rectShiftMode = false
 
 function P.lookingAt(rect_i)
-	return (selRect_i == rect_i) and (P.rects[rect_i].opacity > 0)
+	return (P.rects.sel_i == rect_i) and (P.rects[rect_i].opacity > 0)
 end
 
 function P.canAlter_rnEvent()
@@ -129,7 +113,7 @@ function rectObj:width()
 		
 		-- add colorized string length
 		if (self.ID == P.RN_EVENT_I) and (line_i % 2 == 0) then
-			stringLen = stringLen + rnEvent.get(line_i/2).length * 3
+			stringLen = stringLen + rnEvent.events[line_i/2].length * 3
 		end
 		
 		if self.ID == P.RN_STREAM_I then
@@ -175,7 +159,7 @@ function rectObj:drawBackgroundBox()
 	local y1 = self:top()
 	
 	-- if shiftMode and visible, flash outline
-	if (self.ID == selRect_i) and P.rectShiftMode then
+	if (self.ID == P.rects.sel_i) and P.rectShiftMode then
 		gui.box(x1, y1, x1+self:width(), y1+self:height(), 
 			pulseColor(self.backgroundColor), pulseColor(self.outlineColor))
 		return
@@ -301,7 +285,7 @@ function rectObj:draw()
 	
 	-- color highlighted RN strings, draw boxes
 	if self.ID == P.RN_EVENT_I then
-		for i, event in ipairs(rnEvent.getEventList()) do
+		for i, event in ipairs(rnEvent.events) do
 			self:drawColorizedRNString(2*i, 6, -- 5 digits, space
 				event.startRN_i, event.length)
 			self:drawEventBoxes(event, i)
@@ -333,7 +317,7 @@ local CURSOR_Y_ADDR = CURSOR_X_ADDR + 2
 
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
-	P.rects[P.STAT_DATA_I].strings = unitData.selectedUnit():statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))
+	P.rects[P.STAT_DATA_I].strings = selected(unitData.deployedUnits):statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))
 	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
 	-- don't want to overwrite currBattleParams generally
 	
@@ -357,7 +341,7 @@ end
 -- modifying functions
 
 -- change position or opacity
-function rectObj:shift(x, y, opac)
+function rectObj:adjust(x, y, opac)
 	self.Xratio = self.Xratio + x
 	if self.Xratio < 0 then self.Xratio = 0 end
 	if self.Xratio > 1 then self.Xratio = 1 end
@@ -374,13 +358,13 @@ function rectObj:new(ID_p, color_p)
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.ID = 0
+	o.ID = ID_p
 	o.Xratio = 0 -- 0 to 1, determine position within the gba window
 	o.Yratio = 0
 	o.opacity = 0
+	o.name = RECT_STRINGS[ID_p]
 	o.strings = {}
 	
-	o.ID = ID_p
 	o.outlineColor = color_p or RECT_COLORS[ID_p]
 	
 	local r, g, b, a = gui.parsecolor(o.outlineColor)

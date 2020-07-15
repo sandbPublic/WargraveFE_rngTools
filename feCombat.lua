@@ -39,8 +39,8 @@ ATTACKER_BASE_ADDR = ATTACKER_BASE_ADDR[GAME_VERSION - 5]
 local DEFENDER_BASE_ADDR = {0x0203927C, 0x0203A480, 0x0203A580} -- FE6 -4 from others
 DEFENDER_BASE_ADDR = DEFENDER_BASE_ADDR[GAME_VERSION - 5]
 
---                      mxHP  weap  atk   def    AS   hit  luck  crit   lvl    xp    hp
---                             +12 +0x3C    +2    +2    +6    +4    +2  +6/4    +1    +1
+--                            mxHP  weap  atk   def    AS   hit  luck  crit   lvl    xp    hp
+--                                   +12 +0x3C    +2    +2    +6    +4    +2  +6/4    +1    +1
 local BATTLE_ADDR_OFFSETS = {{0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82},
 							 {0x02, 0x0E, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62},
 							 {  -2, 0x0A, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}}

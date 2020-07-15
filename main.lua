@@ -111,6 +111,8 @@ local savedFog = 0
 local TURN_ADDR = FOG_ADDR + 3
 local currTurn = 0
 
+local autoLog = true
+
 while true do
 	if currTurn ~= memory.readbyte(TURN_ADDR) then
 		currTurn = memory.readbyte(TURN_ADDR)
@@ -119,6 +121,13 @@ while true do
 	
 	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)
+		
+		if autoLog then
+			print(feGUI.rects[feGUI.COORD_I].strings[1])
+			combat.currBattleParams:set()
+			print(combat.currBattleParams.attacker)
+			print(combat.currBattleParams.defender)
+		end
 	end
 
 	updateCtrl(keybCtrl, input.get())

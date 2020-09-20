@@ -115,6 +115,551 @@ local function weaponIdToType(id)
 	return NORMAL
 end
 
+local WEAPON_CODES = {
+	-- FE6, untested
+	{
+		"Iron Sword",
+		"Iron Blade",
+		"Steel Sword",
+		"Silver Sword",
+		"Slim Sword",
+		
+		"Poison Sword",
+		"Brave Sword",
+		"Light Brand",
+		"Durandal",
+		"Armorslayer",
+		
+		"Rapier",
+		"Killing Edge",
+		"Lancereaver",
+		"Wo Dao",
+		"Binding Blade",
+		
+		"Iron Lance",
+		"Steel Lance",
+		"Silver Lance",
+		"Slim Lance",
+		"Poison Lance",	
+		-- 20
+		"Brave Lance",
+		"Javelin",
+		"Maltet",
+		"Horseslayer",
+		"Killer Lance",
+		
+		"Axereaver",
+		"Iron Axe",
+		"Steel Axe",
+		"Silver Axe",
+		"Poison Axe",
+		
+		"Brave Axe",
+		"Hand Axe",
+		"Halberd",
+		"Hammer",
+		"Devil Axe",
+		
+		"Swordreaver",
+		"Devil Axe", -- 2nd?
+		"Halberd", -- 2nd?
+		"Iron Bow",
+		"Steel Bow",
+		-- 40
+		"Silver Bow",
+		"Poison Bow",
+		"Killer Bow",
+		"Brave Bow",
+		"Short Bow",
+		
+		"Longbow",
+		"Murgleis",
+		"Ballista",
+		"Long ballista",
+		"Killer ballista",
+		
+		"Fire",
+		"Thunder",
+		"Fimbulvetr",
+		"Elfire",
+		"Aircalibur",
+		
+		"Fenrir",
+		"Bolting",
+		"Forblaze",
+		"Lightning",
+		"Divine",
+		-- 60
+		"Purge",
+		"Aureola",
+		"Flux",
+		"Nosferatu",
+		"Eclipse",
+		
+		"Apocalypse",
+		"Heal",
+		"Mend",
+		"Recover",
+		"Physic",
+		
+		"Fortify",
+		"Warp",
+		"Rescue",
+		"Restore",
+		"Silence",
+		
+		"Sleep",
+		"Torch",
+		"Hammerne",
+		"? Makes closed areas visible",
+		"Berserk",
+		-- 80
+		"Unlock",
+		"Barrier",
+		"Firestone",
+		"Divinestone",
+		"But what abo",
+		
+		"Secret book",
+		"Goddess icon",
+		"Angelic Robe",
+		"Dragonshield",
+		"Energy Ring",
+		
+		"Speedwings",
+		"Talisman",
+		"Boots",
+		"Body ring",
+		"Hero crest",
+		
+		"Knight crest",
+		"Orion's bolt",
+		"Elysian whip",
+		"Guiding ring",
+		"Chest key",
+		-- 100
+		"Door key",
+		"?", -- desc crashes
+		"Lockpick",
+		"Vulnerary",
+		"Elixir",
+		
+		"Pure water",
+		"Torch",
+		"Antitoxin",
+		"Member Card",
+		"Silver Card",
+		
+		"Gold",
+		"Dark breath",
+		"Eckesachs",
+		"Steel blade",
+		"Silver blade",
+		
+		"Al's sword",
+		"Gant's lance",
+		"Tina'd staff",
+		"Saint's Staff",
+		"Wyrmslayer",
+		-- 120
+		"White gem",
+		"Blue gem",
+		"Red gem",
+		"Delphi shield",
+		"Runesword"
+		-- crashes beyond this point
+	},
+	-- FE7
+	{
+		"Iron Sword",
+		"Slim Sword",
+		"Steel Sword",
+		"Silver Sword",
+		"Iron Blade",
+		"Steel Blade",
+		"Silver Blade",
+		"Poison Sword",
+		"Rapier",
+		"Mani Katti",
+		"Brave Sword",
+		"Wo Dao",
+		"Killing Edge",
+		"Armorslayer",
+		"Wyrmslayer",
+		-- 0x10
+		"Light Brand",
+		"Runesword",
+		"Lancereaver",
+		"Longsword",
+		"Iron Lance",
+		"Slim Lance",
+		"Steel Lance",
+		"Silver Lance",
+		"Poison Lance",
+		"Brave Lance",
+		"Killer Lance",
+		"Horseslayer",
+		"Javelin",
+		"Spear",
+		"Axereaver",
+		"Iron Axe",
+		-- 0x20
+		"Steel Axe",
+		"Silver Axe",
+		"Poison Axe",
+		"Brave Axe",
+		"Killer Axe",
+		"Halberd",
+		"Hammer",
+		"Devil Axe",
+		"Hand Axe",
+		"Tomahawk",
+		"Swordreaver",
+		"Swordslayer",
+		"Iron Bow",
+		"Steel Bow",
+		"Silver Bow",
+		"Poison Bow",
+		-- 0x30
+		"Killer Bow",
+		"Brave Bow",
+		"Short Bow",
+		"Longbow",
+		"Ballista",
+		"Iron ballista",
+		"Killer ballista",
+		"Fire",
+		"Thunder",
+		"Elfire",
+		"Bolting",
+		"Fimbulvetr",
+		"Forblaze",
+		"Excalibur",
+		"Lightning",
+		"Shine",
+		-- 0x40
+		"Divine",
+		"Purge",
+		"Aura",
+		"Luce",
+		"Flux",
+		"Luna",
+		"Nosferatu",
+		"Eclipse",
+		"Fenrir",
+		"Gespenst",
+		"Heal",
+		"Mend",
+		"Recover",
+		"Physic",
+		"Fortify",
+		"Restore",
+		-- 0x50
+		"Silence",
+		"Sleep",
+		"Berserk",
+		"Warp",
+		"Rescue",
+		"Torch",
+		"Hammerne",
+		"Unlock",
+		"Barrier",
+		"Dragon Axe",
+		"Angelic robe",
+		"Energy ring",
+		"Secret book",
+		"Speedwings",
+		"Goddess icon",
+		"Dragonshield",
+		-- 0x60
+		"Talisman",
+		"Boots",
+		"Body ring",
+		"Hero crest",
+		"Knight crest",
+		"Orion's bolt",
+		"Elysian whip",
+		"Guiding ring",
+		"Chest key",
+		"Door key",
+		"Lockpick",
+		"Vulnerary",
+		"Elixir",
+		"Pure water",
+		"Antitoxin",
+		"Torch",
+		-- 0x70
+		"Delphi Shield",
+		"Member Card",
+		"Silver Card",
+		"White gem",
+		"Blue gem",
+		"Red Gem",
+		"30 G",
+		"Vaida's Spear",
+		"Chest key",
+		"Mine",
+		"Light rune",
+		"Iron rune",
+		"Filla's Might",
+		"Ninis's Grace",
+		"Thor's Ire",
+		"Set's Litany",
+		-- 0x80
+		"Emblem blade",
+		"Emblem lance",
+		"Emblem axe",
+		"Emblem bow",
+		"Durandal",
+		"Armads",
+		"Aureola",
+		"Earth seal",
+		"Afa's Drops",
+		"Heaven seal",
+		"Emblem seal",
+		"Fell contract",
+		"Sol Katti",
+		"Wolf Beil",
+		"Ereshkigal",
+		"Flametongue",
+		-- 0x90
+		"Regal blade",
+		"Rex Hasta",
+		"Basilikos",
+		"Reinfleche",
+		"Heavy spear",
+		"Short spear",
+		"Ocean seal",
+		"3000 G",
+		"5000 G",
+		"Wind Sword",
+		"Vulnerary 60",
+		"Vulnerary 60",
+		"Vulnerary 60" -- invalid text from this point
+	},
+	-- FE8
+	{
+		"Iron Sword",
+		"Slim Sword",
+		"Steel Sword",
+		"Silver Sword",
+		"Iron Blade",
+		"Steel Blade",
+		"Silver Blade",
+		"Poison Sword",
+		"Rapier",
+		"Dummy", -- was Mani Katti
+		"Brave Sword",
+		"Shamshir",
+		"Killing Edge",
+		"Armorslayer",
+		"Wyrmslayer",
+		-- 0x10
+		"Light Brand",
+		"Runesword",
+		"Lancereaver",
+		"Zanbato",
+		"Iron Lance",
+		"Slim Lance",
+		"Steel Lance",
+		"Silver Lance",
+		"Toxin Lance",
+		"Brave Lance",
+		"Killer Lance",
+		"Horseslayer",
+		"Javelin",
+		"Spear",
+		"Axereaver",
+		"Iron Axe",
+		-- 0x20
+		"Steel Axe",
+		"Silver Axe",
+		"Poison Axe",
+		"Brave Axe",
+		"Killer Axe",
+		"Halberd",
+		"Hammer",
+		"Devil Axe",
+		"Hand Axe",
+		"Tomahawk",
+		"Swordreaver",
+		"Swordslayer",
+		"Hatchet", -- FE8 insert
+		"Iron Bow",
+		"Steel Bow",
+		"Silver Bow",
+		-- 0x30
+		"Poison Bow",
+		"Killer Bow",
+		"Brave Bow",
+		"Short Bow",
+		"Long Bow",
+		"Ballista",
+		"Iron ballista",
+		"Killer ballista",
+		"Fire",
+		"Thunder",
+		"Elfire",
+		"Bolting",
+		"Fimbulvetr",
+		"Dummy", -- was Forblaze
+		"Excalibur",
+		"Lightning",
+		-- 0x40
+		"Shine",
+		"Divine",
+		"Purge",
+		"Aura",
+		"Dummy", -- was Luce
+		"Flux",
+		"Luna",
+		"Nosferatu",
+		"Eclipse",
+		"Fenrir",
+		"Gleipnir", -- was Gespenst
+		"Heal",
+		"Mend",
+		"Recover",
+		"Physic",
+		"Fortify",
+		-- 0x50
+		"Restore",
+		"Silence",
+		"Sleep",
+		"Berserk",
+		"Warp",
+		"Rescue",
+		"Torch",
+		"Hammerne",
+		"Unlock",
+		"Barrier",
+		"Dragon Axe",
+		"Angelic robe",
+		"Energy ring",
+		"Secret book",
+		"Speedwings",
+		"Goddess icon",
+		-- 0x60
+		"Dragonshield",
+		"Talisman",
+		"Swiftsole", -- was Boots
+		"Body ring",
+		"Hero crest",
+		"Knight crest",
+		"Orion's bolt",
+		"Elysian whip",
+		"Guiding ring",
+		"Chest key",
+		"Door key",
+		"Lockpick",
+		"Vulnerary",
+		"Elixir",
+		"Pure water",
+		"Antitoxin",
+		-- 0x70
+		"Torch",
+		"Delphi Shield",
+		"Member Card",
+		"Silver Card",
+		"White gem",
+		"Blue gem",
+		"Red gem",
+		"Gold", -- was Vaida's Spear
+		"Reginleif", -- was Chest key
+		"Chest key",
+		"Dummy",
+		"Dummy",
+		"Hoplon Guard",
+		"Dummy",
+		"Dummy",
+		"Dummy",
+		-- 0x80
+		"Dummy",
+		"Shadowkiller",
+		"Bright Lance",
+		"Fiendcleaver",
+		"Beacon Bow",
+		"Seiglinde",
+		"Battle Axe",
+		"Ivaldi",
+		"Master seal",
+		"Metis's Tome",
+		"Dummy",
+		"Sharp Claw",
+		"Latona",
+		"Dragonspear",
+		"Vidofnir",
+		"Naglfar",
+		-- 0x90
+		"Wretched Air",
+		"Audhulma",
+		"Siegmund",
+		"Garm",
+		"Nidhogg",
+		"Heavy spear",
+		"Short spear",
+		"Ocean seal",
+		"Lunar Brace",
+		"Solar Brace",
+		"1 Gold",
+		"5 Gold",
+		"10 Gold",
+		"50 Gold",
+		"100 Gold",
+		"3000 Gold",
+		-- 0xA0
+		"5000 Gold",
+		"Wind Sword",
+		"Vulnerary 60",
+		"Vulnerary 60",
+		"Vulnerary 60",
+		"Dance",
+		"Nightmare",
+		"Stone Shard",
+		"Demon Light",
+		"Ravager",
+		"Dragonstone",
+		"Demon Surge",
+		"Shadowshot",
+		"Rotten Claw",
+		"Fetid Claw",
+		"Poison Claw",
+		-- 0xB0
+		"Lethal Talon",
+		"Fiery Fang",
+		"Hellfang",
+		"Evil Eye",
+		"Crimson Eye",
+		"Stone",
+		"Alacalibur",
+		"Juna Fruit",
+		"150 Gold",
+		"200 Gold",
+		"Black Gem",
+		"Gold Gem"
+	}
+}
+
+WEAPON_CODES = WEAPON_CODES[GAME_VERSION - 5]
+while #WEAPON_CODES < 255 do
+	table.insert(WEAPON_CODES, "Weapon code too large")
+end
+WEAPON_CODES[0] = "Nothing"
+
+local UNIT_1_WEAPON_1_ADDR = {0x0202AB94, 0x0202BD6E, 0x0202BE6A}
+UNIT_1_WEAPON_1_ADDR = UNIT_1_WEAPON_1_ADDR[GAME_VERSION - 5]
+for i = 0, 4 do
+	-- memory.writebyte(UNIT_1_WEAPON_1_ADDR+ 2*i, 1+i)
+end
+function P.nextWeaponSlot1()
+	nextByte = (memory.readbyte(UNIT_1_WEAPON_1_ADDR) + 5) % 256
+	print()
+	for i = 0, 4 do  -- check 5 items at once
+		memory.writebyte(UNIT_1_WEAPON_1_ADDR + 2*i, nextByte+i)
+		print(string.format("%3d, %s?", nextByte+i, WEAPON_CODES[nextByte+i]))
+	end
+end
+
 
 
 
@@ -202,9 +747,9 @@ function P.combatObj:autoLogLine(isAttacker)
 		return "--"
 	end
 	
-	return string.format("lv%2d.%s %2d/%2dhp %sa %2dd %2ds %3sh %2sc %3dw", 
+	return string.format("lv%2d.%s %2d/%2dhp %sa %2dd %2ds %3sh %2sc %s", 
 		d[LEVEL_I], dashIfInvalid(d[EXP_I]), d[MAX_HP_I], d[HP_I], dashIfInvalid(d[ATTACK_I]), d[DEF_I], 
-		d[AS_I], hitToString(d[HIT_I]), dashIfInvalid(d[CRIT_I]), d[WEAPON_I])
+		d[AS_I], hitToString(d[HIT_I]), dashIfInvalid(d[CRIT_I]), WEAPON_CODES[d[WEAPON_I]])
 end
 
 function P.combatObj:toStrings()
@@ -232,8 +777,10 @@ function P.combatObj:toStrings()
 			self:data(isAttacker)[HP_I], 
 			self:dmg(isAttacker))
 		
-		if self:doubles(isAttacker) then rLine = rLine .. "x2" 
-		else rLine = rLine .. "  " end	
+		if self:doubles(isAttacker) then rLine = rLine .. "x2 " 
+		else rLine = rLine .. "   " end	
+		
+		rLine = rLine .. WEAPON_CODES[self:data(isAttacker)[WEAPON_I]]
 		
 		if self:data(isAttacker).weaponType ~= NORMAL then
 			rLine = rLine .. " " .. P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weaponType]

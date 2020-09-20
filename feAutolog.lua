@@ -23,7 +23,8 @@ function P.writeLogs()
 		if currTurn < logs[i].turn or currPhase ~= logs[i].phase then
 			currTurn = logs[i].turn
 			currPhase = logs[i].phase
-			f:write(turnString(currTurn, currPhase) "\n")
+			f:write("\n")
+			f:write(turnString(currTurn, currPhase), "\n")
 		end
 		f:write(string.format("%04d RN %05d-%05d at %02d,%02d\n", 
 			i, logs[i].rnStart, logs[i].rnEnd, logs[i].X, logs[i].Y))

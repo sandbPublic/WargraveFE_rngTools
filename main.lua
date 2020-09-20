@@ -204,6 +204,10 @@ while true do
 
 		if pressed(6) then rnEvent.suggestedPermutation() end
 		
+		if pressed(8) then
+			combat.nextWeaponSlot1()
+		end
+		
 		if held(8) then -- hold down, press left/right
 			if pressed("left", gameCtrl) then
 				changeSelection(unitData.deployedUnits, -1)

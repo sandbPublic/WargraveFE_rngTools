@@ -32,7 +32,7 @@ B
 change afa/metis
 switch RNG to 2ndary
 N
-save stats
+save stats and print ranks
 generate log file
 M
 hold, <> move rn, ^v change step

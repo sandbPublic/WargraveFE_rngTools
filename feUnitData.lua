@@ -769,6 +769,18 @@ local function statsInRAM()
 	return stats
 end
 
+local RANK_ADDR = {0x0203923A, 0x0203A418, 0x0203A514}
+RANK_ADDR = RANK_ADDR[GAME_VERSION - 5]
+local RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
+function P.printRanks()
+	for i, name in ipairs(RANK_NAMES) do
+		rank = memory.readbyte(RANK_ADDR + i - 1)
+		if rank > 0 then
+			print(name .. " rank " .. rank)
+		end
+	end
+end
+
 local function factorial(x)
 	if x <= 1 then return 1 end
 	return x * factorial(x-1)

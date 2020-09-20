@@ -6,11 +6,6 @@ classes = P
 
 
 
--- utility functions
--- kept here since this is the highest dependency
-
-
-
 local indexer = 0
 local function nextInd()
 	indexer = indexer + 1

@@ -1,14 +1,16 @@
 -- package dependencies
 -- main
---   gui
---     event
---       combat
---         unit
---           rn
---             class
---               misc
+-- test
+--   autolog
+--     gui
+--       event
+--         combat
+--           unit
+--             rn
+--               class
+--                 misc
 
-require("feGUI")
+require("feAutolog")
 
 local function printStringArray(array)
 	print("")
@@ -20,7 +22,7 @@ end
 local usingPrimaryFunctions = true
 
 -- TYUIOP
---   HJKL
+--  HJKL
 --  BNM
 
 local windowWidthString = ""
@@ -42,6 +44,7 @@ while c do
 	table.insert(hotkeys, hotkey)
 	c = f:read("*line")
 end
+f:close()
 
 local function printHelp()
 	print("")
@@ -104,30 +107,23 @@ end
 local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
 
-local FOG_ADDR = {0x0202AA55, 0x0202BC05, 0x0202BCFD}
-FOG_ADDR = FOG_ADDR[GAME_VERSION - 5]
 local savedFog = 0
-
-local TURN_ADDR = FOG_ADDR + 3
 local currTurn = 0
-
-local autoLog = true
+local currPhase = 0
 
 while true do
-	if currTurn ~= memory.readbyte(TURN_ADDR) then
+	if currTurn ~= memory.readbyte(TURN_ADDR) or currPhase ~= memory.readbyte(PHASE_ADDR) then
 		currTurn = memory.readbyte(TURN_ADDR)
-		print("Turn " .. currTurn)
+		currPhase = memory.readbyte(PHASE_ADDR)
+		print()
+		print(turnString(currTurn, currPhase))
+		print()
 	end
 	
 	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)
 		
-		if autoLog then
-			print(feGUI.rects[feGUI.COORD_I].strings[1])
-			combat.currBattleParams:set()
-			print(combat.currBattleParams.attacker)
-			print(combat.currBattleParams.defender)
-		end
+		autolog.addLog()
 	end
 
 	updateCtrl(keybCtrl, input.get())
@@ -353,7 +349,7 @@ while true do
 			print(string.format("Switching to %s rng", currentRNG:name()))
 		end
 		
-		if pressed(12) then rnEvent.printDiagnostic() end
+		if pressed(12) then autolog.writeLogs() end
 		
 		if pressed(13) then rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass) end
 	end

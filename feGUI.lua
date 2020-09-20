@@ -310,11 +310,6 @@ function rectObj:draw()
 	gui.opacity(1)
 end
 
--- 0,0 is upper left
-local CURSOR_X_ADDR = {0x0202AA1C, 0x0202BBCC, 0x0202BCC4} -- also at +4
-CURSOR_X_ADDR = CURSOR_X_ADDR[GAME_VERSION - 5]
-local CURSOR_Y_ADDR = CURSOR_X_ADDR + 2
-
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
 	P.rects[P.STAT_DATA_I].strings = selected(unitData.deployedUnits):statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))

@@ -587,19 +587,19 @@ if GAME_VERSION == 8 then
 	{25, 09, 06, 03, 09, 03, 03, 04}, --Gilliam
 	{20, 04, 06, 09, 02, 05, 01, 03}, --Moulder
 	{17, 05, 07, 11, 06, 05, 04, 01}, --Vanessa
-	{15, 05, 02, 03, 03, 00, 08, 01}, --Ross	set base level to -9 after trainee promotion
+	{15, 05, 02, 03, 03, 00, 08, 01}, --Ross	set base level to -8 after trainee promotion
 	{28, 08, 07, 07, 05, 01, 03, 04}, --Garcia
 	{17, 04, 05, 06, 03, 02, 04, 01}, --Neimi
 	{18, 04, 04, 10, 03, 01, 08, 02}, --Colm
 	{19, 06, 06, 08, 02, 06, 02, 02}, --Artur
 	{17, 06, 06, 07, 03, 05, 08, 01}, --Lute
-	{18, 02, 04, 08, 02, 06, 08, 01}, --Natasha
+	{18, 02, 04, 08, 02, 06, 06, 01}, --Natasha
 	{24, 08, 13, 14, 05, 02, 07, 05}, --Joshua
 	{23, 08, 09, 11, 07, 02, 08, 04}, --Ephraim
 	{24, 07, 08, 08, 08, 02, 07, 06}, --Forde
 	{25, 09, 06, 07, 09, 01, 06, 05}, --Kyle
 	{20, 07, 09, 13, 06, 07, 08, 04}, --Tana
-	{16, 04, 03, 04, 02, 03, 06, 01}, --Amelia	set base level to -9 after trainee promotion
+	{16, 04, 03, 04, 02, 03, 06, 01}, --Amelia	set base level to -8 after trainee promotion
 	{31, 14, 13, 15, 10, 09, 14, 01}, --Innes
 	{32, 14, 13, 13, 10, 04, 08, 10}, --Gerik
 	{18, 01, 02, 12, 05, 04, 10, 01}, --Tethys
@@ -607,7 +607,7 @@ if GAME_VERSION == 8 then
 	{18, 06, 06, 10, 05, 08, 12, 03}, --L’Arachel
 	{43, 16, 11, 09, 11, 06, 04, 01}, --Dozla
 	{30, 16, 18, 14, 08, 13, 11, 01}, --Saleh
-	{15, 03, 02, 05, 00, 03, 05, -8}, --Ewan	set base level to -9 after trainee promotion
+	{15, 03, 02, 05, 00, 03, 05, 01}, --Ewan	set base level to -8 after trainee promotion
 	{30, 14, 09, 10, 12, 02, 04, 09}, --Cormag
 	{28, 10, 16, 17, 09, 11, 05, 01}, --Rennac
 	{41, 17, 12, 12, 17, 09, 08, 08}, --Duessel
@@ -718,41 +718,29 @@ if GAME_VERSION == 8 then
 
 	initializeCommonValues()
 	
-	DEPLOYED[INDEX_OF_NAME["Neimi"]] = true
+	DEPLOYED[INDEX_OF_NAME["Eirika"]] = true
+	DEPLOYED[INDEX_OF_NAME["Franz"]] = true
 	DEPLOYED[INDEX_OF_NAME["Lute"]] = true
-	DEPLOYED[INDEX_OF_NAME["Seth"]] = true
-	DEPLOYED[INDEX_OF_NAME["Ephraim"]] = true
-	DEPLOYED[INDEX_OF_NAME["Forde"]] = true
-	DEPLOYED[INDEX_OF_NAME["Cormag"]] = true
-	DEPLOYED[INDEX_OF_NAME["L\'Arachel"]] = true
-	DEPLOYED[INDEX_OF_NAME["Ewan"]] = true
+	DEPLOYED[INDEX_OF_NAME["Natasha"]] = true
+	DEPLOYED[INDEX_OF_NAME["Tana"]] = true
+	DEPLOYED[INDEX_OF_NAME["Gerik"]] = true
 	DEPLOYED[INDEX_OF_NAME["Tethys"]] = true
-	DEPLOYED[INDEX_OF_NAME["Syrene"]] = true
+	DEPLOYED[INDEX_OF_NAME["Innes"]] = true
+	DEPLOYED[INDEX_OF_NAME["Dozla"]] = true
+	DEPLOYED[INDEX_OF_NAME["Saleh"]] = true
+	
+	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 2, 0, 2, 0, 0}
+	BOOSTERS[INDEX_OF_NAME["Tana"]] = {7, 0, 0, 0, 2, 0, 0}
+	BOOSTERS[INDEX_OF_NAME["Dozla"]] = {0, 0, 2, 2, 0, 0, 2}
+	
+	PROMOTED_AT[INDEX_OF_NAME["Franz"]] = 17
+	PROMOTED_AT[INDEX_OF_NAME["Lute"]] = 15
+	PROMOTED_AT[INDEX_OF_NAME["Gerik"]] = 10
 	
 	GROWTH_WEIGHTS[INDEX_OF_NAME["L\'Arachel"]] = {30, 60, 05, 19, 30, 10, 10}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
-	
-	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 0, 0, 2, 0, 0}
-	BOOSTERS[INDEX_OF_NAME["Neimi"]] = {0, 0, 0, 0, 0, 0, 2}
-	BOOSTERS[INDEX_OF_NAME["Ewan"]] = {1, 0, 1, 2, 1, 2, 0} -- Mage promo, set base lvl to -8
-	BOOSTERS[INDEX_OF_NAME["Cormag"]] = {7, 0, 2, 2, 2, 2, 0}
-	
-	PROMOTED_AT[INDEX_OF_NAME["Lute"]] = 12
-	PROMOTED_AT[INDEX_OF_NAME["Neimi"]] = 10
-	PROMOTED_AT[INDEX_OF_NAME["Cormag"]] = 16
-	PROMOTED_AT[INDEX_OF_NAME["Forde"]] = 16
-	PROMOTED_AT[INDEX_OF_NAME["Ephraim"]] = 18
-	
-	WILL_END_AT[INDEX_OF_NAME["Seth"]] = 17
-	WILL_END_AT[INDEX_OF_NAME["Cormag"]] = 15
-	WILL_END_AT[INDEX_OF_NAME["Lute"]] = 13
-	WILL_END_AT[INDEX_OF_NAME["Ephraim"]] = 8
-	WILL_END_AT[INDEX_OF_NAME["Forde"]] = 5
-	WILL_END_AT[INDEX_OF_NAME["Syrene"]] = 5
-	WILL_END_AT[INDEX_OF_NAME["Neimi"]] = 4
-	WILL_END_AT[INDEX_OF_NAME["Tethys"]] = 4
-	WILL_END_AT[INDEX_OF_NAME["L\'Arachel"]] = 9
-	WILL_END_AT[INDEX_OF_NAME["Ewan"]] = 3
+
+--	BOOSTERS[INDEX_OF_NAME["Ewan"]] = {1, 0, 1, 2, 1, 2, 0} -- Mage promo, set base lvl to -8
 end
 
 -- determine if healer is present manually

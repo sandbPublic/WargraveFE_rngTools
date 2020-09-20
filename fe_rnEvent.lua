@@ -31,6 +31,7 @@ function P.getByID(vID)
 		end
 	end
 	print("ID not found: " .. tostring(vID))
+	return nil
 end
 
 local rnEventObj = {}
@@ -218,7 +219,10 @@ end
 -- quickly find how many burns needed to improve result of selected rnEvent
 -- for rn burning gameplay
 function P.searchFutureOutcomes(event_i)
-	if #P.events < 1 then return end
+	if #P.events < 1 then 
+		print("no events to search")
+		return 
+	end
 	
 	event_i = event_i or P.events.sel_i
 	-- swap to first location
@@ -231,13 +235,11 @@ function P.searchFutureOutcomes(event_i)
 	print("RNG-pos Score Outcome")
 	
 	local record = -9999
-	for improveAttempts = 0, 1000 do		
+	for improveAttempts = 0, 1000 do
 		event:update()
-		
 		if improveAttempts % 50 == 0 then
 			emu.frameadvance()
 		end
-		
 		if record < event:evaluation_fn() then
 			record = event:evaluation_fn()
 			print(string.format("%7d %5d%s", 

@@ -192,6 +192,21 @@ local function hitToString(hit)
 	return string.format("%02X", hit)
 end
 
+
+
+function P.combatObj:autoLogLine(isAttacker)
+	local d = self:data(isAttacker)
+
+	local function dashIfInvalid(x)
+		if x < 100 then return string.format("%2d", x) end
+		return "--"
+	end
+	
+	return string.format("lv%2d.%s %2d/%2dhp %sa %2dd %2ds %3sh %2sc %3dw", 
+		d[LEVEL_I], dashIfInvalid(d[EXP_I]), d[MAX_HP_I], d[HP_I], dashIfInvalid(d[ATTACK_I]), d[DEF_I], 
+		d[AS_I], hitToString(d[HIT_I]), dashIfInvalid(d[CRIT_I]), d[WEAPON_I])
+end
+
 function P.combatObj:toStrings()
 	local rStrings = {}
 	rStrings[1] = "          LV.XP Hit Crt HP Dmg"

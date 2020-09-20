@@ -33,7 +33,7 @@ change afa/metis
 switch RNG to 2ndary
 N
 save stats
-print rnEvent diagnostic
+generate log file
 M
 hold, <> move rn, ^v change step
 cycle enemy class

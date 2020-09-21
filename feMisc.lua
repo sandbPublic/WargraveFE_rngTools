@@ -23,8 +23,13 @@ function selected(tbl_)
 	return tbl_[tbl_.sel_i]
 end
 
+-- sets selection to 1 if selection doesn't exist
 function changeSelection(tbl_, amount, lock)
+	tbl_.sel_i = tbl_.sel_i or 1
+	
 	if #tbl_ < 1 then return end
+	
+	amount = amount or 0
 	
 	tbl_.sel_i = tbl_.sel_i + amount
 	

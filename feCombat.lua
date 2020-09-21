@@ -681,8 +681,10 @@ function P.combatObj:copy()
 	o.name = self.name
 	
 	o.attacker.class  = self.attacker.class
+	o.attacker.weapon = self.attacker.weapon
 	o.attacker.weaponType = self.attacker.weaponType
 	o.defender.class  = self.defender.class
+	o.defender.weapon = self.defender.weapon
 	o.defender.weaponType = self.defender.weaponType
 	
 	o.player = o.attacker
@@ -736,8 +738,6 @@ local function hitToString(hit)
 	if hit <= 100 then return string.format("%3d", hit) end
 	return string.format("%02X", hit)
 end
-
-
 
 function P.combatObj:autoLogLine(isAttacker)
 	local d = self:data(isAttacker)
@@ -1130,6 +1130,8 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 end
 
 function P.hitSeq_string(argHitSeq)
+	if not argHitSeq or #argHitSeq < 1 then return "" end
+
 	local hitString = ""
 	
 	for _, hitEvent in ipairs(argHitSeq) do
@@ -1178,13 +1180,15 @@ function P.combatObj:new()
 	self.__index = self
 	
 	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	o.attacker.class = classes.LORD
+	o.attacker.weapon = "Nothing"
 	o.attacker.weaponType = NORMAL
+	o.attacker.class = classes.LORD
 	o.name = "no name"
 	
-	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	o.defender.class = classes.LORD
+	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}	
+	o.defender.weapon = "Nothing"
 	o.defender.weaponType = NORMAL
+	o.defender.class = classes.LORD
 	
 	o.player = o.attacker -- alias, sometimes one description makes more sense
 	o.enemy = o.defender
@@ -1200,6 +1204,8 @@ function P.combatObj:set()
 		self.defender[i] = P.paramInRAM(false, i)
 	end
 	
+	self.attacker.weapon = WEAPON_CODES[self.attacker[WEAPON_I]]
+	self.defender.weapon = WEAPON_CODES[self.defender[WEAPON_I]]
 	self.attacker.weaponType = weaponIdToType(self.attacker[WEAPON_I])
 	self.defender.weaponType = weaponIdToType(self.defender[WEAPON_I])
 	

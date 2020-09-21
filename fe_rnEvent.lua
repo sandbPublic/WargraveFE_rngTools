@@ -53,7 +53,7 @@ end
 function rnEventObj:resultString()
 	local rString = ""
 	if self.hasCombat then
-		rString = rString .. " " .. combat.hitSeq_string(self.mHitSeq) 
+		rString = rString .. " " .. self.batParams.attacker.weapon .. " " .. combat.hitSeq_string(self.mHitSeq) 
 	end
 	if self:levelDetected() then
 		rString = rString .. string.format(" %s %3d",

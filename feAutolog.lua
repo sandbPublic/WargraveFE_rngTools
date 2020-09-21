@@ -26,8 +26,8 @@ function P.writeLogs()
 			f:write("\n")
 			f:write(turnString(currTurn, currPhase), "\n")
 		end
-		f:write(string.format("%04d RN %05d-%05d at %02d,%02d\n", 
-			i, logs[i].rnStart, logs[i].rnEnd, logs[i].X, logs[i].Y))
+		f:write(string.format("%d RN %d-%d(%d) at %02d,%02d\n", 
+			i, logs[i].rnStart, logs[i].rnEnd, logs[i].rnEnd-logs[i].rnStart, logs[i].X, logs[i].Y))
 		f:write(logs[i].combat1, "\n")
 		f:write(logs[i].combat2, "\n\n")
 	end
@@ -70,8 +70,8 @@ function P.addLog()
 		end
 	end
 	
-	table.insert(logs, newLog)
 	logCount = logCount + 1
+	logs[logCount] = newLog
 end
 
 return P

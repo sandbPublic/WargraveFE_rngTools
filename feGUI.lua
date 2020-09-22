@@ -323,7 +323,7 @@ function P.drawRects()
 	
 	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings("isColored")
 	P.rects[P.COORD_I].strings = {string.format("%02d,%02d", 
-		memory.readbyte(CURSOR_X_ADDR), memory.readbyte(CURSOR_Y_ADDR))}
+		memory.readbyte(addr.CURSOR_X), memory.readbyte(addr.CURSOR_Y))}
 	
 	for _, rect in ipairs(P.rects) do
 		rect:draw()

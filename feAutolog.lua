@@ -7,14 +7,14 @@ local logLineObj = {}
 
 local logs = {}
 local logCount = 0
-
+local logsWritten = 0
 
 
 
 -- non modifying functions
 
 function P.writeLogs()
-	local fileName = "autolog" .. os.time() .. ".txt"
+	local fileName = "autolog" .. logsWritten .. "-" .. os.time() .. ".txt"
 	local f = io.open(fileName, "w")
 	
 	local currTurn = 0
@@ -33,6 +33,7 @@ function P.writeLogs()
 	end
 	
 	f:close()
+	logsWritten = logsWritten + 1
 	print("wrote " .. fileName)
 end
 
@@ -50,8 +51,8 @@ function logLineObj:new()
 	o.phase = memory.readbyte(PHASE_ADDR)
 	o.rnStart = rns.rng1.prevPos
 	o.rnEnd = rns.rng1.pos
-	o.X = memory.readbyte(CURSOR_X_ADDR)
-	o.Y = memory.readbyte(CURSOR_Y_ADDR)
+	o.X = memory.readbyte(addr.CURSOR_X)
+	o.Y = memory.readbyte(addr.CURSOR_Y)
 	combat.currBattleParams:set()
 	o.combat1 = combat.currBattleParams:autoLogLine("isAttacker")
 	o.combat2 = combat.currBattleParams:autoLogLine()

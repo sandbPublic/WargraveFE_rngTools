@@ -113,9 +113,9 @@ local currTurn = 0
 local currPhase = 0
 
 while true do
-	if currTurn ~= memory.readbyte(TURN_ADDR) or currPhase ~= memory.readbyte(PHASE_ADDR) then
-		currTurn = memory.readbyte(TURN_ADDR)
-		currPhase = memory.readbyte(PHASE_ADDR)
+	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= memory.readbyte(addr.PHASE) then
+		currTurn = memory.readbyte(addr.TURN)
+		currPhase = memory.readbyte(addr.PHASE)
 		print()
 		print(turnString(currTurn, currPhase))
 		print()
@@ -290,12 +290,12 @@ while true do
 		
 		if pressed(5) then -- toggle fog
 			if savedFog > 0 then
-				memory.writebyte(FOG_ADDR, savedFog)
+				memory.writebyte(addr.FOG, savedFog)
 				print("fog set to " .. savedFog)
 				savedFog = 0
 			else
-				savedFog = memory.readbyte(FOG_ADDR)
-				memory.writebyte(FOG_ADDR, 0)
+				savedFog = memory.readbyte(addr.FOG)
+				memory.writebyte(addr.FOG, 0)
 				print("fog set to 0")
 			end
 		end

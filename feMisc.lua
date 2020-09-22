@@ -6,12 +6,12 @@ WINDOW_WIDTH = 45
 
 
 
-FOG_ADDR = {0x0202AA55, 0x0202BC05, 0x0202BCFD}
-FOG_ADDR = FOG_ADDR[GAME_VERSION - 5]
-PHASE_ADDR = FOG_ADDR + 2
+
+
+
 -- 0 = player, 0x40 = other, 0x80 = enemy
 local PHASE_NAMES = {"player", "other", "enemy"}
-TURN_ADDR = PHASE_ADDR + 1
+
 function turnString(turn, phase)
 	return "Turn " .. turn .. " " .. PHASE_NAMES[1+phase/0x40] .. " phase"
 end

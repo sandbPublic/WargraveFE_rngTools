@@ -14,7 +14,7 @@ local logsWritten = 0
 -- non modifying functions
 
 function P.writeLogs()
-	local fileName = "autolog" .. logsWritten .. "-" .. os.time() .. ".txt"
+	local fileName = "autolog" .. os.time() .. "-" .. logsWritten .. ".txt"
 	local f = io.open(fileName, "w")
 	
 	local currTurn = 0
@@ -47,8 +47,8 @@ function logLineObj:new()
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.turn = memory.readbyte(TURN_ADDR)
-	o.phase = memory.readbyte(PHASE_ADDR)
+	o.turn = memory.readbyte(addr.TURN)
+	o.phase = memory.readbyte(addr.PHASE)
 	o.rnStart = rns.rng1.prevPos
 	o.rnEnd = rns.rng1.pos
 	o.X = memory.readbyte(addr.CURSOR_X)

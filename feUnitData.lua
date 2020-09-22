@@ -746,35 +746,28 @@ end
 -- determine if healer is present manually
 P.HEALER_DEPLOYED = false
 local AFAS_I = INDEX_OF_NAME["Cormag"]
-
-
  
 
--- compare to the addresses in feCombat
-local LEVEL_ADDR = {0x0203921C, 0x0203A3F8, 0x0203A4F4}
-LEVEL_ADDR = LEVEL_ADDR[GAME_VERSION - 5]
-local EXP_ADDR = LEVEL_ADDR + 1
-local MAX_HP_ADDR = EXP_ADDR + 9
+
 
 local function statsInRAM()
 	local stats = {}
 	
-	stats[1] = memory.readbyte(MAX_HP_ADDR)
+	stats[1] = memory.readbyte(addr.ATTACKER_MAX_HP)
 	for stat_i = 2, 7 do
-		stats[stat_i] = memory.readbyte(MAX_HP_ADDR + stat_i)  -- at +1 is current hp
+		stats[stat_i] = memory.readbyte(addr.ATTACKER_MAX_HP + stat_i)  -- at +1 is current hp
 	end
-	stats[LEVEL_I] = memory.readbyte(LEVEL_ADDR)
-	stats[EXP_I] = memory.readbyte(EXP_ADDR)
+	stats[LEVEL_I] = memory.readbyte(addr.ATTACKER_LEVEL)
+	stats[EXP_I] = memory.readbyte(addr.ATTACKER_EXP)
 	
 	return stats
 end
 
-local RANK_ADDR = {0x0203923A, 0x0203A418, 0x0203A514}
-RANK_ADDR = RANK_ADDR[GAME_VERSION - 5]
+
 local RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
 function P.printRanks()
 	for i, name in ipairs(RANK_NAMES) do
-		rank = memory.readbyte(RANK_ADDR + i - 1)
+		rank = memory.readbyte(addr.ATTACKER_RANKS + i - 1)
 		if rank > 0 then
 			print(name .. " rank " .. rank)
 		end

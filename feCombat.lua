@@ -39,6 +39,8 @@ ATTACKER_BASE_ADDR = ATTACKER_BASE_ADDR[GAME_VERSION - 5]
 local DEFENDER_BASE_ADDR = {0x0203927C, 0x0203A480, 0x0203A580} -- FE6 -4 from others
 DEFENDER_BASE_ADDR = DEFENDER_BASE_ADDR[GAME_VERSION - 5]
 
+-- mxHP here is same as on stat screen
+-- weapons list in 10 bytes, (item,uses) x5
 --                            mxHP  weap  atk   def    AS   hit  luck  crit   lvl    xp    hp
 --                                   +12 +0x3C    +2    +2    +6    +4    +2  +6/4    +1    +1
 local BATTLE_ADDR_OFFSETS = {{0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82},
@@ -115,8 +117,8 @@ local function weaponIdToType(id)
 	return NORMAL
 end
 
-local WEAPON_CODES = {
-	-- FE6, untested
+local ITEM_CODES = {
+	-- FE6
 	{
 		"Iron Sword",
 		"Iron Blade",
@@ -640,11 +642,11 @@ local WEAPON_CODES = {
 	}
 }
 
-WEAPON_CODES = WEAPON_CODES[GAME_VERSION - 5]
-while #WEAPON_CODES < 255 do
-	table.insert(WEAPON_CODES, "Weapon code too large")
+ITEM_CODES = ITEM_CODES[GAME_VERSION - 5]
+while #ITEM_CODES < 255 do
+	table.insert(ITEM_CODES, "Item code too large")
 end
-WEAPON_CODES[0] = "Nothing"
+ITEM_CODES[0] = "Nothing"
 
 local UNIT_1_WEAPON_1_ADDR = {0x0202AB94, 0x0202BD6E, 0x0202BE6A}
 UNIT_1_WEAPON_1_ADDR = UNIT_1_WEAPON_1_ADDR[GAME_VERSION - 5]
@@ -656,7 +658,7 @@ function P.nextWeaponSlot1()
 	print()
 	for i = 0, 4 do  -- check 5 items at once
 		memory.writebyte(UNIT_1_WEAPON_1_ADDR + 2*i, nextByte+i)
-		print(string.format("%3d, %s?", nextByte+i, WEAPON_CODES[nextByte+i]))
+		print(string.format("%3d, %s?", nextByte+i, ITEM_CODES[nextByte+i]))
 	end
 end
 
@@ -748,8 +750,8 @@ function P.combatObj:autoLogLine(isAttacker)
 	end
 	
 	return string.format("lv%2d.%s %2d/%2dhp %sa %2dd %2ds %3sh %2sc %s", 
-		d[LEVEL_I], dashIfInvalid(d[EXP_I]), d[MAX_HP_I], d[HP_I], dashIfInvalid(d[ATTACK_I]), d[DEF_I], 
-		d[AS_I], hitToString(d[HIT_I]), dashIfInvalid(d[CRIT_I]), WEAPON_CODES[d[WEAPON_I]])
+		d[LEVEL_I], dashIfInvalid(d[EXP_I]), d[HP_I], d[MAX_HP_I], dashIfInvalid(d[ATTACK_I]), d[DEF_I], 
+		d[AS_I], hitToString(d[HIT_I]), dashIfInvalid(d[CRIT_I]), ITEM_CODES[d[WEAPON_I]])
 end
 
 function P.combatObj:toStrings()
@@ -780,7 +782,7 @@ function P.combatObj:toStrings()
 		if self:doubles(isAttacker) then rLine = rLine .. "x2 " 
 		else rLine = rLine .. "   " end	
 		
-		rLine = rLine .. WEAPON_CODES[self:data(isAttacker)[WEAPON_I]]
+		rLine = rLine .. ITEM_CODES[self:data(isAttacker)[WEAPON_I]]
 		
 		if self:data(isAttacker).weaponType ~= NORMAL then
 			rLine = rLine .. " " .. P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weaponType]
@@ -1204,8 +1206,8 @@ function P.combatObj:set()
 		self.defender[i] = P.paramInRAM(false, i)
 	end
 	
-	self.attacker.weapon = WEAPON_CODES[self.attacker[WEAPON_I]]
-	self.defender.weapon = WEAPON_CODES[self.defender[WEAPON_I]]
+	self.attacker.weapon = ITEM_CODES[self.attacker[WEAPON_I]]
+	self.defender.weapon = ITEM_CODES[self.defender[WEAPON_I]]
 	self.attacker.weaponType = weaponIdToType(self.attacker[WEAPON_I])
 	self.defender.weaponType = weaponIdToType(self.defender[WEAPON_I])
 	

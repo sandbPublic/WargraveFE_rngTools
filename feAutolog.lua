@@ -14,7 +14,10 @@ local logsWritten = 0
 -- non modifying functions
 
 function P.writeLogs()
-	local fileName = "autolog" .. os.time() .. "-" .. logsWritten .. ".txt"
+	local fileName = string.format("autolog%dch%d-%d.txt",
+		os.time(),
+		memory.readbyte(addr.CHAPTER),
+		logsWritten)
 	local f = io.open(fileName, "w")
 	
 	local currTurn = 0
@@ -26,8 +29,8 @@ function P.writeLogs()
 			f:write("\n")
 			f:write(turnString(currTurn, currPhase), "\n")
 		end
-		f:write(string.format("%d RN %d-%d(%d) at %02d,%02d\n", 
-			i, logs[i].rnStart, logs[i].rnEnd, logs[i].rnEnd-logs[i].rnStart, logs[i].X, logs[i].Y))
+		f:write(string.format("%d RN %d-%d (%d)\n", 
+			i, logs[i].rnStart, logs[i].rnEnd, logs[i].rnEnd-logs[i].rnStart))
 		f:write(logs[i].combat1, "\n")
 		f:write(logs[i].combat2, "\n\n")
 	end
@@ -51,11 +54,19 @@ function logLineObj:new()
 	o.phase = memory.readbyte(addr.PHASE)
 	o.rnStart = rns.rng1.prevPos
 	o.rnEnd = rns.rng1.pos
-	o.X = memory.readbyte(addr.CURSOR_X)
-	o.Y = memory.readbyte(addr.CURSOR_Y)
+	
 	combat.currBattleParams:set()
-	o.combat1 = combat.currBattleParams:autoLogLine("isAttacker")
-	o.combat2 = combat.currBattleParams:autoLogLine()
+	
+	local function line(combatant)
+		return string.format("%-12s with %-12s at %2d,%2d",
+			combatant.name,
+			combatant.weapon,
+			combatant.x,
+			combatant.y)
+	end
+	
+	o.combat1 = line(combat.currBattleParams.attacker)
+	o.combat2 = line(combat.currBattleParams.defender)
 	
 	return o
 end

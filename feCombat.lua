@@ -627,27 +627,6 @@ P.combatObj = {}
 
 -- non modifying functions
 
-function P.combatObj:copy()
-	local o = {}
-	setmetatable(o, self)
-	self.__index = self
-	
-	o.attacker = {}
-	o.defender = {}
-	
-	for k, v in pairs(self.attacker) do
-		o.attacker[k] = v
-	end
-	
-	for k, v in pairs(self.defender) do
-		o.defender[k] = v
-	end
-
-	o.bonusExp = self.bonusExp
-	
-	return o
-end
-
 function P.combatObj:isWeaponSpecial(isPlayer)
 	if isPlayer then return self.player.weaponType ~= NORMAL end
 	return self.enemy.weaponType ~= NORMAL
@@ -663,39 +642,9 @@ function P.combatObj:isUsingStaff()
 	return self.attacker.atk == 0xFF -- healing only?
 end
 
-
--- todo precalculate into variables when combatObj is set()
-function P.combatObj:dmg(isAttacker, pierce)
-	if pierce then
-		return self:data(isAttacker).atk
-	end
-	return math.max(0, self:data(isAttacker).atk - self:data(not isAttacker).def)
-end
-
-function P.combatObj:doubles(isAttacker)
-	return (self.attacker.AS >= self.defender.AS + 4 
-			and isAttacker and self.attacker.weaponType ~= HALVE) 
-		   or 
-		   (self.defender.AS >= self.attacker.AS + 4 
-		    and not isAttacker and self.defender.weaponType ~= HALVE)
-end
-
 local function hitToString(hit)
 	if hit <= 100 then return string.format("%3d", hit) end
 	return string.format("%02X", hit)
-end
-
-function P.combatObj:autoLogLine(isAttacker)
-	local d = self:data(isAttacker)
-
-	local function dashIfInvalid(x)
-		if x < 100 then return string.format("%2d", x) end
-		return "--"
-	end
-	
-	return string.format("lv%2d.%s %2d/%2dhp %sa %2dd %2ds %3sh %2sc %s", 
-		d.level, dashIfInvalid(d.exp), d.currHP, d.maxHP, dashIfInvalid(d.atk), d.def, 
-		d.AS, hitToString(d.hit), dashIfInvalid(d.crit), d.weapon)
 end
 
 function P.combatObj:toStrings()
@@ -705,9 +654,7 @@ function P.combatObj:toStrings()
 		rStrings[1] = "STAFF     LV.XP Hit Crt HP Dmg" 
 	end
 	
-	local function line(isAttacker)
-		local combatant = self:data(isAttacker)
-		
+	local function line(combatant)
 		local experStr = string.format("%02d", combatant.exp)
 		if combatant.exp > 99 then
 			experStr = "--"
@@ -720,9 +667,9 @@ function P.combatObj:toStrings()
 			hitToString(combatant.hit), 
 			hitToString(combatant.crit), 
 			combatant.currHP, 
-			self:dmg(isAttacker))
+			combatant.dmg)
 		
-		if self:doubles(isAttacker) then rLine = rLine .. "x2 " 
+		if combatant.doubles then rLine = rLine .. "x2 " 
 		else rLine = rLine .. "   " end	
 		
 		rLine = rLine .. combatant.weapon
@@ -733,8 +680,8 @@ function P.combatObj:toStrings()
 		return rLine
 	end
 	
-	rStrings[2] = line(ATTACKER)
-	rStrings[3] = line(DEFENDER)
+	rStrings[2] = line(self.attacker)
+	rStrings[3] = line(self.defender)
 	
 	return rStrings
 end
@@ -752,34 +699,27 @@ function P.combatObj:toCompactStrings()
 	local rStrings = {}	
 	rStrings[1] = "Dmg  trHit Cr"
 	
-	local function line(isAttacker)
+	local function line(combatant)
 		local rLine = ""
 		
-		local dmg = self:dmg(isAttacker)
-		if dmg >= 100 then 
-			rLine = rLine .. "--   "
-		else
-			rLine = rLine .. string.format("%2d",self:dmg(isAttacker))
-			if self:doubles(isAttacker) then rLine = rLine .. "x2 " 
-			else rLine = rLine .. "   " end
+		rLine = rLine .. string.format("%2d", combatant.dmg)
+		if combatant.doubles then rLine = rLine .. "x2 " 
+		else rLine = rLine .. "   " end
+		
+		if combatant.hit > 100 then rLine = rLine .. " --- "
+		elseif combatant.hit == 100 then rLine = rLine .. "100.0"
+		else rLine = rLine .. string.format("%05.2f", trueHit(combatant.hit))
 		end
 		
-		local hit = self:data(isAttacker).hit
-		if hit > 100 then rLine = rLine .. " --- "
-		elseif hit == 100 then rLine = rLine .. "100.0"
-		else rLine = rLine .. string.format("%05.2f", trueHit(hit))
-		end
-		
-		local crit = self:data(isAttacker).crit
-		if crit > 100 then rLine = rLine .. " --"
-		else rLine = rLine .. string.format(" %2d", crit)
+		if combatant.crit > 100 then rLine = rLine .. " --"
+		else rLine = rLine .. string.format(" %2d", combatant.crit)
 		end
 		
 		return rLine
 	end
 	
-	rStrings[2] = line(ATTACKER)
-	rStrings[3] = line(DEFENDER)
+	rStrings[2] = line(self.attacker)
+	rStrings[3] = line(self.defender)
 	
 	return rStrings
 end
@@ -860,7 +800,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 	local retHitEv = {}
 	retHitEv.action = ""
 	retHitEv.RNsConsumed = 0
-	retHitEv.dmg = self:dmg(isAttacker)
+	retHitEv.dmg = combatant.dmg
 	
 	if combatant.weaponType == STONE then
 		retHitEv.dmg = 999
@@ -909,7 +849,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 			if classes.hasPierce(combatant.class) then
 				if lvl > nextRn() then
 					retHitEv.action = "P"
-					retHitEv.dmg = self:dmg(isAttacker, true)
+					retHitEv.dmg = self.attacker.atk
 				end
 			end
 			
@@ -1011,9 +951,9 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 		setNext(DEFENDER)
 	end
 	
-	if self:doubles(ATTACKER) then
+	if self.attacker.doubles then
 		setNext(ATTACKER)
-	elseif self:doubles(DEFENDER) and defenderCounters then
+	elseif self.defender.doubles and defenderCounters then
 		setNext(DEFENDER)
 	end
 	
@@ -1118,6 +1058,11 @@ function P.combatObj:toggleBonusExp()
 	print(string.format("bonus xp: %d", self.bonusExp)) 
 end
 
+
+
+
+
+-- todo record weapon uses for weapon breaking preventing doubling and autologger
 local function createCombatant(offset)
 	c = {}
 	
@@ -1143,6 +1088,18 @@ local function createCombatant(offset)
 	return c
 end
 
+function P.combatObj:setDoubles()
+	local speedDifference = self.attacker.AS - self.defender.AS
+
+	self.attacker.doubles = (speedDifference >= 4 and self.attacker.weaponType ~= HALVE)
+	self.defender.doubles = (speedDifference <= -4 and self.defender.weaponType ~= HALVE)	   
+end
+
+function P.combatObj:setDmg()
+	self.attacker.dmg = math.max(0, self.attacker.atk - self.defender.def)
+	self.defender.dmg = math.max(0, self.defender.atk - self.attacker.def)   
+end
+
 function P.combatObj:new()
 	local o = {}
 	setmetatable(o, self)
@@ -1156,6 +1113,9 @@ function P.combatObj:new()
 	o.defender.class = classes.LORD
 	o.defender.name = "no name"
 	
+	o:setDoubles()
+	o:setDmg()
+	
 	o.player = o.attacker -- alias, sometimes one description makes more sense
 	o.enemy = o.defender
 	
@@ -1168,11 +1128,16 @@ function P.combatObj:set()
 	self.attacker = createCombatant(0)
 	self.attacker.class = selected(unitData.deployedUnits).class
 	self.attacker.name = selected(unitData.deployedUnits).name
-	self.player = self.attacker
+	
 	
 	self.defender = createCombatant(addr.DEFENDER_OFFSET)
 	self.defender.class = classes.LORD
 	self.defender.name = "Enemy"
+	
+	self:setDoubles()
+	self:setDmg()
+	
+	self.player = self.attacker
 	self.enemy = self.defender
 	
 	if classes.PROMOTED[self.player.class] then
@@ -1182,7 +1147,29 @@ function P.combatObj:set()
 	self.bonusExp = 0
 end
 
+function P.combatObj:copy()
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
+	
+	o.attacker = {}
+	o.defender = {}
+	
+	for k, v in pairs(self.attacker) do
+		o.attacker[k] = v
+	end
+	
+	for k, v in pairs(self.defender) do
+		o.defender[k] = v
+	end
 
+	o.player = o.attacker
+	o.enemy = o.defender
+	
+	o.bonusExp = self.bonusExp
+	
+	return o
+end
 
 
 P.currBattleParams = combat.combatObj:new()

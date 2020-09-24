@@ -333,6 +333,7 @@ while true do
 			end
 		end	
 		
+		-- todo reimplement
 		if pressed(10) then 
 			-- print(combat.paramInRAM(true)) 
 		end

@@ -732,25 +732,21 @@ function P.combatObj:willLevel(XPgained)
 	return self:canLevel() and (self.player.exp+XPgained >= 100)
 end
 
-function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
+--http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
+function P.combatObj:expFrom(kill, assassinated) 
 	if not self:canLevel() then return 0 end
-	
-	local playerClass = self.player.class
-	local playerClassPower = classes.EXP_POWER[playerClass]	
+		
 	local expFromDmg = math.max(1,
-		(31+self.enemy.level-self.player.level)/playerClassPower)
+		(31+self.enemy.level-self.player.level) / classes.EXP_POWER[self.player.class])
 	
 	local rExpFrom = expFromDmg
 	
 	if kill then
-		-- todo: load enemy class from RAM?
-		local enemyClass = self.enemy.class
-		local enemyClassPower = classes.EXP_POWER[enemyClass]
-		
-		local enemyValue = self.enemy.level*enemyClassPower
-			+classes.EXP_KILL_MODIFIER[enemyClass]
-		local playerValue = self.player.level*playerClassPower
-			+classes.EXP_KILL_MODIFIER[playerClass]
+		local enemyValue = self.enemy.level * classes.EXP_POWER[self.enemy.class]
+			+classes.EXP_KILL_MODIFIER[self.enemy.class]
+			
+		local playerValue = self.player.level * classes.EXP_POWER[self.player.class]
+			+classes.EXP_KILL_MODIFIER[self.player.class]
 		
 		local assassinateMult = 1
 		if assassinated then
@@ -915,6 +911,7 @@ end
 -- variable number of events, 1 to 6
 -- X hit events, expGained, lvlUp, totalRNsConsumed, pHP, eHP
 -- can carry enemy's hp from previous combat
+-- todo track weapon uses for weapon breaking preventing doubling
 function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 	local rHitSeq = {} -- numeric keys are hit events
 	local isAttackers = {} -- unnecessary to return with current functionality
@@ -1060,9 +1057,7 @@ end
 
 
 
-
-
--- todo record weapon uses for weapon breaking preventing doubling and autologger
+-- todo populate name and class using codes from unitData and classes
 local function createCombatant(offset)
 	c = {}
 	
@@ -1078,6 +1073,7 @@ local function createCombatant(offset)
 	local wCode  = memory.readbyte(offset + addr.UNIT_ITEMS)
 	c.weapon     = ITEM_CODES[wCode]
 	c.weaponType = weaponIdToType(wCode)
+	c.weaponUses = memory.readbyte(offset + addr.UNIT_ITEMS + 1)
 	c.atk        = memory.readbyte(offset + addr.UNIT_ATK)
 	c.def        = memory.readbyte(offset + addr.UNIT_DEF)
 	c.AS         = memory.readbyte(offset + addr.UNIT_AS)

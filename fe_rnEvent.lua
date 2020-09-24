@@ -164,11 +164,11 @@ function rnEventObj:evaluation_fn(printV)
 			self.mHitSeq.expGained = 0
 			if printV then printStr = printStr .. string.format(" staff hit %02d", hitValue) end
 		else			
-			local eHPstartFrac = self.enemyHPstart/self.batParams:getMaxHP(false)
-			local eHPendFrac = self.mHitSeq.eHP/self.batParams:getMaxHP(false)
+			local eHPstartFrac = self.enemyHPstart/self.batParams.enemy.maxHP
+			local eHPendFrac = self.mHitSeq.eHP/self.batParams.enemy.maxHP
 			local eLostValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
 			
-			local pHPstartFrac = self.batParams:getHP("isPlayer")/self.maxHP
+			local pHPstartFrac = self.batParams.player.currHP/self.maxHP
 			local pHPendFrac = self.mHitSeq.pHP/self.maxHP
 			local pLostValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
 			
@@ -308,18 +308,9 @@ function rnEventObj:printDiagnostic()
 		print(str)
 		print(string.format("expGained=%2d pHP=%2d eHP=%2d", 
 			self.mHitSeq.expGained, self.mHitSeq.pHP, self.mHitSeq.eHP))
-			
-		strH = ""
-		strA = ""
-		strD = ""
-		for data_i, str_ in ipairs(combat.PARAM_NAMES) do
-			strH = strH .. str_ .. " "
-			strA = strA .. string.format("%3d ", self.batParams.attacker[data_i])
-			strD = strD .. string.format("%3d ", self.batParams.defender[data_i])
-		end
-		print(strH)
-		print(strA)
-		print(strD)
+		
+		print(self.batParams.attacker)
+		print(self.batParams.defender)
 	end
 	
 	print(string.format("Eval %5.2f", self.eval))
@@ -457,7 +448,7 @@ function rnEventObj:setEnemyHP(rnEvent_i)
 		return
 	end
 
-	self.enemyHPstart = self.batParams:getHP(false)
+	self.enemyHPstart = self.batParams.enemy.currHP
 	
 	if self.enemyID == 0 then return end
 	

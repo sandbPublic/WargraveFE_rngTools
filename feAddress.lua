@@ -35,10 +35,10 @@ P.UNIT_MAX_HP     = P.UNIT_NAME_CODE + 18 -- {0x39224, 0x3A402, 0x3A4FE}
 -- note "current" hp may be POST COMBAT hp on combat preview....
 P.UNIT_ITEMS      = P.UNIT_MAX_HP + 12    -- {0x39230, 0x3A40E, 0x3A50A} 
 -- weapons list in 10 bytes, (item,uses) x5
-P.UNIT_ATK        = P.UNIT_MAX_HP + 0x48  -- {0x3926C, 0x3A44A, 0x3A546} 
-P.UNIT_DEF        = P.UNIT_ATK +  2       -- {0x3926E, 0x3A44C, 0x3A548} 
+P.UNIT_ATK        = P.UNIT_MAX_HP + 0x48  -- {0x3926C, 0x3A44A, 0x3A546} includes weapon triangle
+P.UNIT_DEF        = P.UNIT_ATK +  2       -- {0x3926E, 0x3A44C, 0x3A548} includes terrain bonus
 P.UNIT_AS         = P.UNIT_ATK +  4       -- {0x39270, 0x3A44E, 0x3A54A} 
-P.UNIT_HIT        = P.UNIT_ATK + 10       -- {0x39276, 0x3A454, 0x3A550} 
+P.UNIT_HIT        = P.UNIT_ATK + 10       -- {0x39276, 0x3A454, 0x3A550} if can't attack, = 0xFF
 -- redundant with stat screen values
 -- P.UNIT_LUCK    = P.UNIT_ATK + 14       -- {0x3927A, 0x3A458, 0x3A554}
 P.UNIT_CRIT       = P.UNIT_ATK + 16       -- {0x3927C, 0x3A45A, 0x3A556}

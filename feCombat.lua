@@ -4,6 +4,11 @@
 -- Instead implement rn advancing to enable fast enemy phase trials.
 -- Therefore attacker is always the player.
 
+-- note that staff hit only updates in animation, not in preview
+-- in preview, p/e crit and p hit are set to 255 as well
+-- therefore, normal combat can be set in preview or after RNs used
+-- staff can only be set after RN used
+
 require("feUnitData")
 
 local P = {}
@@ -16,53 +21,6 @@ local ATTACKER = true
 local DEFENDER = false
 local PLAYER = true
 local ENEMY = false
-
--- in the order they appear in RAM
-local MAX_HP_I  = 1 -- for drain
-local WEAPON_I  = 2 -- weapon code
-local ATTACK_I  = 3 -- includes weapon triangle, 0xFF when healing (staff?) or not attacking?
-local DEF_I     = 4 -- includes terrain bonus
-local AS_I      = 5 -- attack speed
-local HIT_I     = 6 -- if can't attack, 0xFF
-local LUCK_I    = 7 -- for devil axe in fe7/8
-local CRIT_I    = 8 
-local LEVEL_I   = 9 -- for Great Shield, Pierce, Sure Strike, and exp cap at level 19
-local EXP_I     = 10 -- for level up detection
-local HP_I      = 11 -- current HP
-local NUM_ADDRS = 11
-P.PARAM_NAMES = {"mHP", "wep", "atk", "def", "AS ", "hit", "lck", "crt", "lvl", "exp", "cHP"}
-P.PARAM_NAMES.sel_i = AS_I
-
-local ATTACKER_BASE_ADDR = {0x02039200, 0x0203A400, 0x0203A500} 
-ATTACKER_BASE_ADDR = ATTACKER_BASE_ADDR[GAME_VERSION - 5]
-
-local DEFENDER_BASE_ADDR = {0x0203927C, 0x0203A480, 0x0203A580} -- FE6 -4 from others
-DEFENDER_BASE_ADDR = DEFENDER_BASE_ADDR[GAME_VERSION - 5]
-
--- mxHP here is same as on stat screen
--- weapons list in 10 bytes, (item,uses) x5
---                            mxHP  weap  atk   def    AS   hit  luck  crit   lvl    xp    hp
---                                   +12 +0x3C    +2    +2    +6    +4    +2  +6/4    +1    +1
-local BATTLE_ADDR_OFFSETS = {{0x24, 0x30, 0x6C, 0x6E, 0x70, 0x76, 0x7A, 0x7C, 0x80, 0x81, 0x82},
-							 {0x02, 0x0E, 0x4A, 0x4C, 0x4E, 0x54, 0x58, 0x5A, 0x60, 0x61, 0x62},
-							 {  -2, 0x0A, 0x46, 0x48, 0x4A, 0x50, 0x54, 0x56, 0x5C, 0x5D, 0x5E}}
-BATTLE_ADDR_OFFSETS = BATTLE_ADDR_OFFSETS[GAME_VERSION - 5]
-
-function P.paramInRAM(isAttacker, index)
-	index = index or P.PARAM_NAMES.sel_i
-	if isAttacker then
-		return memory.readbyte(ATTACKER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index])	
-	end
-	return memory.readbyte(DEFENDER_BASE_ADDR + BATTLE_ADDR_OFFSETS[index])
-end
-
--- note that staff hit only updates in animation, not in preview
--- in preview, p/e crit and p hit are set to 255 as well
--- therefore, normal combat can be set in preview or after RNs used
--- staff can only be set after RN used
-
-
-
 
 local BRAVE_S_ID   = {0,0,0,0,0, 07, 11, 11}
 local BRAVE_L_ID   = {0,0,0,0,0, 21, 25, 25}
@@ -676,35 +634,18 @@ function P.combatObj:copy()
 	
 	o.attacker = {}
 	o.defender = {}
-	for i = 1, NUM_ADDRS do
-		o.attacker[i] = self.attacker[i]
-		o.defender[i] = self.defender[i]
+	
+	for k, v in pairs(self.attacker) do
+		o.attacker[k] = v
 	end
-	o.name = self.name
 	
-	o.attacker.class  = self.attacker.class
-	o.attacker.weapon = self.attacker.weapon
-	o.attacker.weaponType = self.attacker.weaponType
-	o.defender.class  = self.defender.class
-	o.defender.weapon = self.defender.weapon
-	o.defender.weaponType = self.defender.weaponType
-	
-	o.player = o.attacker
-	o.enemy = o.defender
-	
+	for k, v in pairs(self.defender) do
+		o.defender[k] = v
+	end
+
 	o.bonusExp = self.bonusExp
 	
 	return o
-end
-
-function P.combatObj:getHP(isPlayer)
-	if isPlayer then return self.player[HP_I] end
-	return self.enemy[HP_I]
-end
-
-function P.combatObj:getMaxHP(isPlayer)
-	if isPlayer then return self.player[MAX_HP_I] end
-	return self.enemy[MAX_HP_I]
 end
 
 function P.combatObj:isWeaponSpecial(isPlayer)
@@ -712,27 +653,30 @@ function P.combatObj:isWeaponSpecial(isPlayer)
 	return self.enemy.weaponType ~= NORMAL
 end
 
+-- todo remove
 function P.combatObj:data(isAttacker)
 	if isAttacker then return self.attacker end
 	return self.defender
 end
 
 function P.combatObj:isUsingStaff()
-	return self.attacker[ATTACK_I] == 0xFF -- healing only?
+	return self.attacker.atk == 0xFF -- healing only?
 end
 
+
+-- todo precalculate into variables when combatObj is set()
 function P.combatObj:dmg(isAttacker, pierce)
 	if pierce then
-		return self:data(isAttacker)[ATTACK_I]
+		return self:data(isAttacker).atk
 	end
-	return math.max(0, self:data(isAttacker)[ATTACK_I] - self:data(not isAttacker)[DEF_I])
+	return math.max(0, self:data(isAttacker).atk - self:data(not isAttacker).def)
 end
 
 function P.combatObj:doubles(isAttacker)
-	return (self.attacker[AS_I] >= self.defender[AS_I] + 4 
+	return (self.attacker.AS >= self.defender.AS + 4 
 			and isAttacker and self.attacker.weaponType ~= HALVE) 
 		   or 
-		   (self.defender[AS_I] >= self.attacker[AS_I] + 4 
+		   (self.defender.AS >= self.attacker.AS + 4 
 		    and not isAttacker and self.defender.weaponType ~= HALVE)
 end
 
@@ -750,8 +694,8 @@ function P.combatObj:autoLogLine(isAttacker)
 	end
 	
 	return string.format("lv%2d.%s %2d/%2dhp %sa %2dd %2ds %3sh %2sc %s", 
-		d[LEVEL_I], dashIfInvalid(d[EXP_I]), d[HP_I], d[MAX_HP_I], dashIfInvalid(d[ATTACK_I]), d[DEF_I], 
-		d[AS_I], hitToString(d[HIT_I]), dashIfInvalid(d[CRIT_I]), ITEM_CODES[d[WEAPON_I]])
+		d.level, dashIfInvalid(d.exp), d.currHP, d.maxHP, dashIfInvalid(d.atk), d.def, 
+		d.AS, hitToString(d.hit), dashIfInvalid(d.crit), d.weapon)
 end
 
 function P.combatObj:toStrings()
@@ -762,30 +706,29 @@ function P.combatObj:toStrings()
 	end
 	
 	local function line(isAttacker)
-		local name = self.name
-		if not isAttacker then name = "Enemy" end
+		local combatant = self:data(isAttacker)
 		
-		local experStr = string.format("%02d", self:data(isAttacker)[EXP_I])
-		if self:data(isAttacker)[EXP_I] > 99 then
-			experStr = string.format("--", self:data(isAttacker)[EXP_I])
+		local experStr = string.format("%02d", combatant.exp)
+		if combatant.exp > 99 then
+			experStr = "--"
 		end
 		
 		local rLine = string.format("%-10.10s%2d.%s %3s %3s %2d %2d",
-			name, 
-			self:data(isAttacker)[LEVEL_I], 
+			combatant.name, 
+			combatant.level, 
 			experStr, 
-			hitToString(self:data(isAttacker)[HIT_I]), 
-			hitToString(self:data(isAttacker)[CRIT_I]), 
-			self:data(isAttacker)[HP_I], 
+			hitToString(combatant.hit), 
+			hitToString(combatant.crit), 
+			combatant.currHP, 
 			self:dmg(isAttacker))
 		
 		if self:doubles(isAttacker) then rLine = rLine .. "x2 " 
 		else rLine = rLine .. "   " end	
 		
-		rLine = rLine .. ITEM_CODES[self:data(isAttacker)[WEAPON_I]]
+		rLine = rLine .. combatant.weapon
 		
-		if self:data(isAttacker).weaponType ~= NORMAL then
-			rLine = rLine .. " " .. P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weaponType]
+		if combatant.weaponType ~= NORMAL then
+			rLine = rLine .. " " .. P.WEAPON_TYPE_STRINGS[combatant.weaponType]
 		end
 		return rLine
 	end
@@ -821,13 +764,13 @@ function P.combatObj:toCompactStrings()
 			else rLine = rLine .. "   " end
 		end
 		
-		local hit = self:data(isAttacker)[HIT_I]
+		local hit = self:data(isAttacker).hit
 		if hit > 100 then rLine = rLine .. " --- "
 		elseif hit == 100 then rLine = rLine .. "100.0"
 		else rLine = rLine .. string.format("%05.2f", trueHit(hit))
 		end
 		
-		local crit = self:data(isAttacker)[CRIT_I]
+		local crit = self:data(isAttacker).crit
 		if crit > 100 then rLine = rLine .. " --"
 		else rLine = rLine .. string.format(" %2d", crit)
 		end
@@ -842,11 +785,11 @@ function P.combatObj:toCompactStrings()
 end
 
 function P.combatObj:canLevel()
-	return self.player[LEVEL_I] % 20 ~= 0
+	return self.player.level % 20 ~= 0
 end
 
 function P.combatObj:willLevel(XPgained)
-	return self:canLevel() and (self.player[EXP_I]+XPgained >= 100)
+	return self:canLevel() and (self.player.exp+XPgained >= 100)
 end
 
 function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
@@ -855,7 +798,7 @@ function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-
 	local playerClass = self.player.class
 	local playerClassPower = classes.EXP_POWER[playerClass]	
 	local expFromDmg = math.max(1,
-		(31+self.enemy[LEVEL_I]-self.player[LEVEL_I])/playerClassPower)
+		(31+self.enemy.level-self.player.level)/playerClassPower)
 	
 	local rExpFrom = expFromDmg
 	
@@ -864,9 +807,9 @@ function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-
 		local enemyClass = self.enemy.class
 		local enemyClassPower = classes.EXP_POWER[enemyClass]
 		
-		local enemyValue = self.enemy[LEVEL_I]*enemyClassPower
+		local enemyValue = self.enemy.level*enemyClassPower
 			+classes.EXP_KILL_MODIFIER[enemyClass]
-		local playerValue = self.player[LEVEL_I]*playerClassPower
+		local playerValue = self.player.level*playerClassPower
 			+classes.EXP_KILL_MODIFIER[playerClass]
 		
 		local assassinateMult = 1
@@ -903,8 +846,8 @@ function P.combatObj:expFrom(kill, assassinated) --http://serenesforest.net/the-
 			enemyValue-playerValue + 20 + self.bonusExp)))
 	end
 	
-	if self.player[LEVEL_I] % 20 == 19 then
-		return math.min(math.floor(rExpFrom), 100 - self.player[EXP_I])
+	if self.player.level % 20 == 19 then
+		return math.min(math.floor(rExpFrom), 100 - self.player.exp)
 	end
 	
 	return math.floor(rExpFrom)
@@ -912,40 +855,39 @@ end
 
 -- string action type, int dmg, int rnsConsumed, bool expWasGained, bool assassinated
 function P.combatObj:hitEvent(index, isAttacker)
+	local combatant = self:data(isAttacker)
+
 	local retHitEv = {}
 	retHitEv.action = ""
 	retHitEv.RNsConsumed = 0
 	retHitEv.dmg = self:dmg(isAttacker)
 	
-	if self:data(isAttacker).weaponType == STONE then
+	if combatant.weaponType == STONE then
 		retHitEv.dmg = 999
 	end
 	
 	-- todo, only matters if eclipse happens after the target is damaged by another unit
-	--if self:data(isAttacker).weaponType == HALVE then
+	--if combatant.weaponType == HALVE then
 		--retHitEv.dmg = 999 
 	--end
 	
 	retHitEv.expWasGained = isAttacker -- assume true and falsify
 	retHitEv.assassinated = false
 	
-	local hit = self:data(isAttacker)[HIT_I]
-	local crt = self:data(isAttacker)[CRIT_I]
-	local lvl = self:data(isAttacker)[LEVEL_I]
-	
-	if lvl > 20 then
-		lvl = lvl - 20
-	end
-	
 	local function nextRn()
 		retHitEv.RNsConsumed = retHitEv.RNsConsumed + 1
 		return rns.rng1:getRN(index+retHitEv.RNsConsumed-1)--use consumed rn
 	end
 		
-	if hit ~= 255 then -- no action	
-		local willHit = (hit > (nextRn()+nextRn())/2)
+	if combatant.hit ~= 255 then -- no action	
+		local willHit = (combatant.hit > (nextRn()+nextRn())/2)
 		
-		if classes.hasSureStrike(self:data(isAttacker).class) then
+		local lvl = combatant.level
+		if lvl > 20 then
+			lvl = lvl - 20
+		end
+		
+		if classes.hasSureStrike(combatant.class) then
 			if lvl > nextRn() then
 				willHit = true
 			end
@@ -964,20 +906,20 @@ function P.combatObj:hitEvent(index, isAttacker)
 				end
 			end
 			
-			if classes.hasPierce(self:data(isAttacker).class) then
+			if classes.hasPierce(combatant.class) then
 				if lvl > nextRn() then
 					retHitEv.action = "P"
 					retHitEv.dmg = self:dmg(isAttacker, true)
 				end
 			end
 			
-			if crt > nextRn() then
+			if combatant.crit > nextRn() then
 				local silencerRn = 0
 				if GAME_VERSION >= 7 then 
 					silencerRn = nextRn() -- does not roll against Demon King
 				end
 				
-				if classes.hasSilencer(self:data(isAttacker).class) and
+				if classes.hasSilencer(combatant.class) and
 					(25 > silencerRn or -- bosses are resistant to silencer
 					(50 > silencerRn and self.bonusExp ~= 40)) then
 					
@@ -996,11 +938,11 @@ function P.combatObj:hitEvent(index, isAttacker)
 			end
 			
 			-- crit/devil priority?
-			if self:data(isAttacker).weaponType == DEVIL then
+			if combatant.weaponType == DEVIL then
 				local devilRN = nextRn()
 			
-				if ((31 - self:data(isAttacker)[LUCK_I] > devilRN) and (GAME_VERSION >= 7)) or 
-					(21 - self:data(isAttacker)[LEVEL_I] > devilRN) then
+				if ((31 - combatant.luck > devilRN) and (GAME_VERSION >= 7)) or 
+					(21 - combatant.level > devilRN) then
 					retHitEv.action = "DEV"
 					retHitEv.expWasGained = false -- untested
 				end
@@ -1022,7 +964,7 @@ function P.combatObj:staffHitEvent(index)
 	retStvHitEv.dmg = 0
 	retStvHitEv.expWasGained = true
 	
-	if self.attacker[HIT_I] <= rns.rng1:getRN(index) then
+	if self.attacker.hit <= rns.rng1:getRN(index) then
 		retStvHitEv.action = "STF-O"
 		retStvHitEv.expWasGained = false
 	end
@@ -1039,10 +981,10 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 	rHitSeq.expGained = 1
 	rHitSeq.lvlUp = false
 	rHitSeq.totalRNsConsumed = 0
-	rHitSeq.pHP = self.player[HP_I]
+	rHitSeq.pHP = self.player.currHP
 	
 	-- pass enemy HP from previous combats this phase if applicable
-	rHitSeq.eHP = carriedEnemyHP or self.enemy[HP_I]
+	rHitSeq.eHP = carriedEnemyHP or self.enemy.currHP
 	if rHitSeq.eHP == 0 then
 		rHitSeq.expGained = 0
 		return rHitSeq
@@ -1063,7 +1005,7 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 	end
 	
 	setNext(ATTACKER)
-	defenderCounters = (self.defender[HIT_I] ~= 255)
+	defenderCounters = (self.defender.hit ~= 255)
 	
 	if defenderCounters then
 		setNext(DEFENDER)
@@ -1092,7 +1034,7 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 			end
 			
 			if self.attacker.weaponType == DRAIN then
-				rHitSeq.pHP = math.min(rHitSeq.pHP + hE.dmg, self.attacker[MAX_HP_I])
+				rHitSeq.pHP = math.min(rHitSeq.pHP + hE.dmg, self.attacker.maxHP)
 			end
 			
 			if rHitSeq.eHP <= 0 then  -- enemy died, combat over
@@ -1114,7 +1056,7 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 			end
 			
 			if self.defender.weaponType == DRAIN then
-				rHitSeq.eHP = math.min(rHitSeq.eHP + hE.dmg, self.defender[MAX_HP_I])
+				rHitSeq.eHP = math.min(rHitSeq.eHP + hE.dmg, self.defender.maxHP)
 			end
 
 			rHitSeq[ev_i].action = hE.action:lower()
@@ -1155,7 +1097,7 @@ end
 -- modifying functions
 
 function P.combatObj:togglePromo(isAttacker)
-	self:data(isAttacker)[LEVEL_I] = (self:data(isAttacker)[LEVEL_I] + 19) % 40 + 1
+	self:data(isAttacker).level = (self:data(isAttacker).level + 19) % 40 + 1
 end
 
 function P.combatObj:cycleWeapon(isAttacker)
@@ -1206,18 +1148,13 @@ function P.combatObj:new()
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.test_a = createCombatant(0)
-	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-	o.attacker.weapon = "Nothing"
-	o.attacker.weaponType = NORMAL
+	o.attacker = createCombatant(0)
 	o.attacker.class = classes.LORD
-	o.name = "no name"
+	o.attacker.name = "no name"
 	
-	o.test_d = createCombatant(addr.DEFENDER_OFFSET)
-	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}	
-	o.defender.weapon = "Nothing"
-	o.defender.weaponType = NORMAL
+	o.defender = createCombatant(addr.DEFENDER_OFFSET)
 	o.defender.class = classes.LORD
+	o.defender.name = "no name"
 	
 	o.player = o.attacker -- alias, sometimes one description makes more sense
 	o.enemy = o.defender
@@ -1228,18 +1165,15 @@ function P.combatObj:new()
 end
 
 function P.combatObj:set()
-	for i = 1, NUM_ADDRS do
-		self.attacker[i] = P.paramInRAM(true, i)
-		self.defender[i] = P.paramInRAM(false, i)
-	end
+	self.attacker = createCombatant(0)
+	self.attacker.class = selected(unitData.deployedUnits).class
+	self.attacker.name = selected(unitData.deployedUnits).name
+	self.player = self.attacker
 	
-	self.attacker.weapon = ITEM_CODES[self.attacker[WEAPON_I]]
-	self.defender.weapon = ITEM_CODES[self.defender[WEAPON_I]]
-	self.attacker.weaponType = weaponIdToType(self.attacker[WEAPON_I])
-	self.defender.weaponType = weaponIdToType(self.defender[WEAPON_I])
-	
-	self.player.class = selected(unitData.deployedUnits).class
-	self.name = selected(unitData.deployedUnits).name
+	self.defender = createCombatant(addr.DEFENDER_OFFSET)
+	self.defender.class = classes.LORD
+	self.defender.name = "Enemy"
+	self.enemy = self.defender
 	
 	if classes.PROMOTED[self.player.class] then
 		self:togglePromo(PLAYER)

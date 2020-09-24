@@ -333,17 +333,12 @@ while true do
 			end
 		end	
 		
-		if pressed(10) then print(combat.paramInRAM(true)) end
+		if pressed(10) then 
+			-- print(combat.paramInRAM(true)) 
+		end
 		
 		if held(10) then
-			if pressed("left", gameCtrl) then
-				changeSelection(combat.PARAM_NAMES, -1)
-				print("now printing stat " .. selected(combat.PARAM_NAMES))
-			end
-			if pressed("right", gameCtrl) then
-				changeSelection(combat.PARAM_NAMES, 1)
-				print("now printing stat " .. selected(combat.PARAM_NAMES))
-			end
+			-- change combatant stat to print
 		end
 			
 		if pressed(11) then

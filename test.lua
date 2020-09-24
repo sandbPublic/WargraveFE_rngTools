@@ -69,7 +69,7 @@ end
 if true then
 	print("---Combat...---")
 	
-	combat.paramInRAM()
+	--combat.paramInRAM()
 	combat.currBattleParams:set()
 	assert(combat.hitSeq_string({}) == "")
 	-- todo combatObj tests

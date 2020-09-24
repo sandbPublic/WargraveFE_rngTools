@@ -313,12 +313,10 @@ end
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
 	P.rects[P.STAT_DATA_I].strings = selected(unitData.deployedUnits):statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))
-	P.rects[P.COMBAT_I].strings = combat.currCombatants:toStrings()
-	-- don't want to overwrite currCombatants generally
+	P.rects[P.COMBAT_I].strings = combat.combatObj:new():toStrings()
 	
 	if P.lookingAt(P.COMPACT_BPS_I) then
-		combat.currCombatants:set() -- auto update
-		P.rects[P.COMPACT_BPS_I].strings = combat.currCombatants:toCompactStrings()
+		P.rects[P.COMPACT_BPS_I].strings = combat.combatObj:new():toCompactStrings()
 	end
 	
 	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings("isColored")

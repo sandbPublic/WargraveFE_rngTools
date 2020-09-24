@@ -1096,52 +1096,19 @@ function P.combatObj:new()
 	setmetatable(o, self)
 	self.__index = self
 	
-	o:set()
+	o.attacker = createCombatant(0)
+	o.defender = createCombatant(addr.DEFENDER_OFFSET)
 	
-	return o
-end
-
-function P.combatObj:set()
-	self.attacker = createCombatant(0)
-	self.defender = createCombatant(addr.DEFENDER_OFFSET)
+	o:setDoubles()
+	o:setDmg()
 	
-	self:setDoubles()
-	self:setDmg()
-	
-	self.player = self.attacker
-	self.enemy = self.defender
-	
-	self:setExpGain()
-	self.bonusExp = 0
-end
-
-function P.combatObj:copy()
-	local o = {}
-	setmetatable(o, self)
-	self.__index = self
-	
-	o.attacker = {}
-	o.defender = {}
-	
-	for k, v in pairs(self.attacker) do
-		o.attacker[k] = v
-	end
-	
-	for k, v in pairs(self.defender) do
-		o.defender[k] = v
-	end
-
 	o.player = o.attacker
 	o.enemy = o.defender
 	
-	o.expFromDmg = self.expFromDmg
-	o.expFromKill = self.expFromKill
-	o.bonusExp = self.bonusExp
+	o:setExpGain()
+	o.bonusExp = 0
 	
 	return o
 end
-
-
-P.currCombatants = combat.combatObj:new()
 
 return combat

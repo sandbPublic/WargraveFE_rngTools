@@ -608,7 +608,7 @@ end
 
 
 
-function rnEventObj:new(combatants)
+function rnEventObj:new()
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
@@ -618,7 +618,7 @@ function rnEventObj:new(combatants)
 	
 	o.unit = selected(unitData.deployedUnits)
 	o:setStats() -- todo do we get enemy stats on EP?
-	o.combatants = combat.currCombatants:copy()
+	o.combatants = combat.combatObj:new()
 	
 	o.hasCombat = true -- most rnEvents will be combats without levels or digs
 	o.lvlUp = false

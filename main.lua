@@ -187,7 +187,6 @@ while true do
 		if pressed(2) then
 			selected(unitData.deployedUnits):setStats()
 			rnEvent.addEvent()
-			selected(rnEvent.events).combatants:set()
 			rnEvent.update_rnEvents()
 			
 			printStringArray(selected(rnEvent.events).combatants:toStrings())
@@ -196,14 +195,14 @@ while true do
 		if pressed(3) then rnEvent.toggle("hasCombat") end
 		
 		if pressed(4) then
-			combat.currCombatants:set()
+			c = combat.combatObj:new()
 			print()
-			print(combat.currCombatants.attacker)
+			print(c.attacker)
 			print()
-			print(combat.currCombatants.defender)
+			print(c.defender)
 		end	
 		
-		if pressed(5) then rnEvent.combatants:toggleBonusExp() end
+		if pressed(5) then selected(rnEvent.events).combatants:toggleBonusExp() end
 
 		if pressed(6) then rnEvent.suggestedPermutation() end
 		
@@ -244,8 +243,7 @@ while true do
 		if pressed(11) then selected(unitData.deployedUnits):toggleAfas() end
 		
 		if pressed(12) then -- save battle params & stats
-			combat.currCombatants:set()
-			printStringArray(combat.currCombatants:toStrings())
+			printStringArray(combat.combatObj:new():toStrings())
 			
 			selected(unitData.deployedUnits):setStats()
 			rnEvent.updateStats()

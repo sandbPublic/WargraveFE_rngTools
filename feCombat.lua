@@ -732,61 +732,17 @@ end
 -- todo precompute
 function P.combatObj:expFrom(kill, assassinated) 
 	if self.player.level == 20 then return 0 end
-	
-	-- todo eggs always yield 50xp if killed, 0 if not killed
-	
-	plvl = self.player.level
-	if classes.PROMOTED[self.player.class] then
-		plvl = plvl + 20
-	end
-	
-	elvl = self.enemy.level
-	if classes.PROMOTED[self.enemy.class] then
-		elvl = elvl + 20
-	end
-	
-	local expFromDmg = math.max(1,
-		(31+elvl-plvl) / classes.EXP_POWER[self.player.class])
-	
-	local rExpFrom = expFromDmg
+	local rExpFrom = self.expFromDmg
 	
 	if kill then
-		local enemyValue = elvl * classes.EXP_POWER[self.enemy.class]
-			+classes.EXP_KILL_MODIFIER[self.enemy.class]
-			
-		local playerValue = plvl * classes.EXP_POWER[self.player.class]
-			+classes.EXP_KILL_MODIFIER[self.player.class]
-		
 		local assassinateMult = 1
 		if assassinated then
 			assassinateMult = 2 -- doubles exp from kill?
 			-- https://serenesforest.net/forums/index.php?/topic/78394-simplifying-and-correcting-the-experience-calculations/
 		end
 		
-		-- if FE7 normal mode, or FE8. note this gains a lot of exp 
-		-- from killing an equal or slightly "weaker" enemy,
-		-- especially at high levels, up to level*1.5.
-		-- a level 39 killing a level 39 gets ~68 exp more
-		-- than a level 39 killing a level 40.
-		-- final Ursula gets a "value" reduction of -20 due to being a valkyrie
-		-- so this effect is easily observable at Final
-		
-		-- inconsistent in FE8? on Ephraim mode, 
-		-- Gilliam lvl 10 killing fighter lvl 9
-		-- gains 27, not 42 xp??
-		-- yet Franz lvl 26 killing Entombed lvl 24 gains 55, not 15 exp?
-		-- in same level, Gilliam doesn't get this "mode bonus" when he otherwise would
-		-- level 21 Lute killing level 9 cav gains 6, not 22
-		
-		-- hypothesis: only affects promoted (enemy or player?) or boss units? in FE8?
-		if enemyValue - playerValue <= 0 and GAME_VERSION == 7 
-			--and self.bonusExp == 40 
-			then
-			playerValue = math.floor(playerValue/2)
-		end
-		
-		rExpFrom = math.min(100, math.floor(expFromDmg+assassinateMult*math.max(0, 
-			enemyValue-playerValue + 20 + self.bonusExp)))
+		rExpFrom = math.min(100, math.floor(self.expFromDmg+
+			assassinateMult*math.max(0, self.expFromKill + self.bonusExp)))
 	end
 	
 	if self.player.level == 19 then
@@ -1083,6 +1039,63 @@ function P.combatObj:setDmg()
 	self.defender.dmg = math.max(0, self.defender.atk - self.attacker.def)   
 end
 
+-- depends on bonus exp (thief or boss) and assassinates
+-- pre-calculate immutable values
+function P.combatObj:setExpGain()
+	if self.player.level == 20 then
+		self.expFromDmg = 0
+		self.expFromKill = 0
+		return
+	end
+	
+	if self.enemy.class == classes.EGG then
+		self.expFromDmg = 0
+		self.expFromKill = 50
+		return
+	end
+	
+	plvl = self.player.level
+	if classes.PROMOTED[self.player.class] then
+		plvl = plvl + 20
+	end
+	
+	elvl = self.enemy.level
+	if classes.PROMOTED[self.enemy.class] then
+		elvl = elvl + 20
+	end
+	
+	self.expFromDmg = math.max(1,
+		(31+elvl-plvl) / classes.EXP_POWER[self.player.class])
+	
+	local enemyValue = elvl * classes.EXP_POWER[self.enemy.class]
+		+classes.EXP_KILL_MODIFIER[self.enemy.class]
+		
+	local playerValue = plvl * classes.EXP_POWER[self.player.class]
+		+classes.EXP_KILL_MODIFIER[self.player.class]
+	
+	-- if FE7 normal mode, or FE8. note this gains a lot of exp 
+	-- from killing an equal or slightly "weaker" enemy,
+	-- especially at high levels, up to level*1.5.
+	-- a level 39 killing a level 39 gets ~68 exp more
+	-- than a level 39 killing a level 40.
+	-- final Ursula gets a "value" reduction of -20 due to being a valkyrie
+	-- so this effect is easily observable at Final
+	
+	-- inconsistent in FE8? on Ephraim mode, 
+	-- Gilliam lvl 10 killing fighter lvl 9
+	-- gains 27, not 42 xp??
+	-- yet Franz lvl 26 killing Entombed lvl 24 gains 55, not 15 exp?
+	-- in same level, Gilliam doesn't get this "mode bonus" when he otherwise would
+	-- level 21 Lute killing level 9 cav gains 6, not 22
+	
+	-- hypothesis: only affects promoted (enemy or player?) or boss units? in FE8?
+	if enemyValue - playerValue <= 0 and GAME_VERSION == 7 then
+		playerValue = math.floor(playerValue/2)
+	end
+	
+	self.expFromKill = enemyValue - playerValue + 20
+end
+
 function P.combatObj:new()
 	local o = {}
 	setmetatable(o, self)
@@ -1098,6 +1111,7 @@ function P.combatObj:new()
 	o.player = o.attacker -- alias, sometimes one description makes more sense
 	o.enemy = o.defender
 	
+	o:setExpGain()
 	o.bonusExp = 0 -- 20 for killing thief, 40 for killing boss
 	
 	return o
@@ -1113,6 +1127,7 @@ function P.combatObj:set()
 	self.player = self.attacker
 	self.enemy = self.defender
 	
+	self:setExpGain()
 	self.bonusExp = 0
 end
 

@@ -8,8 +8,8 @@ U
 toggle rnEvent.combat
 toggle rnEvent.lvlUp
 I
---
-toggle rnEvent dig -- todo remove
+print combat
+toggle rnEvent dig
 O
 toggle bonus exp
 toggle fog
@@ -36,4 +36,4 @@ save stats and print ranks  -- todo ranks and support
 generate log file
 M
 hold, <> move rn, ^v change step
--- todo
+--

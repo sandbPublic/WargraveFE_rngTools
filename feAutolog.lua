@@ -58,7 +58,7 @@ function logLineObj:new()
 	combat.currBattleParams:set()
 	
 	local function line(combatant)
-		return string.format("%-12s with %2d use %-12s  at %2d,%2d",
+		return string.format("%-9s with %2d use %-12s  at %2d,%2d",
 			combatant.name,
 			combatant.weaponUses,
 			combatant.weapon,

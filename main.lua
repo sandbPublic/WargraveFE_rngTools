@@ -196,7 +196,10 @@ while true do
 		if pressed(3) then rnEvent.toggle("hasCombat") end
 		
 		if pressed(4) then
-			-- was toggle promo
+			print()
+			print(combat.currBattleParams.attacker)
+			print()
+			print(combat.currBattleParams.defender)
 		end	
 		
 		if pressed(5) then rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp) end
@@ -348,10 +351,7 @@ while true do
 		if pressed(12) then autolog.writeLogs() end
 		
 		if pressed(13) then 
-			print()
-			print(combat.currBattleParams.attacker)
-			print()
-			print(combat.currBattleParams.defender)
+			--
 		end
 	end
 	

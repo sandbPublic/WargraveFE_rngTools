@@ -753,12 +753,12 @@ local AFAS_I = INDEX_OF_NAME["Cormag"]
 local function statsInRAM()
 	local stats = {}
 	
-	stats[1] = memory.readbyte(addr.ATTACKER_MAX_HP)
+	stats[1] = memory.readbyte(addr.UNIT_MAX_HP)
 	for stat_i = 2, 7 do
-		stats[stat_i] = memory.readbyte(addr.ATTACKER_MAX_HP + stat_i)  -- at +1 is current hp
+		stats[stat_i] = memory.readbyte(addr.UNIT_MAX_HP + stat_i)  -- at +1 is current hp
 	end
-	stats[LEVEL_I] = memory.readbyte(addr.ATTACKER_LEVEL)
-	stats[EXP_I] = memory.readbyte(addr.ATTACKER_EXP)
+	stats[LEVEL_I] = memory.readbyte(addr.UNIT_LEVEL)
+	stats[EXP_I] = memory.readbyte(addr.UNIT_EXP)
 	
 	return stats
 end
@@ -767,7 +767,7 @@ end
 local RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
 function P.printRanks()
 	for i, name in ipairs(RANK_NAMES) do
-		rank = memory.readbyte(addr.ATTACKER_RANKS + i - 1)
+		rank = memory.readbyte(addr.UNIT_RANKS + i - 1)
 		if rank > 0 then
 			print(name .. " rank " .. rank)
 		end

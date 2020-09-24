@@ -1176,17 +1176,44 @@ function P.combatObj:toggleBonusExp()
 	print(string.format("bonus xp: %d", self.bonusExp)) 
 end
 
+local function createCombatant(offset)
+	c = {}
+	
+	c.nameCode   = memory.readword(offset + addr.UNIT_NAME_CODE)
+	c.classCode  = memory.readword(offset + addr.UNIT_CLASS_CODE)
+	c.level      = memory.readbyte(offset + addr.UNIT_LEVEL)
+	c.exp        = memory.readbyte(offset + addr.UNIT_EXP)
+	c.x          = memory.readbyte(offset + addr.UNIT_X)
+	c.y          = memory.readbyte(offset + addr.UNIT_Y)
+
+	c.maxHP      = memory.readbyte(offset + addr.UNIT_MAX_HP)
+	c.luck       = memory.readbyte(offset + addr.UNIT_MAX_HP + 7)
+	local wCode  = memory.readbyte(offset + addr.UNIT_ITEMS)
+	c.weapon     = ITEM_CODES[wCode]
+	c.weaponType = weaponIdToType(wCode)
+	c.atk        = memory.readbyte(offset + addr.UNIT_ATK)
+	c.def        = memory.readbyte(offset + addr.UNIT_DEF)
+	c.AS         = memory.readbyte(offset + addr.UNIT_AS)
+	c.hit        = memory.readbyte(offset + addr.UNIT_HIT)
+	c.crit       = memory.readbyte(offset + addr.UNIT_CRIT)
+	c.currHP     = memory.readbyte(offset + addr.UNIT_CURR_HP)
+	
+	return c
+end
+
 function P.combatObj:new()
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
 	
+	o.test_a = createCombatant(0)
 	o.attacker = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	o.attacker.weapon = "Nothing"
 	o.attacker.weaponType = NORMAL
 	o.attacker.class = classes.LORD
 	o.name = "no name"
 	
+	o.test_d = createCombatant(addr.DEFENDER_OFFSET)
 	o.defender = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}	
 	o.defender.weapon = "Nothing"
 	o.defender.weaponType = NORMAL

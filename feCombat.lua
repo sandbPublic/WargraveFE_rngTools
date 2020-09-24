@@ -632,8 +632,7 @@ function P.combatObj:isWeaponSpecial(isPlayer)
 	return self.enemy.weaponType ~= NORMAL
 end
 
--- todo remove
-function P.combatObj:data(isAttacker)
+function P.combatObj:combatant(isAttacker)
 	if isAttacker then return self.attacker end
 	return self.defender
 end
@@ -729,7 +728,6 @@ function P.combatObj:willLevel(XPgained)
 end
 
 --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
--- todo precompute
 function P.combatObj:expFrom(kill, assassinated) 
 	if self.player.level == 20 then return 0 end
 	local rExpFrom = self.expFromDmg
@@ -754,7 +752,7 @@ end
 
 -- string action type, int dmg, int rnsConsumed, bool expWasGained, bool assassinated
 function P.combatObj:hitEvent(index, isAttacker)
-	local combatant = self:data(isAttacker)
+	local combatant = self:combatant(isAttacker)
 
 	local retHitEv = {}
 	retHitEv.action = ""
@@ -793,7 +791,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 			-- confirmed gShield, Pierce, crit, Silencer order
 			-- then Devil?
 			
-			if classes.hasGreatShield(self:data(not isAttacker).class) then
+			if classes.hasGreatShield(self:combatant(not isAttacker).class) then
 				if combatant.level > nextRn() then  -- gShield works on attackers level
 					retHitEv.action = "G" -- does crit even roll?
 					retHitEv.dmg = 0
@@ -894,7 +892,7 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 	
 	local function setNext(isAttacker)
 		table.insert(isAttackers, isAttacker)
-		if self:data(isAttacker).weaponType == BRAVE then
+		if self:combatant(isAttacker).weaponType == BRAVE then
 			table.insert(isAttackers, isAttacker)
 		end
 	end

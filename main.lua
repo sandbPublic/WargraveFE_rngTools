@@ -196,13 +196,14 @@ while true do
 		if pressed(3) then rnEvent.toggle("hasCombat") end
 		
 		if pressed(4) then
+			combat.currCombatants:set()
 			print()
 			print(combat.currCombatants.attacker)
 			print()
 			print(combat.currCombatants.defender)
 		end	
 		
-		if pressed(5) then rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp) end
+		if pressed(5) then rnEvent.combatants:toggleBonusExp() end
 
 		if pressed(6) then rnEvent.suggestedPermutation() end
 		

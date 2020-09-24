@@ -605,20 +605,10 @@ function P.change(k, amount)
 	invalidateCache()
 end
 
-function P.toggleBatParam(func, var)
-	if #P.events <= 0 then return end
-	
-	func(selected(P.events).combatants, var) -- :func() syntactic for func(self)
-	invalidateCache()
-end
 
 
 
-
-function rnEventObj:new(combatants, sel_Unit_i)
-	combatants = combatants or combat.currCombatants
-	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
-	
+function rnEventObj:new(combatants)
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
@@ -628,7 +618,7 @@ function rnEventObj:new(combatants, sel_Unit_i)
 	
 	o.unit = selected(unitData.deployedUnits)
 	o:setStats() -- todo do we get enemy stats on EP?
-	o.combatants = combatants:copy()
+	o.combatants = combat.currCombatants:copy()
 	
 	o.hasCombat = true -- most rnEvents will be combats without levels or digs
 	o.lvlUp = false

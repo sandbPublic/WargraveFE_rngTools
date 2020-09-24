@@ -11,7 +11,7 @@ P.CURSOR_X = {0x2AA1C, 0x2BBCC, 0x2BCC4} -- also at +4
 P.CURSOR_X = RAM_BASE + P.CURSOR_X[GAME_VERSION - 5]
 P.CURSOR_Y = P.CURSOR_X + 2
 
--- todo money, {0x2BC00} -- 2 bytes
+-- todo money, {0x2AA50? 0x2BC00, 0x2BCF8?} -- 2 bytes, or more? 2 bytes maxes out at 65535, need extra half byte?
 P.FOG = {0x2AA55, 0x2BC05, 0x2BCFD} -- +0x39 from CURSOR_X ?
 P.FOG = RAM_BASE + P.FOG[GAME_VERSION - 5]
 P.CHAPTER = P.FOG + 1 -- FE6x chapters count from 32

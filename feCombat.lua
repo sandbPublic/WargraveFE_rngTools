@@ -1061,7 +1061,8 @@ end
 local function createCombatant(offset)
 	c = {}
 	
-	c.name = unitData.HEX_CODES[memory.readword(offset + addr.UNIT_NAME_CODE)] or "name not found"
+	local nameCode = memory.readword(offset + addr.UNIT_NAME_CODE)
+	c.name = unitData.HEX_CODES[nameCode] or string.format("%04x", nameCode)
 	c.class = classes.HEX_CODES[memory.readword(offset + addr.UNIT_CLASS_CODE)] or classes.OTHER
 	c.level      = memory.readbyte(offset + addr.UNIT_LEVEL)
 	c.exp        = memory.readbyte(offset + addr.UNIT_EXP)

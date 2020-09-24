@@ -7,12 +7,12 @@ feGUI = P
 
 
 P.rects = {}
-P.RN_EVENT_I 		= 1
-P.RN_STREAM_I		= 2
-P.STAT_DATA_I		= 3
-P.BATTLE_PARAMS_I 	= 4
-P.COMPACT_BPS_I		= 5
-P.COORD_I			= 6
+P.RN_EVENT_I 	= 1
+P.RN_STREAM_I	= 2
+P.STAT_DATA_I	= 3
+P.COMBAT_I 	    = 4
+P.COMPACT_BPS_I	= 5
+P.COORD_I		= 6
 
 local RECT_COLORS = {
 	"blue",
@@ -313,12 +313,12 @@ end
 function P.drawRects()
 	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
 	P.rects[P.STAT_DATA_I].strings = selected(unitData.deployedUnits):statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))
-	P.rects[P.BATTLE_PARAMS_I].strings = combat.currBattleParams:toStrings()
-	-- don't want to overwrite currBattleParams generally
+	P.rects[P.COMBAT_I].strings = combat.currCombatants:toStrings()
+	-- don't want to overwrite currCombatants generally
 	
 	if P.lookingAt(P.COMPACT_BPS_I) then
-		combat.currBattleParams:set() -- auto update
-		P.rects[P.COMPACT_BPS_I].strings = combat.currBattleParams:toCompactStrings()
+		combat.currCombatants:set() -- auto update
+		P.rects[P.COMPACT_BPS_I].strings = combat.currCombatants:toCompactStrings()
 	end
 	
 	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings("isColored")

@@ -53,7 +53,7 @@ end
 function rnEventObj:resultString()
 	local rString = ""
 	if self.hasCombat then
-		rString = rString .. " " .. self.batParams.attacker.weapon .. " " .. combat.hitSeq_string(self.mHitSeq) 
+		rString = rString .. " " .. self.combatants.attacker.weapon .. " " .. combat.hitSeq_string(self.mHitSeq) 
 	end
 	if self:levelDetected() then
 		rString = rString .. string.format(" %s %3d",
@@ -104,16 +104,16 @@ function rnEventObj:headerString(rnEvent_i)
 		detailString = detailString .. string.format(" eID %d %dhp", self.enemyID, self.enemyHPstart)
 	end
 
-	if self.batParams:isWeaponSpecial("isPlayer") then
-		detailString = detailString .. " " .. combat.WEAPON_TYPE_STRINGS[self.batParams.player.weaponType]:upper()
+	if self.combatants:isWeaponSpecial("isPlayer") then
+		detailString = detailString .. " " .. combat.WEAPON_TYPE_STRINGS[self.combatants.player.weaponType]:upper()
 	end
 	
-	if self.batParams:isWeaponSpecial(false) then
-		detailString = detailString .. " " .. combat.WEAPON_TYPE_STRINGS[self.batParams.enemy.weaponType]
+	if self.combatants:isWeaponSpecial(false) then
+		detailString = detailString .. " " .. combat.WEAPON_TYPE_STRINGS[self.combatants.enemy.weaponType]
 	end
 	
-	if self.batParams.enemy.class ~= classes.LORD then
-		detailString = detailString .. " class " .. tostring(self.batParams.enemy.class)
+	if self.combatants.enemy.class ~= classes.LORD then
+		detailString = detailString .. " class " .. tostring(self.combatants.enemy.class)
 	end
 	
 	if self.pHPweight ~= DEFAULT_PHP_WEIGHT or self.eHPweight ~= DEFAULT_EHP_WEIGHT then
@@ -164,11 +164,11 @@ function rnEventObj:evaluation_fn(printV)
 			self.mHitSeq.expGained = 0
 			if printV then printStr = printStr .. string.format(" staff hit %02d", hitValue) end
 		else			
-			local eHPstartFrac = self.enemyHPstart/self.batParams.enemy.maxHP
-			local eHPendFrac = self.mHitSeq.eHP/self.batParams.enemy.maxHP
+			local eHPstartFrac = self.enemyHPstart/self.combatants.enemy.maxHP
+			local eHPendFrac = self.mHitSeq.eHP/self.combatants.enemy.maxHP
 			local eLostValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
 			
-			local pHPstartFrac = self.batParams.player.currHP/self.maxHP
+			local pHPstartFrac = self.combatants.player.currHP/self.maxHP
 			local pHPendFrac = self.mHitSeq.pHP/self.maxHP
 			local pLostValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
 			
@@ -297,7 +297,7 @@ function rnEventObj:printDiagnostic()
 	print(string.format("Diagnosis of rnEvent %d", self.ID))
 	
 	if self.hasCombat then
-		for _, str_ in ipairs(self.batParams:toStrings()) do print(str_) end
+		for _, str_ in ipairs(self.combatants:toStrings()) do print(str_) end
 		
 		local str = ""
 		for _, hitEvent in ipairs(self.mHitSeq) do
@@ -309,8 +309,8 @@ function rnEventObj:printDiagnostic()
 		print(string.format("expGained=%2d pHP=%2d eHP=%2d", 
 			self.mHitSeq.expGained, self.mHitSeq.pHP, self.mHitSeq.eHP))
 		
-		print(self.batParams.attacker)
-		print(self.batParams.defender)
+		print(self.combatants.attacker)
+		print(self.combatants.defender)
 	end
 	
 	print(string.format("Eval %5.2f", self.eval))
@@ -448,7 +448,7 @@ function rnEventObj:setEnemyHP(rnEvent_i)
 		return
 	end
 
-	self.enemyHPstart = self.batParams.enemy.currHP
+	self.enemyHPstart = self.combatants.enemy.currHP
 	
 	if self.enemyID == 0 then return end
 	
@@ -467,7 +467,7 @@ end
 -- does not do anything with cached values
 function rnEventObj:updateFull()
 	if self.hasCombat then
-		self.mHitSeq = self.batParams:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
+		self.mHitSeq = self.combatants:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
 		
 		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
 		
@@ -608,15 +608,15 @@ end
 function P.toggleBatParam(func, var)
 	if #P.events <= 0 then return end
 	
-	func(selected(P.events).batParams, var) -- :func() syntactic for func(self)
+	func(selected(P.events).combatants, var) -- :func() syntactic for func(self)
 	invalidateCache()
 end
 
 
 
 
-function rnEventObj:new(batParams, sel_Unit_i)
-	batParams = batParams or combat.currBattleParams
+function rnEventObj:new(combatants, sel_Unit_i)
+	combatants = combatants or combat.currCombatants
 	sel_Unit_i = sel_Unit_i or unitData.sel_Unit_i
 	
 	local o = {}
@@ -628,7 +628,7 @@ function rnEventObj:new(batParams, sel_Unit_i)
 	
 	o.unit = selected(unitData.deployedUnits)
 	o:setStats() -- todo do we get enemy stats on EP?
-	o.batParams = batParams:copy()
+	o.combatants = combatants:copy()
 	
 	o.hasCombat = true -- most rnEvents will be combats without levels or digs
 	o.lvlUp = false

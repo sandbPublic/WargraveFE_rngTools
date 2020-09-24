@@ -996,9 +996,6 @@ function P.combatObj:toggleBonusExp()
 	print(string.format("bonus xp: %d", self.bonusExp)) 
 end
 
-
-
--- todo populate name and class using codes from unitData and classes
 local function createCombatant(offset)
 	c = {}
 	
@@ -1101,18 +1098,7 @@ function P.combatObj:new()
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.attacker = createCombatant(0)
-	
-	o.defender = createCombatant(addr.DEFENDER_OFFSET)
-	
-	o:setDoubles()
-	o:setDmg()
-	
-	o.player = o.attacker -- alias, sometimes one description makes more sense
-	o.enemy = o.defender
-	
-	o:setExpGain()
-	o.bonusExp = 0 -- 20 for killing thief, 40 for killing boss
+	o:set()
 	
 	return o
 end
@@ -1150,12 +1136,14 @@ function P.combatObj:copy()
 	o.player = o.attacker
 	o.enemy = o.defender
 	
+	o.expFromDmg = self.expFromDmg
+	o.expFromKill = self.expFromKill
 	o.bonusExp = self.bonusExp
 	
 	return o
 end
 
 
-P.currBattleParams = combat.combatObj:new()
+P.currCombatants = combat.combatObj:new()
 
 return combat

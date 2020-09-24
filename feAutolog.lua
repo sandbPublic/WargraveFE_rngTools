@@ -55,7 +55,7 @@ function logLineObj:new()
 	o.rnStart = rns.rng1.prevPos
 	o.rnEnd = rns.rng1.pos
 	
-	combat.currBattleParams:set()
+	combat.currCombatants:set()
 	
 	local function line(combatant)
 		return string.format("%-9s with %2d use %-12s  at %2d,%2d",
@@ -66,8 +66,8 @@ function logLineObj:new()
 			combatant.y)
 	end
 	
-	o.combat1 = line(combat.currBattleParams.attacker)
-	o.combat2 = line(combat.currBattleParams.defender)
+	o.combat1 = line(combat.currCombatants.attacker)
+	o.combat2 = line(combat.currCombatants.defender)
 	
 	return o
 end

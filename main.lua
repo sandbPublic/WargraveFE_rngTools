@@ -275,11 +275,7 @@ while true do
 		if pressed(1) then rnEvent.undoDelete() end
 		
 		if pressed(2) then
-			if gameCtrl.thisFrame.B then -- enemy's weapon
-				rnEvent.toggleBatParam(combat.combatObj.cycleWeapon, false)
-			else
-				rnEvent.toggleBatParam(combat.combatObj.cycleWeapon, true)
-			end
+			-- was cycle weapon
 		end
 		
 		if pressed(3) then rnEvent.toggle("lvlUp") end

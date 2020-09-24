@@ -3,13 +3,13 @@ delete last rnEvent
 undo rnEvent deletion
 Y
 register new rnEvent
-cycle weapon type, hold B for enemy -- todo remove
+--
 U
 toggle rnEvent.combat
 toggle rnEvent.lvlUp
 I
-toggle enemy promo -- todo remove
-toggle rnEvent dig
+--
+toggle rnEvent dig -- todo remove
 O
 toggle bonus exp
 toggle fog

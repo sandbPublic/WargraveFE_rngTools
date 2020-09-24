@@ -637,32 +637,6 @@ P.HEX_CODES[0x9A68] = P.MID_JOURNEYMAN
 P.HEX_CODES[0x9ABC] = P.MID_PUPIL
 end
 
--- exact class doesn't matter, just that they share the desired property
-function P.nextRelevantEnemyClass(class)
-	if class == P.THIEF then		
-		print("now bishop, xp kill mod -20")
-		return P.BISHOP_F
-	elseif class == P.BISHOP_F then
-		print("now lord")
-		return P.LORD
-	elseif class == P.LORD then
-		print("now journeyman, xp power 1")
-		return P.JOURNEYMAN
-	elseif class == P.JOURNEYMAN then
-		print("now general, great shield active")
-		return P.GENERAL_M
-	elseif class == P.GENERAL_M then
-		print("now wyvern knight, pierce active")
-		return P.WYVERN_KNIGHT_M
-	elseif class == P.WYVERN_KNIGHT_M then
-		print("now sniper, sure strike active")
-		return P.SNIPER_M
-	else
-		print("now thief, xp power 2")
-		return P.THIEF
-	end
-end
-
 function P.isNoncombat(class)
 	return class == P.DANCER or 
 		class == P.BARD or 

@@ -729,6 +729,7 @@ function P.combatObj:willLevel(XPgained)
 end
 
 --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
+-- todo precompute
 function P.combatObj:expFrom(kill, assassinated) 
 	if self.player.level == 20 then return 0 end
 	
@@ -1033,19 +1034,6 @@ end
 
 
 -- modifying functions
-
-function P.combatObj:cycleWeapon(isAttacker)
-	self:data(isAttacker).weaponType = self:data(isAttacker).weaponType + 1
-	if self:data(isAttacker).weaponType > #P.WEAPON_TYPE_STRINGS then
-		self:data(isAttacker).weaponType = 1
-	end
-	
-	print(P.WEAPON_TYPE_STRINGS[self:data(isAttacker).weaponType])
-end
-
-function P.combatObj:cycleEnemyClass()
-	self.enemy.class = classes.nextRelevantEnemyClass(self.enemy.class)
-end
 
 function P.combatObj:toggleBonusExp()
 	self.bonusExp = (self.bonusExp + 20) % 60

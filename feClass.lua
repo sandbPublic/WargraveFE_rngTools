@@ -5,12 +5,13 @@ classes = P
 
 
 
-
+do -- indexing
 local indexer = 0
 local function nextInd()
 	indexer = indexer + 1
 	return indexer
 end
+P.OTHER 		    = nextInd()
 
 -- TRAINEES
 P.JOURNEYMAN 		= nextInd()
@@ -107,12 +108,14 @@ P.ROGUE 			= nextInd()
 
 P.ARCHSAGE 			= nextInd()
 P.NECROMANCER 		= nextInd()
+end
 
 P.EXP_POWER = {}
 P.PROMOTED = {}
 P.EXP_KILL_MODIFIER = {}
 P.CAPS = {}
 P.PROMO_GAINS = {}
+P.HEX_CODES = {}
 
 for class_i = 1, P.NECROMANCER do
 	P.EXP_POWER[class_i] = 3
@@ -149,6 +152,7 @@ P.EXP_KILL_MODIFIER[P.ROGUE] 	  = -20
 -- https://serenesforest.net/blazing-sword/classes/maximum-stats/
 -- https://serenesforest.net/the-sacred-stones/classes/maximum-stats/
 
+do -- CAPS
 P.CAPS[P.DANCER]			= {60, 10, 10, 30, 24, 26, 30}
 P.CAPS[P.BARD]				= {60, 10, 10, 30, 24, 26, 30}
 
@@ -229,12 +233,15 @@ if GAME_VERSION == 6 then
 	P.CAPS[P.SNIPER_F]		= {60, 23, 30, 29, 24, 24, 30}
 	P.CAPS[P.SNIPER_M]		= {60, 24, 30, 29, 22, 23, 30}
 end
+end
+
 
 -- https://serenesforest.net/binding-blade/classes/promotion-gains/
 -- https://serenesforest.net/blazing-sword/classes/promotion-gains/
 -- https://serenesforest.net/the-sacred-stones/classes/promotion-gains/
 -- fe8 promo gains are the same regardless of which class you promote from (except Con and Move)
 
+do -- PROMO_GAINS
 P.PROMO_GAINS[P.MASTER_LORD] 		= {4, 2, 3, 2, 2, 5, 0}
 P.PROMO_GAINS[P.BLADE_LORD] 		= {3, 2, 2, 0, 3, 5, 0}
 P.PROMO_GAINS[P.KNIGHT_LORD] 		= {4, 2, 0, 1, 1, 3, 0}
@@ -319,6 +326,110 @@ if GAME_VERSION == 8 then
 	P.PROMO_GAINS[P.GENERAL_M] 			= {4, 2, 2, 3, 2, 3, 0}
 
 	P.PROMO_GAINS[P.HERO_M] 			= {4, 1, 2, 2, 2, 2, 0}
+end
+end
+
+-- HEX_CODES, duplicate unpromoted are male, female
+if GAME_VERSION == 6 then
+end
+
+if GAME_VERSION == 7 then
+	P.HEX_CODES[0x01B0] = P.LORD -- Lord (Eliwood)
+	P.HEX_CODES[0x0204] = P.LORD -- Lord (Lyn)
+	P.HEX_CODES[0x0258] = P.LORD -- Lord (Hector)
+	P.HEX_CODES[0x03A8] = P.KNIGHT_LORD
+	P.HEX_CODES[0x03FC] = P.BLADE_LORD
+	P.HEX_CODES[0x0450] = P.GREAT_LORD_7
+	P.HEX_CODES[0x04A4] = P.MERCENARY
+	P.HEX_CODES[0x04F8] = P.MERCENARY -- Mercenary (from FE6?)*
+	P.HEX_CODES[0x054C] = P.HERO_M
+	P.HEX_CODES[0x05A0] = P.HERO_F
+	P.HEX_CODES[0x05F4] = P.MYRMIDON
+	P.HEX_CODES[0x0648] = P.MYRMIDON
+	P.HEX_CODES[0x069C] = P.SWORDMASTER_M
+	P.HEX_CODES[0x06F0] = P.SWORDMASTER_F
+	P.HEX_CODES[0x0744] = P.FIGHTER
+	P.HEX_CODES[0x0798] = P.WARRIOR
+	P.HEX_CODES[0x07EC] = P.ARMOR_KNIGHT
+	P.HEX_CODES[0x0840] = P.ARMOR_KNIGHT
+	P.HEX_CODES[0x0894] = P.GENERAL_M
+	P.HEX_CODES[0x08E8] = P.GENERAL_F
+	P.HEX_CODES[0x093C] = P.ARCHER
+	P.HEX_CODES[0x0990] = P.ARCHER
+	P.HEX_CODES[0x09E4] = P.SNIPER_M
+	P.HEX_CODES[0x0A38] = P.SNIPER_F
+	P.HEX_CODES[0x0A8C] = P.MONK
+	P.HEX_CODES[0x0AE0] = P.CLERIC
+	P.HEX_CODES[0x0B34] = P.BISHOP_M
+	P.HEX_CODES[0x0B88] = P.BISHOP_F
+	P.HEX_CODES[0x0BDC] = P.MAGE
+	P.HEX_CODES[0x0C30] = P.MAGE
+	P.HEX_CODES[0x0C84] = P.SAGE_M
+	P.HEX_CODES[0x0CD8] = P.SAGE_F
+	P.HEX_CODES[0x0D2C] = P.SHAMAN
+	P.HEX_CODES[0x0D80] = P.SHAMAN
+	P.HEX_CODES[0x0DD4] = P.DRUID_M
+	P.HEX_CODES[0x0E28] = P.DRUID_F
+	P.HEX_CODES[0x0E7C] = P.CAVALIER
+	P.HEX_CODES[0x0ED0] = P.CAVALIER
+	P.HEX_CODES[0x0F24] = P.PALADIN_M
+	P.HEX_CODES[0x0F78] = P.PALADIN_F
+	P.HEX_CODES[0x0FCC] = P.TROUBADOUR
+	P.HEX_CODES[0x1020] = P.VALKYRIE
+	P.HEX_CODES[0x1074] = P.NOMAD
+	P.HEX_CODES[0x10C8] = P.NOMAD
+	P.HEX_CODES[0x111C] = P.TROOPER_M
+	P.HEX_CODES[0x1170] = P.TROOPER_F
+	P.HEX_CODES[0x11C4] = P.PEGASUS_KNIGHT
+	P.HEX_CODES[0x1218] = P.FALCO_KNIGHT
+	P.HEX_CODES[0x126C] = P.WYVERN_RIDER
+	P.HEX_CODES[0x12C0] = P.WYVERN_RIDER
+	P.HEX_CODES[0x1314] = P.WYVERN_LORD_M
+	P.HEX_CODES[0x1368] = P.WYVERN_LORD_F
+	P.HEX_CODES[0x13BC] = P.MANAKETE -- Soldier, 2 exp power
+	P.HEX_CODES[0x1410] = P.BRIGAND
+	P.HEX_CODES[0x1464] = P.PIRATE
+	P.HEX_CODES[0x14B8] = P.BERSERKER
+	P.HEX_CODES[0x150C] = P.THIEF
+	P.HEX_CODES[0x1560] = P.THIEF
+	P.HEX_CODES[0x15B4] = P.ASSASSIN_M
+	P.HEX_CODES[0x1608] = P.OTHER -- Dead Civilian*
+	P.HEX_CODES[0x165C] = P.DANCER
+	P.HEX_CODES[0x16B0] = P.BARD
+	P.HEX_CODES[0x1704] = P.ARCHSAGE
+	P.HEX_CODES[0x1758] = P.OTHER -- Magic Seal
+	P.HEX_CODES[0x17AC] = P.TRANSPORTER -- Tent
+	P.HEX_CODES[0x1800] = P.OTHER -- Dark Druid
+	P.HEX_CODES[0x1854] = P.OTHER -- Fire Dragon
+	P.HEX_CODES[0x18A8] = P.OTHER -- Male Civilian*
+	P.HEX_CODES[0x18FC] = P.OTHER -- Female Civilian*
+	P.HEX_CODES[0x1950] = P.OTHER -- Nils (keeled over)*
+	P.HEX_CODES[0x19A4] = P.OTHER -- Bramimond
+	P.HEX_CODES[0x19F8] = P.OTHER -- Male Peer*
+	P.HEX_CODES[0x1A4C] = P.OTHER -- Female Peer*
+	P.HEX_CODES[0x1AA0] = P.OTHER -- Prince*
+	P.HEX_CODES[0x1AF4] = P.OTHER -- Queen*
+	P.HEX_CODES[0x1B48] = P.OTHER -- Civilian*
+	P.HEX_CODES[0x1B9C] = P.OTHER -- Corsair
+	P.HEX_CODES[0x1BF0] = P.OTHER -- Prince (front of Tactician?)*
+	P.HEX_CODES[0x1C44] = P.OTHER -- Prince (Tactician lying down?)*
+	P.HEX_CODES[0x1C98] = P.OTHER -- Prince (back of Tactician?)*
+	P.HEX_CODES[0x1CEC] = P.OTHER -- Child (back of Dancer)*
+	P.HEX_CODES[0x1D40] = P.OTHER -- Fire Dragon (Ninian wounded)*
+	P.HEX_CODES[0x1D94] = P.OTHER -- Dead Warrior*
+	P.HEX_CODES[0x1DE8] = P.OTHER -- Male Child*
+	P.HEX_CODES[0x1E3C] = P.OTHER -- Female Child*
+	P.HEX_CODES[0x1E90] = P.TRANSPORTER -- Transporter (Cart)
+	P.HEX_CODES[0x1EE4] = P.SAGE_F -- Female Sage (Limstella?)*
+	P.HEX_CODES[0x1F38] = P.ARCHER -- Archer riding Ballista*
+	P.HEX_CODES[0x1F8C] = P.ARCHER -- Archer riding Iron Ballista*
+	P.HEX_CODES[0x1FE0] = P.ARCHER -- Archer riding Killer Ballista*
+	P.HEX_CODES[0x2034] = P.OTHER -- Empty Ballista*
+	P.HEX_CODES[0x2088] = P.OTHER -- Empty Iron Ballista*
+	P.HEX_CODES[0x20DC] = P.OTHER -- Empty Killer Ballista*
+end
+
+if GAME_VERSION == 8 then
 end
 
 -- exact class doesn't matter, just that they share the desired property

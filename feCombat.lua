@@ -1061,8 +1061,8 @@ end
 local function createCombatant(offset)
 	c = {}
 	
-	c.nameCode   = memory.readword(offset + addr.UNIT_NAME_CODE)
-	c.classCode  = memory.readword(offset + addr.UNIT_CLASS_CODE)
+	c.name = unitData.HEX_CODES[memory.readword(offset + addr.UNIT_NAME_CODE)] or "name not found"
+	c.class = classes.HEX_CODES[memory.readword(offset + addr.UNIT_CLASS_CODE)] or classes.OTHER
 	c.level      = memory.readbyte(offset + addr.UNIT_LEVEL)
 	c.exp        = memory.readbyte(offset + addr.UNIT_EXP)
 	c.x          = memory.readbyte(offset + addr.UNIT_X)
@@ -1102,12 +1102,8 @@ function P.combatObj:new()
 	self.__index = self
 	
 	o.attacker = createCombatant(0)
-	o.attacker.class = classes.LORD
-	o.attacker.name = "no name"
 	
 	o.defender = createCombatant(addr.DEFENDER_OFFSET)
-	o.defender.class = classes.LORD
-	o.defender.name = "no name"
 	
 	o:setDoubles()
 	o:setDmg()
@@ -1122,13 +1118,8 @@ end
 
 function P.combatObj:set()
 	self.attacker = createCombatant(0)
-	self.attacker.class = selected(unitData.deployedUnits).class
-	self.attacker.name = selected(unitData.deployedUnits).name
-	
 	
 	self.defender = createCombatant(addr.DEFENDER_OFFSET)
-	self.defender.class = classes.LORD
-	self.defender.name = "Enemy"
 	
 	self:setDoubles()
 	self:setDmg()

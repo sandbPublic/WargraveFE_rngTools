@@ -3,12 +3,12 @@ delete last rnEvent
 undo rnEvent deletion
 Y
 register new rnEvent
-cycle weapon type, hold B for enemy
+cycle weapon type, hold B for enemy -- todo remove
 U
 toggle rnEvent.combat
 toggle rnEvent.lvlUp
 I
-toggle enemy promo
+toggle enemy promo -- todo remove
 toggle rnEvent dig
 O
 toggle bonus exp
@@ -20,20 +20,20 @@ H
 switch to 2ndary functions
 switch to primary functions
 J
-hold, <> change selected unit
+hold, <> change selected unit -- todo remove
 hold, <^v> change hp weight
 K
 toggle window visibility
 move window (<^v>LR)
 L
 hold, <> display mode
-print stat, hold+<> to change
+print stat, hold+<> to change -- todo reimplement
 B
 change afa/metis
 switch RNG to 2ndary
 N
-save stats and print ranks
+save stats and print ranks  -- todo ranks and support
 generate log file
 M
 hold, <> move rn, ^v change step
-cycle enemy class
+-- todo

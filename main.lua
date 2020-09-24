@@ -353,7 +353,12 @@ while true do
 		
 		if pressed(12) then autolog.writeLogs() end
 		
-		if pressed(13) then rnEvent.toggleBatParam(combat.combatObj.cycleEnemyClass) end
+		if pressed(13) then 
+			print()
+			print(combat.currBattleParams.attacker)
+			print()
+			print(combat.currBattleParams.defender)
+		end
 	end
 	
 	feGUI.drawRects()

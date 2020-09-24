@@ -724,28 +724,36 @@ function P.combatObj:toCompactStrings()
 	return rStrings
 end
 
-function P.combatObj:canLevel()
-	return self.player.level % 20 ~= 0
-end
-
 function P.combatObj:willLevel(XPgained)
-	return self:canLevel() and (self.player.exp+XPgained >= 100)
+	return self.player.level ~= 20 and (self.player.exp+XPgained >= 100)
 end
 
 --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
 function P.combatObj:expFrom(kill, assassinated) 
-	if not self:canLevel() then return 0 end
-		
+	if self.player.level == 20 then return 0 end
+	
+	-- todo eggs always yield 50xp if killed, 0 if not killed
+	
+	plvl = self.player.level
+	if classes.PROMOTED[self.player.class] then
+		plvl = plvl + 20
+	end
+	
+	elvl = self.enemy.level
+	if classes.PROMOTED[self.enemy.class] then
+		elvl = elvl + 20
+	end
+	
 	local expFromDmg = math.max(1,
-		(31+self.enemy.level-self.player.level) / classes.EXP_POWER[self.player.class])
+		(31+elvl-plvl) / classes.EXP_POWER[self.player.class])
 	
 	local rExpFrom = expFromDmg
 	
 	if kill then
-		local enemyValue = self.enemy.level * classes.EXP_POWER[self.enemy.class]
+		local enemyValue = elvl * classes.EXP_POWER[self.enemy.class]
 			+classes.EXP_KILL_MODIFIER[self.enemy.class]
 			
-		local playerValue = self.player.level * classes.EXP_POWER[self.player.class]
+		local playerValue = plvl * classes.EXP_POWER[self.player.class]
 			+classes.EXP_KILL_MODIFIER[self.player.class]
 		
 		local assassinateMult = 1
@@ -776,13 +784,11 @@ function P.combatObj:expFrom(kill, assassinated)
 			playerValue = math.floor(playerValue/2)
 		end
 		
-		-- eggs always yield 50xp
-		
 		rExpFrom = math.min(100, math.floor(expFromDmg+assassinateMult*math.max(0, 
 			enemyValue-playerValue + 20 + self.bonusExp)))
 	end
 	
-	if self.player.level % 20 == 19 then
+	if self.player.level == 19 then
 		return math.min(math.floor(rExpFrom), 100 - self.player.exp)
 	end
 	
@@ -817,14 +823,9 @@ function P.combatObj:hitEvent(index, isAttacker)
 		
 	if combatant.hit ~= 255 then -- no action	
 		local willHit = (combatant.hit > (nextRn()+nextRn())/2)
-		
-		local lvl = combatant.level
-		if lvl > 20 then
-			lvl = lvl - 20
-		end
-		
+				
 		if classes.hasSureStrike(combatant.class) then
-			if lvl > nextRn() then
+			if combatant.level > nextRn() then
 				willHit = true
 			end
 		end
@@ -836,14 +837,14 @@ function P.combatObj:hitEvent(index, isAttacker)
 			-- then Devil?
 			
 			if classes.hasGreatShield(self:data(not isAttacker).class) then
-				if lvl > nextRn() then
+				if combatant.level > nextRn() then  -- gShield works on attackers level
 					retHitEv.action = "G" -- does crit even roll?
 					retHitEv.dmg = 0
 				end
 			end
 			
 			if classes.hasPierce(combatant.class) then
-				if lvl > nextRn() then
+				if combatant.level > nextRn() then
 					retHitEv.action = "P"
 					retHitEv.dmg = self.attacker.atk
 				end
@@ -1033,10 +1034,6 @@ end
 
 -- modifying functions
 
-function P.combatObj:togglePromo(isAttacker)
-	self:data(isAttacker).level = (self:data(isAttacker).level + 19) % 40 + 1
-end
-
 function P.combatObj:cycleWeapon(isAttacker)
 	self:data(isAttacker).weaponType = self:data(isAttacker).weaponType + 1
 	if self:data(isAttacker).weaponType > #P.WEAPON_TYPE_STRINGS then
@@ -1065,6 +1062,7 @@ local function createCombatant(offset)
 	c.name = unitData.HEX_CODES[nameCode] or string.format("%04x", nameCode)
 	c.class = classes.HEX_CODES[memory.readword(offset + addr.UNIT_CLASS_CODE)] or classes.OTHER
 	c.level      = memory.readbyte(offset + addr.UNIT_LEVEL)
+	
 	c.exp        = memory.readbyte(offset + addr.UNIT_EXP)
 	c.x          = memory.readbyte(offset + addr.UNIT_X)
 	c.y          = memory.readbyte(offset + addr.UNIT_Y)
@@ -1119,7 +1117,6 @@ end
 
 function P.combatObj:set()
 	self.attacker = createCombatant(0)
-	
 	self.defender = createCombatant(addr.DEFENDER_OFFSET)
 	
 	self:setDoubles()
@@ -1127,10 +1124,6 @@ function P.combatObj:set()
 	
 	self.player = self.attacker
 	self.enemy = self.defender
-	
-	if classes.PROMOTED[self.player.class] then
-		self:togglePromo(PLAYER)
-	end
 	
 	self.bonusExp = 0
 end

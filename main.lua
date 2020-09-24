@@ -196,9 +196,7 @@ while true do
 		if pressed(3) then rnEvent.toggle("hasCombat") end
 		
 		if pressed(4) then
-			rnEvent.toggleBatParam(combat.combatObj.togglePromo)
-			
-			printStringArray(selected(rnEvent.events).batParams:toStrings())
+			-- was toggle promo
 		end	
 		
 		if pressed(5) then rnEvent.toggleBatParam(combat.combatObj.toggleBonusExp) end

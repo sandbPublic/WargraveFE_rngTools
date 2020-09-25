@@ -606,7 +606,7 @@ function rnEventObj:new()
 	o.ID = #P.events+1 -- order in which rnEvents were registered
 	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
 	
-	o.unit = selected(unitData.deployedUnits)
+	o.unit = unitData.currUnit()
 	o:setStats() -- todo do we get enemy stats on EP?
 	o.combatants = combat.combatObj:new()
 	

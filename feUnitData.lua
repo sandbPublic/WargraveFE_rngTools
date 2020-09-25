@@ -1484,29 +1484,25 @@ function unitObj:new(unit_i)
 	return o
 end
 
-P.deployedUnits = {}
-P.deployedUnits.sel_i = 1
-
 local units = {}
 
 for unit_i = 1, #NAMES do
-	if DEPLOYED[unit_i] then
-		table.insert(P.deployedUnits, unitObj:new(unit_i))
-	end
 	table.insert(units, unitObj:new(unit_i))
 end
 units[0] = unitObj:new(0)
 
-function P.getUnit(hexCode)
-	local name = unitData.HEX_CODES[hexCode] or string.format("%04x", hexCode)
+function P.currUnit()
+	local name = P.hexCodeToName(memory.readword(addr.UNIT_NAME_CODE))
 	
+	local u = units[0]
 	if INDEX_OF_NAME[name] then
-		return units[INDEX_OF_NAME[name]]
+		u = units[INDEX_OF_NAME[name]]
+	else
+		print("unit not found " .. name)
+		INDEX_OF_NAME[name] = 0 -- will "find" unit 0 if checking for this code again
 	end
-	
-	print("unit not found " .. name)
-	INDEX_OF_NAME[name] = 0 -- will "find" unit 0 if checking for this code again
-	return units[0]
+	u:setStats()
+	return u
 end
 
 return unitData

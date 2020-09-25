@@ -185,7 +185,6 @@ while true do
 		if pressed(1) then rnEvent.deleteLastEvent() end
 		
 		if pressed(2) then
-			selected(unitData.deployedUnits):setStats()
 			rnEvent.addEvent()
 			rnEvent.update_rnEvents()
 			
@@ -207,18 +206,11 @@ while true do
 		if pressed(6) then rnEvent.suggestedPermutation() end
 		
 		if pressed(8) then
-			print(selected(unitData.deployedUnits).name)
+			
 		end
 		
 		if held(8) then -- hold down, press left/right
-			if pressed("left", gameCtrl) then
-				changeSelection(unitData.deployedUnits, -1)
-				print(selected(unitData.deployedUnits).name)
-			end
-			if pressed("right", gameCtrl) then
-				changeSelection(unitData.deployedUnits, 1)
-				print(selected(unitData.deployedUnits).name)
-			end
+			
 		end
 		
 		if pressed(9) then -- quick toggle visibility
@@ -240,13 +232,14 @@ while true do
 			end
 		end
 				
-		if pressed(11) then selected(unitData.deployedUnits):toggleAfas() end
+		if pressed(11) then 
+			unitData.currUnit():toggleAfas()
+		end
 		
 		if pressed(12) then -- save battle params & stats
 			printStringArray(combat.combatObj:new():toStrings())
 			
-			selected(unitData.deployedUnits):setStats()
-			printStringArray(selected(unitData.deployedUnits):statData_strings())
+			printStringArray(unitData.currUnit():statData_strings())
 			rnEvent.updateStats()
 			
 			unitData.printRanks()

@@ -32,7 +32,7 @@ B
 change afa/metis
 switch RNG to 2ndary
 N
-save stats and print ranks  -- todo ranks and support
+save print combat,stats,ranks&supports
 generate log file
 M
 hold, <> move rn, ^v change step

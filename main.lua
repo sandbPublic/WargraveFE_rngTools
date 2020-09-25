@@ -246,11 +246,11 @@ while true do
 			printStringArray(combat.combatObj:new():toStrings())
 			
 			selected(unitData.deployedUnits):setStats()
+			printStringArray(selected(unitData.deployedUnits):statData_strings())
 			rnEvent.updateStats()
+			
 			unitData.printRanks()
 			unitData.printSupports()
-			
-			printStringArray(selected(unitData.deployedUnits):statData_strings())
 		end
 		
 		if held(13) then -- hold down, then press direction

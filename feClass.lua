@@ -4,9 +4,8 @@ local P = {}
 classes = P
 
 
-
-do -- indexing
 local indexer = 0
+do
 local function nextInd()
 	indexer = indexer + 1
 	return indexer
@@ -124,14 +123,14 @@ P.CAPS = {}
 P.PROMO_GAINS = {}
 P.HEX_CODES = {}
 
-for class_i = 1, P.NECROMANCER do
+for class_i = 1, indexer do
 	P.EXP_POWER[class_i] = 3
 	P.PROMOTED[class_i] = (class_i >= P.MASTER_LORD)
 	P.EXP_KILL_MODIFIER[class_i] = 0
-	if not P.PROMOTED[class_i] then
-		P.PROMO_GAINS[class_i] = {0, 0, 0, 0, 0, 0, 0}
-		P.CAPS[class_i] = {60, 20, 20, 20, 20, 20, 30}
-	end
+	
+	-- only apply for unpromoted, but will be overwritten later
+	P.PROMO_GAINS[class_i] = {0, 0, 0, 0, 0, 0, 0}
+	P.CAPS[class_i] = {60, 20, 20, 20, 20, 20, 30}
 end
 
 -- also civilian, Pontifex
@@ -300,6 +299,8 @@ P.PROMO_GAINS[P.SWORDMASTER_M] 		= {5, 2, 0, 0, 2, 1, 0}
 P.PROMO_GAINS[P.ASSASSIN_F] 		= {2, 1, 1, 1, 2, 1, 0}
 P.PROMO_GAINS[P.ASSASSIN_M] 		= {3, 1, 0, 0, 2, 2, 0}
 P.PROMO_GAINS[P.ROGUE] 				= {2, 1, 1, 0, 2, 2, 0}
+
+P.PROMO_GAINS[P.ENTOMBED]           = {0, 0, 0, 0, 0, 0, 0} -- untested
 
 if GAME_VERSION == 6 then
 	P.PROMO_GAINS[P.WYVERN_LORD_F] 	= {5, 2, 2, 2, 2, 2, 0} -- 6 only

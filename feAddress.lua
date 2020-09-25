@@ -52,6 +52,7 @@ P.UNIT_CURR_HP = RAM_BASE + P.UNIT_CURR_HP[GAME_VERSION - 5]
 -- 8 consecutive bytes 26, 28, 28
 P.UNIT_RANKS = {0x3923A, 0x3A418, 0x3A514}
 P.UNIT_RANKS = RAM_BASE + P.UNIT_RANKS[GAME_VERSION - 5]
+-- status eg poison at + 8?
 -- 10? consecutive bytes
 P.UNIT_SUPPORTS = P.UNIT_RANKS + 10
 

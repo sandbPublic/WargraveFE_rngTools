@@ -965,26 +965,26 @@ local function createCombatant(offset)
 	c = {}
 	
 	local nameCode = memory.readword(offset + addr.UNIT_NAME_CODE)
-	c.name = unitData.HEX_CODES[nameCode] or string.format("%04x", nameCode)
-	c.class = classes.HEX_CODES[memory.readword(offset + addr.UNIT_CLASS_CODE)] or classes.OTHER
-	c.level      = memory.readbyte(offset + addr.UNIT_LEVEL)
+	c.name         = unitData.hexCodeToName(nameCode)
+	c.class        = classes.HEX_CODES[memory.readword(offset + addr.UNIT_CLASS_CODE)] or classes.OTHER
+	c.level        = memory.readbyte(offset + addr.UNIT_LEVEL)
 	
-	c.exp        = memory.readbyte(offset + addr.UNIT_EXP)
-	c.x          = memory.readbyte(offset + addr.UNIT_X)
-	c.y          = memory.readbyte(offset + addr.UNIT_Y)
+	c.exp          = memory.readbyte(offset + addr.UNIT_EXP)
+	c.x            = memory.readbyte(offset + addr.UNIT_X)
+	c.y            = memory.readbyte(offset + addr.UNIT_Y)
 
-	c.maxHP      = memory.readbyte(offset + addr.UNIT_MAX_HP)
-	c.luck       = memory.readbyte(offset + addr.UNIT_MAX_HP + 7)
-	local wCode  = memory.readbyte(offset + addr.UNIT_ITEMS)
-	c.weapon     = ITEM_CODES[wCode]
-	c.weaponType = weaponIdToType(wCode)
-	c.weaponUses = memory.readbyte(offset + addr.UNIT_ITEMS + 1)
-	c.atk        = memory.readbyte(offset + addr.UNIT_ATK)
-	c.def        = memory.readbyte(offset + addr.UNIT_DEF)
-	c.AS         = memory.readbyte(offset + addr.UNIT_AS)
-	c.hit        = memory.readbyte(offset + addr.UNIT_HIT)
-	c.crit       = memory.readbyte(offset + addr.UNIT_CRIT)
-	c.currHP     = memory.readbyte(offset + addr.UNIT_CURR_HP)
+	c.maxHP        = memory.readbyte(offset + addr.UNIT_MAX_HP)
+	c.luck         = memory.readbyte(offset + addr.UNIT_MAX_HP + 7)
+	local wCode    = memory.readbyte(offset + addr.UNIT_ITEMS)
+	c.weapon       = ITEM_CODES[wCode]
+	c.weaponType   = weaponIdToType(wCode)
+	c.weaponUses   = memory.readbyte(offset + addr.UNIT_ITEMS + 1)
+	c.atk          = memory.readbyte(offset + addr.UNIT_ATK)
+	c.def          = memory.readbyte(offset + addr.UNIT_DEF)
+	c.AS           = memory.readbyte(offset + addr.UNIT_AS)
+	c.hit          = memory.readbyte(offset + addr.UNIT_HIT)
+	c.crit         = memory.readbyte(offset + addr.UNIT_CRIT)
+	c.currHP       = memory.readbyte(offset + addr.UNIT_CURR_HP)
 	
 	return c
 end

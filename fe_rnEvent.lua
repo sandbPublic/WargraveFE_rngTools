@@ -104,17 +104,7 @@ function rnEventObj:headerString(rnEvent_i)
 		detailString = detailString .. string.format(" eID %d %dhp", self.enemyID, self.enemyHPstart)
 	end
 
-	if self.combatants:isWeaponSpecial("isPlayer") then
-		detailString = detailString .. " " .. combat.WEAPON_TYPE_STRINGS[self.combatants.player.weaponType]:upper()
-	end
-	
-	if self.combatants:isWeaponSpecial(false) then
-		detailString = detailString .. " " .. combat.WEAPON_TYPE_STRINGS[self.combatants.enemy.weaponType]
-	end
-	
-	if self.combatants.enemy.class ~= classes.LORD then
-		detailString = detailString .. " class " .. tostring(self.combatants.enemy.class)
-	end
+	detailString = detailString .. self.combatants.specialWeaponStr
 	
 	if self.pHPweight ~= DEFAULT_PHP_WEIGHT or self.eHPweight ~= DEFAULT_EHP_WEIGHT then
 		detailString = detailString .. string.format(" hpw %d %d", self.pHPweight, self.eHPweight)

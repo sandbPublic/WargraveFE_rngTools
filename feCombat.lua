@@ -606,31 +606,12 @@ while #ITEM_CODES < 255 do
 end
 ITEM_CODES[0] = "Nothing"
 
-local UNIT_1_WEAPON_1_ADDR = {0x0202AB94, 0x0202BD6E, 0x0202BE6A}
-UNIT_1_WEAPON_1_ADDR = UNIT_1_WEAPON_1_ADDR[GAME_VERSION - 5]
-for i = 0, 4 do
-	-- memory.writebyte(UNIT_1_WEAPON_1_ADDR+ 2*i, 1+i)
-end
-function P.nextWeaponSlot1()
-	nextByte = (memory.readbyte(UNIT_1_WEAPON_1_ADDR) + 5) % 256
-	print()
-	for i = 0, 4 do  -- check 5 items at once
-		memory.writebyte(UNIT_1_WEAPON_1_ADDR + 2*i, nextByte+i)
-		print(string.format("%3d, %s?", nextByte+i, ITEM_CODES[nextByte+i]))
-	end
-end
-
 
 
 
 P.combatObj = {}
 
 -- non modifying functions
-
-function P.combatObj:isWeaponSpecial(isPlayer)
-	if isPlayer then return self.player.weaponType ~= NORMAL end
-	return self.enemy.weaponType ~= NORMAL
-end
 
 function P.combatObj:combatant(isAttacker)
 	if isAttacker then return self.attacker end
@@ -655,28 +636,20 @@ function P.combatObj:toStrings()
 	
 	local function line(combatant)
 		local experStr = string.format("%02d", combatant.exp)
-		if combatant.exp > 99 then
-			experStr = "--"
-		end
+		if combatant.exp > 99 then experStr = "--" end
+		local doubleStr = "  "
+		if combatant.doubles then doubleStr = doubleStr .. "x2" end
 		
-		local rLine = string.format("%-10.10s%2d.%s %3s %3s %2d %2d",
+		return string.format("%-10.10s%2d.%s %3s %3s %2d %2d%s %s",
 			combatant.name, 
 			combatant.level, 
 			experStr, 
 			hitToString(combatant.hit), 
 			hitToString(combatant.crit), 
 			combatant.currHP, 
-			combatant.dmg)
-		
-		if combatant.doubles then rLine = rLine .. "x2 " 
-		else rLine = rLine .. "   " end	
-		
-		rLine = rLine .. combatant.weapon
-		
-		if combatant.weaponType ~= NORMAL then
-			rLine = rLine .. " " .. P.WEAPON_TYPE_STRINGS[combatant.weaponType]
-		end
-		return rLine
+			combatant.dmg,
+			doubleStr,
+			combatant.weapon)
 	end
 	
 	rStrings[2] = line(self.attacker)
@@ -728,16 +701,14 @@ function P.combatObj:willLevel(XPgained)
 end
 
 --http://serenesforest.net/the-sacred-stones/miscellaneous/calculations/
-function P.combatObj:expFrom(kill, assassinated) 
+function P.combatObj:expFrom(didKill, didAssassinate) 
 	if self.player.level == 20 then return 0 end
+	
 	local rExpFrom = self.expFromDmg
 	
-	if kill then
+	if didKill then
 		local assassinateMult = 1
-		if assassinated then
-			assassinateMult = 2 -- doubles exp from kill?
-			-- https://serenesforest.net/forums/index.php?/topic/78394-simplifying-and-correcting-the-experience-calculations/
-		end
+		if didAssassinate then assassinateMult = 2 end
 		
 		rExpFrom = math.min(100, math.floor(self.expFromDmg+
 			assassinateMult*math.max(0, self.expFromKill + self.bonusExp)))
@@ -750,7 +721,7 @@ function P.combatObj:expFrom(kill, assassinated)
 	return math.floor(rExpFrom)
 end
 
--- string action type, int dmg, int rnsConsumed, bool expWasGained, bool assassinated
+-- string action type, int dmg, int rnsConsumed, bool expWasGained, bool didAssassinate
 function P.combatObj:hitEvent(index, isAttacker)
 	local combatant = self:combatant(isAttacker)
 
@@ -769,7 +740,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 	--end
 	
 	retHitEv.expWasGained = isAttacker -- assume true and falsify
-	retHitEv.assassinated = false
+	retHitEv.didAssassinate = false
 	
 	local function nextRn()
 		retHitEv.RNsConsumed = retHitEv.RNsConsumed + 1
@@ -817,7 +788,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 					
 					retHitEv.action = "S"
 					retHitEv.dmg = 999
-					retHitEv.assassinated = true
+					retHitEv.didAssassinate = true
 				else
 					if retHitEv.action == "P" then
 						retHitEv.action = "PC"
@@ -932,7 +903,7 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 			
 			if rHitSeq.eHP <= 0 then  -- enemy died, combat over
 				rHitSeq.eHP = 0
-				rHitSeq.expGained = self:expFrom(true, hE.assassinated)
+				rHitSeq.expGained = self:expFrom(true, hE.didAssassinate)
 				rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
 				return rHitSeq
 			elseif hE.expWasGained then -- no kill
@@ -980,10 +951,6 @@ function P.hitSeq_string(argHitSeq)
 	return hitString
 end
 
-function P.combatObj:RNsConsumedAt(rnOffset)
-	return self:hitSeq(rnOffset).totalRNsConsumed
-end
-
 
 
 
@@ -1020,18 +987,6 @@ local function createCombatant(offset)
 	c.currHP     = memory.readbyte(offset + addr.UNIT_CURR_HP)
 	
 	return c
-end
-
-function P.combatObj:setDoubles()
-	local speedDifference = self.attacker.AS - self.defender.AS
-
-	self.attacker.doubles = (speedDifference >= 4 and self.attacker.weaponType ~= HALVE)
-	self.defender.doubles = (speedDifference <= -4 and self.defender.weaponType ~= HALVE)	   
-end
-
-function P.combatObj:setDmg()
-	self.attacker.dmg = math.max(0, self.attacker.atk - self.defender.def)
-	self.defender.dmg = math.max(0, self.defender.atk - self.attacker.def)   
 end
 
 -- depends on bonus exp (thief or boss) and assassinates
@@ -1099,14 +1054,26 @@ function P.combatObj:new()
 	o.attacker = createCombatant(0)
 	o.defender = createCombatant(addr.DEFENDER_OFFSET)
 	
-	o:setDoubles()
-	o:setDmg()
+	local speedDifference = o.attacker.AS - o.defender.AS
+	o.attacker.doubles = (speedDifference >= 4 and o.attacker.weaponType ~= HALVE)
+	o.defender.doubles = (speedDifference <= -4 and o.defender.weaponType ~= HALVE)	
+	
+	self.attacker.dmg = math.max(0, self.attacker.atk - self.defender.def)
+	self.defender.dmg = math.max(0, self.defender.atk - self.attacker.def)  
 	
 	o.player = o.attacker
 	o.enemy = o.defender
 	
 	o:setExpGain()
 	o.bonusExp = 0
+
+	o.specialWeaponStr = ""
+	if o.attacker.weaponType ~= NORMAL then
+		o.specialWeaponStr = o.specialWeaponStr .. " " .. P.WEAPON_TYPE_STRINGS[o.attacker.weaponType]:upper()
+	end
+	if o.defender.weaponType ~= NORMAL then
+		o.specialWeaponStr = o.specialWeaponStr .. " " .. P.WEAPON_TYPE_STRINGS[o.defender.weaponType]
+	end
 	
 	return o
 end

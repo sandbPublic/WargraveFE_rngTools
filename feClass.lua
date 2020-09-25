@@ -108,6 +108,8 @@ P.ASSASSIN_F 		= nextInd()
 P.ASSASSIN_M 		= nextInd()
 P.ROGUE 			= nextInd()
 
+P.TRANSPO_PROMO		= nextInd()
+
 P.ARCHSAGE 			= nextInd()
 P.NECROMANCER 		= nextInd()
 
@@ -498,8 +500,8 @@ if GAME_VERSION == 7 then
 	P.HEX_CODES[0x1D94] = P.OTHER -- Dead Warrior*
 	P.HEX_CODES[0x1DE8] = P.OTHER -- Male Child*
 	P.HEX_CODES[0x1E3C] = P.OTHER -- Female Child*
-	P.HEX_CODES[0x1E90] = P.TRANSPORTER -- Transporter (Cart)
-	P.HEX_CODES[0x1EE4] = P.SAGE_F -- Female Sage (Limstella?)*
+	P.HEX_CODES[0x1E90] = P.TRANSPO_PROMO -- Transporter (Cart)
+	P.HEX_CODES[0x1EE4] = P.SAGE_F -- Female Sage (Limstella)*
 	P.HEX_CODES[0x1F38] = P.ARCHER -- Archer riding Ballista*
 	P.HEX_CODES[0x1F8C] = P.ARCHER -- Archer riding Iron Ballista*
 	P.HEX_CODES[0x1FE0] = P.ARCHER -- Archer riding Killer Ballista*

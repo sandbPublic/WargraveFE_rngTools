@@ -14,12 +14,11 @@ local EXP_I = 9
 
 local NAMES = {}
 local INDEX_OF_NAME = {} -- useful to set values for a specific unit
-local DEPLOYED = {}
 local GROWTHS = {}
 local GROWTH_WEIGHTS = {}
 local BASE_STATS = {}
 local BOOSTERS = {}
-local CLASSES = {}
+local BASE_CLASSES = {}
 local PROMOTIONS = {}
 local PROMOTED_AT = {}
 local WILL_PROMOTE_AT = {} -- for dynamic stat weights, some units will not promote at 10
@@ -175,7 +174,7 @@ if GAME_VERSION == 6 then
 	{35, 19, 18, 14, 05, 30, 11, 20}, -- Yodel
 	{44, 20, 28, 23, 15, 13, 18, 19}  -- Karel6
 	}
-	CLASSES = {
+	BASE_CLASSES = {
 	classes.LORD, 			-- Roy
 	classes.PALADIN_M, 		-- Marcus
 	classes.CAVALIER, 		-- Allen
@@ -375,7 +374,6 @@ HEX_CODES[0x8360] = "Guinevere"
 		BASE_STATS[INDEX_OF_NAME["Zeis"]]     = {37, 19, 13, 11, 15, 03, 09, 07}
 	end
 
-	DEPLOYED[INDEX_OF_NAME["Roy"]] = true
 	-- ideally won't take more than 1 hit anyway, so hp is closer to def+res
 	-- speed gives twice the avoid of luck, but luck also gives crit evade so 2 points luck slightly better
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 19, 30, 10, 10} 
@@ -486,7 +484,7 @@ if GAME_VERSION == 7 then
 	{43, 12, 22, 20, 15, 18, 10, 16}, -- Renault
 	{40, 30, 24, 20, 20, 28, 25, 20}, -- Athos
 	}
-	CLASSES = {
+	BASE_CLASSES = {
 	classes.LORD,			-- Eliwood
 	classes.CAVALIER,		-- Lowen
 	classes.PALADIN_M,		-- Marcus
@@ -837,7 +835,6 @@ HEX_CODES[0xFFDC] = "Linus (morph)"
 		BASE_STATS[INDEX_OF_NAME["Vaida"]]    = {43, 20, 19, 13, 21, 06, 11, 09}
 	end
 
-	DEPLOYED[INDEX_OF_NAME["Eliwood"]] = true
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 19, 30, 10, 10}	
 end
 
@@ -944,7 +941,7 @@ if GAME_VERSION == 8 then
 	{46, 20, 14, 12, 18, 11, 05, 11}, --Fado
 	{44, 22, 13, 11, 17, 19, 04, 14}, --Lyon
 	}
-	CLASSES = {
+	BASE_CLASSES = {
 	classes.LORD,				--Eirika
 	classes.PALADIN_M,			--Seth
 	classes.CAVALIER,			--Franz
@@ -1084,17 +1081,6 @@ HEX_CODES[0x4620] = "Hayden"
 	
 	initializeCommonValues()
 	
-	DEPLOYED[INDEX_OF_NAME["Eirika"]] = true
-	DEPLOYED[INDEX_OF_NAME["Franz"]] = true
-	DEPLOYED[INDEX_OF_NAME["Lute"]] = true
-	DEPLOYED[INDEX_OF_NAME["Natasha"]] = true
-	DEPLOYED[INDEX_OF_NAME["Tana"]] = true
-	DEPLOYED[INDEX_OF_NAME["Gerik"]] = true
-	DEPLOYED[INDEX_OF_NAME["Tethys"]] = true
-	DEPLOYED[INDEX_OF_NAME["Innes"]] = true
-	DEPLOYED[INDEX_OF_NAME["Dozla"]] = true
-	DEPLOYED[INDEX_OF_NAME["Saleh"]] = true
-	
 	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 2, 0, 2, 0, 0}
 	BOOSTERS[INDEX_OF_NAME["Tana"]] = {7, 0, 0, 0, 2, 0, 0}
 	BOOSTERS[INDEX_OF_NAME["Dozla"]] = {0, 0, 2, 2, 0, 0, 2}
@@ -1111,12 +1097,11 @@ end
 
 -- for unfound hex codes
 NAMES[0] = "unit not found"
-DEPLOYED[0] = false
 GROWTHS[0] = {0, 0, 0, 0, 0, 0, 0}
 GROWTH_WEIGHTS[0] = {0, 0, 0, 0, 0, 0, 0}
 BASE_STATS[0] = {0, 0, 0, 0, 0, 0, 0, 0}
 BOOSTERS[0] = {0, 0, 0, 0, 0, 0, 0}
-CLASSES[0] = classes.OTHER
+BASE_CLASSES[0] = classes.OTHER
 PROMOTIONS[0] = classes.OTHER_PROMOTED 
 PROMOTED_AT[0] = 0
 WILL_PROMOTE_AT[0] = 0
@@ -1143,7 +1128,7 @@ local function statsInRAM()
 end
 
 function P.hexCodeToName(hexCode)
-	return HEX_CODES[hexCode] or string.format("%04x", hexCode)
+	return HEX_CODES[hexCode] or string.format("%04X", hexCode)
 end
 
 local RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
@@ -1164,6 +1149,9 @@ function P.printSupports()
 		end
 	end
 end
+
+
+
 
 local function factorial(x)
 	if x <= 1 then return 1 end
@@ -1417,11 +1405,6 @@ function unitObj:setDynamicWeights()
 		
 		-- if more likely to hit promoted class cap than unpromoted, use that probability
 		if self.canPromote then
-			--print(self.promotion)
-			--print(self.stats)
-			--print(#classes.CAPS)
-			--print(classes.CAPS[self.promotion])
-			--print(classes.PROMO_GAINS[self.promotion])
 			local gainsTilStatCap_P = classes.CAPS[self.promotion][stat_i] 
 				- self.stats[stat_i] - classes.PROMO_GAINS[self.promotion][stat_i]
 			
@@ -1465,16 +1448,17 @@ function unitObj:new(unit_i)
 		o.bases[i] = o.bases[i] + boost
 	end
 
-	o.class = CLASSES[unit_i]
+	o.class = classes.HEX_CODES[memory.readword(addr.UNIT_CLASS_CODE)] or classes.OTHER
 	o.promotion = PROMOTIONS[unit_i]
-	if PROMOTED_AT[unit_i] > 0 then
-		o.class = o.promotion
-		for i, gain in ipairs(classes.PROMO_GAINS[o.promotion]) do
+	
+	o.canPromote = o.class == BASE_CLASSES[unit_i] and o.class ~= o.promotion
+	if o.canPromote then
+		for i, gain in ipairs(classes.PROMO_GAINS[o.class]) do
 			o.bases[i] = o.bases[i] + gain
 		end
 		o.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
 	end
-	o.canPromote = o.class ~= o.promotion
+	
 	o.willPromoteAt = WILL_PROMOTE_AT[unit_i]
 	o.willEndAt = WILL_END_AT[unit_i]
 	o.hasAfas = (unit_i == AFAS_I)

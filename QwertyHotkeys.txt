@@ -36,4 +36,4 @@ save print combat,stats,ranks&supports
 generate log file
 M
 hold, <> move rn, ^v change step
---
+print class&unit code info

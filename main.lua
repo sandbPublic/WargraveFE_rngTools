@@ -343,8 +343,13 @@ while true do
 		
 		if pressed(12) then autolog.writeLogs() end
 		
-		if pressed(13) then 
-			--
+		if pressed(13) then
+			print()
+			local nameCode = memory.readword(addr.UNIT_NAME_CODE)
+			print(string.format("unit %s 0x%04X", unitData.hexCodeToName(nameCode), nameCode))
+			local classCode = memory.readword(addr.UNIT_CLASS_CODE)
+			local class = classes.HEX_CODES[classCode] or classes.OTHER
+			print(string.format("class %d 0x%04X", class, classCode))
 		end
 	end
 	

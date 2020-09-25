@@ -1133,9 +1133,18 @@ end
 local RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
 function P.printRanks()
 	for i, name in ipairs(RANK_NAMES) do
-		rank = memory.readbyte(addr.UNIT_RANKS + i - 1)
+		local rank = memory.readbyte(addr.UNIT_RANKS + i - 1)
 		if rank > 0 then
 			print(name .. " rank " .. rank)
+		end
+	end
+end
+
+function P.printSupports()
+	for i = 0, 9 do
+		local support = memory.readbyte(addr.UNIT_SUPPORTS + i)
+		if support > 0 then
+			print("Support " .. i .. " " .. support)
 		end
 	end
 end

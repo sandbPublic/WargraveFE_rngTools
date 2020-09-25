@@ -248,6 +248,7 @@ while true do
 			selected(unitData.deployedUnits):setStats()
 			rnEvent.updateStats()
 			unitData.printRanks()
+			unitData.printSupports()
 			
 			printStringArray(selected(unitData.deployedUnits):statData_strings())
 		end

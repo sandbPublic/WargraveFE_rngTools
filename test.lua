@@ -60,6 +60,7 @@ end
 if true then
 	print("---Unit data...---")
 	unitData.printRanks()
+	unitData.printSupports()
 	-- todo unitObj tests
 	
 	print("---Unit data passed...---")

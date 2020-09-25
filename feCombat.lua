@@ -1058,8 +1058,8 @@ function P.combatObj:new()
 	o.attacker.doubles = (speedDifference >= 4 and o.attacker.weaponType ~= HALVE)
 	o.defender.doubles = (speedDifference <= -4 and o.defender.weaponType ~= HALVE)	
 	
-	self.attacker.dmg = math.max(0, self.attacker.atk - self.defender.def)
-	self.defender.dmg = math.max(0, self.defender.atk - self.attacker.def)  
+	o.attacker.dmg = math.max(0, o.attacker.atk - o.defender.def)
+	o.defender.dmg = math.max(0, o.defender.atk - o.attacker.def)  
 	
 	o.player = o.attacker
 	o.enemy = o.defender

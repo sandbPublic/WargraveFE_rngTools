@@ -52,6 +52,8 @@ P.UNIT_CURR_HP = RAM_BASE + P.UNIT_CURR_HP[GAME_VERSION - 5]
 -- 8 consecutive bytes 26, 28, 28
 P.UNIT_RANKS = {0x3923A, 0x3A418, 0x3A514}
 P.UNIT_RANKS = RAM_BASE + P.UNIT_RANKS[GAME_VERSION - 5]
+-- 10? consecutive bytes
+P.UNIT_SUPPORTS = P.UNIT_RANKS + 10
 
 -- same data structure exists for the defender in combat
 P.DEFENDER_OFFSET = {0x7C, 0x80, 0x80}

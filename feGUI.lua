@@ -311,20 +311,27 @@ function rectObj:draw()
 end
 
 function P.drawRects()
-	P.rects[P.RN_STREAM_I].strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
-	P.rects[P.STAT_DATA_I].strings = unitData.currUnit():statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))
-	P.rects[P.COMBAT_I].strings = combat.combatObj:new():toStrings()
-	
-	if P.lookingAt(P.COMPACT_BPS_I) then
-		P.rects[P.COMPACT_BPS_I].strings = combat.combatObj:new():toCompactStrings()
+	local function getStrings(i)
+		if i == P.RN_STREAM_I then
+			return rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
+		elseif i == P.STAT_DATA_I then
+			return unitData.currUnit():statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))
+		elseif i == P.COMBAT_I then
+			return combat.combatObj:new():toStrings()
+		elseif i == P.COMPACT_BPS_I then
+			return combat.combatObj:new():toCompactStrings()
+		elseif i == P.RN_EVENT_I then
+			return rnEvent.toStrings("isColored")
+		elseif i == P.COORD_I then
+			return {string.format("%02d,%02d", memory.readbyte(addr.CURSOR_X), memory.readbyte(addr.CURSOR_Y))}
+		end
 	end
 	
-	P.rects[P.RN_EVENT_I].strings = rnEvent.toStrings("isColored")
-	P.rects[P.COORD_I].strings = {string.format("%02d,%02d", 
-		memory.readbyte(addr.CURSOR_X), memory.readbyte(addr.CURSOR_Y))}
-	
-	for _, rect in ipairs(P.rects) do
-		rect:draw()
+	for i, rect in ipairs(P.rects) do
+		if P.lookingAt(i) then
+			rect.strings = getStrings(i)
+			rect:draw()
+		end
 	end
 end
 

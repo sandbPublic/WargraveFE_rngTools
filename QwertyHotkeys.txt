@@ -3,12 +3,12 @@ delete last rnEvent
 undo rnEvent deletion
 Y
 register new rnEvent
---
+print rnEvent diagnostic
 U
 toggle rnEvent.combat
-toggle rnEvent.lvlUp
-I
 print combat
+I
+toggle rnEvent.lvlUp
 toggle rnEvent dig
 O
 toggle bonus exp
@@ -32,7 +32,7 @@ B
 change afa/metis
 switch RNG to 2ndary
 N
-save print combat,stats,ranks&supports
+save,print combat,stats,ranks&supports
 generate log file
 M
 hold, <> move rn, ^v change step

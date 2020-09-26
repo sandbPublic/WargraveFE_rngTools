@@ -193,13 +193,7 @@ while true do
 		
 		if pressed(3) then rnEvent.toggle("hasCombat") end
 		
-		if pressed(4) then
-			c = combat.combatObj:new()
-			print()
-			print(c.attacker)
-			print()
-			print(c.defender)
-		end	
+		if pressed(4) then rnEvent.toggle("lvlUp") end	
 		
 		if pressed(5) then selected(rnEvent.events).combatants:toggleBonusExp() end
 
@@ -271,10 +265,16 @@ while true do
 		if pressed(1) then rnEvent.undoDelete() end
 		
 		if pressed(2) then
-			-- was cycle weapon
+			rnEvent.printDiagnostic()
 		end
 		
-		if pressed(3) then rnEvent.toggle("lvlUp") end
+		if pressed(3) then
+			c = combat.combatObj:new()
+			print()
+			print(c.attacker)
+			print()
+			print(c.defender)
+		end
 		
 		if pressed(4) then rnEvent.toggle("dig") end
 		

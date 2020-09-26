@@ -638,7 +638,7 @@ function P.combatObj:toStrings()
 		local experStr = string.format("%02d", combatant.exp)
 		if combatant.exp > 99 then experStr = "--" end
 		local doubleStr = "  "
-		if combatant.doubles then doubleStr = doubleStr .. "x2" end
+		if combatant.doubles then doubleStr = "x2" end
 		
 		return string.format("%-10.10s%2d.%s %3s %3s %2d %2d%s %s",
 			combatant.name, 

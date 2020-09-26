@@ -23,16 +23,22 @@ function P.writeLogs()
 	local currTurn = 0
 	local currPhase = 0
 	for i = 1, logCount do
-		if currTurn < logs[i].turn or currPhase ~= logs[i].phase then
+		if currTurn ~= logs[i].turn or currPhase ~= logs[i].phase then
 			currTurn = logs[i].turn
 			currPhase = logs[i].phase
 			f:write("\n")
 			f:write(turnString(currTurn, currPhase), "\n")
 		end
-		f:write(string.format("%d RN %d-%d (%d)\n", 
-			i, logs[i].rnStart, logs[i].rnEnd, logs[i].rnEnd-logs[i].rnStart))
-		f:write(logs[i].combat1, "\n")
-		f:write(logs[i].combat2, "\n\n")
+		
+		local rnsUsed = logs[i].rnEnd-logs[i].rnStart
+		f:write(string.format("%4d RN %d-%d (%d)\n", 
+			i, logs[i].rnStart, logs[i].rnEnd, rnsUsed))
+		
+		if logs[i].attacker then
+			f:write(logs[i].outcome, "\n")
+			f:write(logs[i].attacker, "\n")
+			f:write(logs[i].defender, "\n")
+		end
 	end
 	
 	f:close()
@@ -54,8 +60,7 @@ function logLineObj:new()
 	o.phase = memory.readbyte(addr.PHASE)
 	o.rnStart = rns.rng1.prevPos
 	o.rnEnd = rns.rng1.pos
-	
-	c = combat.combatObj:new()
+	o.rnsUsed = o.rnEnd - o.rnStart
 	
 	local function line(combatant)
 		return string.format("%-9s with %2d use %-12s  at %2d,%2d",
@@ -66,8 +71,13 @@ function logLineObj:new()
 			combatant.y)
 	end
 	
-	o.combat1 = line(c.attacker)
-	o.combat2 = line(c.defender)
+	local c = combat.combatObj:new()
+	local hitSeq = c:hitSeq(o.rnStart)
+	if hitSeq.totalRNsConsumed == o.rnsUsed then
+		o.outcome = combat.hitSeq_string(hitSeq)
+		o.attacker = line(c.attacker)
+		o.defender = line(c.defender)
+	end
 	
 	return o
 end
@@ -75,12 +85,12 @@ end
 function P.addLog()
 	local newLog = logLineObj:new()
 	
-	for i = 1, logCount do
-		if logs[i].rnStart >= newLog.rnStart then
-			-- erase subsequent logs (jumped back via savestate, or negative rn jump)
-			logCount = i - 1
-			break
-		end
+	while logs[logCount] and math.max(logs[logCount].rnStart, logs[logCount].rnEnd) 
+	                         > math.min(newLog.rnStart, newLog.rnEnd) do
+		
+		-- saved log overlaps or comes after newLog
+		-- erase subsequent logs (jumped back via savestate, or negative rn jump)
+		logCount = logCount - 1
 	end
 	
 	logCount = logCount + 1

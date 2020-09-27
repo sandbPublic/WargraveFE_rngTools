@@ -22,10 +22,6 @@ if true then
 	changeSelection(miscTest, 2, "lock")
 	assert(selected(miscTest) == "b")
 	
-	assert(turnString(1, 0x00) == "Turn 1 player phase")
-	assert(turnString(2, 0x40) == "Turn 2 other phase")
-	assert(turnString(3, 0x80) == "Turn 3 enemy phase")
-	
 	print("---Misc passed---")
 end
 

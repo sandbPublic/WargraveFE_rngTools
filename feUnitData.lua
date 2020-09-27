@@ -1477,6 +1477,9 @@ units[0] = unitObj:new(0)
 
 function P.currUnit()
 	local name = P.hexCodeToName(memory.readword(addr.UNIT_NAME_CODE))
+	if getPhase() == "enemy" then
+		name = P.hexCodeToName(memory.readword(addr.DEFENDER_OFFSET + addr.UNIT_NAME_CODE))
+	end
 	
 	local u = units[0]
 	if INDEX_OF_NAME[name] then

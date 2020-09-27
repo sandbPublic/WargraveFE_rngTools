@@ -21,13 +21,13 @@ function P.writeLogs()
 	local f = io.open(fileName, "w")
 	
 	local currTurn = 0
-	local currPhase = 0
+	local currPhase = "player"
 	for i = 1, logCount do
 		if currTurn ~= logs[i].turn or currPhase ~= logs[i].phase then
 			currTurn = logs[i].turn
 			currPhase = logs[i].phase
 			f:write("\n")
-			f:write(turnString(currTurn, currPhase), "\n")
+			f:write("Turn " .. currTurn .. " " .. currPhase .. " phase\n")
 		end
 		
 		local rnsUsed = logs[i].rnEnd-logs[i].rnStart
@@ -57,7 +57,7 @@ function logLineObj:new()
 	self.__index = self
 	
 	o.turn = memory.readbyte(addr.TURN)
-	o.phase = memory.readbyte(addr.PHASE)
+	o.phase = getPhase()
 	o.rnStart = rns.rng1.prevPos
 	o.rnEnd = rns.rng1.pos
 	o.rnsUsed = o.rnEnd - o.rnStart
@@ -71,7 +71,7 @@ function logLineObj:new()
 			combatant.y)
 	end
 	
-	local c = combat.combatObj:new()
+	local c = combat.combatObj:new()  -- todo if loaded after rn burns, exp/lvl may be inaccurate?
 	local hitSeq = c:hitSeq(o.rnStart)
 	if hitSeq.totalRNsConsumed == o.rnsUsed then
 		o.outcome = combat.hitSeq_string(hitSeq)

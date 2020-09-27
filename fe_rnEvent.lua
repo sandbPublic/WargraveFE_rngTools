@@ -78,6 +78,9 @@ function rnEventObj:headerString(rnEvent_i)
 	end
 	
 	local detailString = ""
+	if self.combatants.phase ~= "player" then
+		detailString = " " .. self.combatants.phase
+	end
 	
 	if self.burns ~= 0 then
 		detailString = detailString .. string.format(" burns %d", self.burns)
@@ -101,7 +104,7 @@ function rnEventObj:headerString(rnEvent_i)
 	end
 	
 	if self.enemyID ~= 0 then
-		detailString = detailString .. string.format(" eID %d %dhp", self.enemyID, self.enemyHPstart)
+		detailString = detailString .. string.format(" eID %d %2dhp", self.enemyID, self.enemyHPstart)
 	end
 
 	detailString = detailString .. self.combatants.specialWeaponStr
@@ -115,7 +118,7 @@ function rnEventObj:headerString(rnEvent_i)
 end
 
 function rnEventObj:healable()
-	if self.hasCombat and self.mHitSeq.pHP < self.maxHP then
+	if self.hasCombat and self.mHitSeq.atkHP < self.maxHP then
 		return true
 	end
 	return self:levelDetected() 
@@ -155,11 +158,11 @@ function rnEventObj:evaluation_fn(printV)
 			if printV then printStr = printStr .. string.format(" staff hit %02d", hitValue) end
 		else			
 			local eHPstartFrac = self.enemyHPstart/self.combatants.enemy.maxHP
-			local eHPendFrac = self.mHitSeq.eHP/self.combatants.enemy.maxHP
+			local eHPendFrac = self.mHitSeq.defHP/self.combatants.enemy.maxHP
 			local eLostValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
 			
 			local pHPstartFrac = self.combatants.player.currHP/self.maxHP
-			local pHPendFrac = self.mHitSeq.pHP/self.maxHP
+			local pHPendFrac = self.mHitSeq.atkHP/self.maxHP
 			local pLostValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
 			
 			score = score + self.eHPweight * eLostValue 
@@ -296,11 +299,21 @@ function rnEventObj:printDiagnostic()
 		end
 		
 		print(str)
-		print(string.format("expGained=%2d pHP=%2d eHP=%2d", 
-			self.mHitSeq.expGained, self.mHitSeq.pHP, self.mHitSeq.eHP))
+		print(string.format("expGained=%2d pHP=%2d eHP=%2d eHPstart=%2d eHPend=%2d", 
+			self.mHitSeq.expGained,
+			self.mHitSeq.atkHP,
+			self.mHitSeq.defHP,
+			self.enemyHPstart,
+			self.enemyHPend))
 		
+		print()
+		print(self.mHitSeq)
+		print()
 		print(self.combatants.attacker)
+		print()
 		print(self.combatants.defender)
+		print()
+		print(self.combatants.phase .. " phase " .. self.combatants.specialWeaponStr)
 	end
 	
 	print(string.format("Eval %5.2f", self.eval))
@@ -432,7 +445,7 @@ function rnEventObj:setStats()
 	self.mExpValueFactor = self.unit:expValueFactor()
 end
 
-function rnEventObj:setEnemyHP(rnEvent_i)
+function rnEventObj:setEnemyHPstart(rnEvent_i)
 	if not self.hasCombat then 
 		self.enemyHPstart = 0
 		return
@@ -461,7 +474,7 @@ function rnEventObj:updateFull()
 		
 		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
 		
-		self.enemyHPend = self.mHitSeq.eHP
+		self.enemyHPend = self.mHitSeq.defHP
 	else
 		self.postCombatRN_i = self.postBurnsRN_i
 	end
@@ -530,7 +543,7 @@ function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
 	end
 	
 	self.postBurnsRN_i = self.startRN_i + self.burns
-	self:setEnemyHP(rnEvent_i)
+	self:setEnemyHPstart(rnEvent_i)
 	
 	if cacheUpdateOnly then
 		if self.cache[self.postBurnsRN_i] then

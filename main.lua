@@ -110,14 +110,14 @@ local rnStepSize = 1 -- distance to move rng position or how many burns to add t
 
 local savedFog = 0
 local currTurn = 0
-local currPhase = 0
+local currPhase = "player"
 
 while true do
-	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= memory.readbyte(addr.PHASE) then
+	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
 		currTurn = memory.readbyte(addr.TURN)
-		currPhase = memory.readbyte(addr.PHASE)
+		currPhase = getPhase()
 		print()
-		print(turnString(currTurn, currPhase))
+		print("Turn " .. currTurn .. " " .. currPhase .. " phase")
 		print()
 	end
 	

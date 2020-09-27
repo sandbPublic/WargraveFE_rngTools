@@ -12,8 +12,8 @@ WINDOW_WIDTH = 45
 -- 0 = player, 0x40 = other, 0x80 = enemy
 local PHASE_NAMES = {"player", "other", "enemy"}
 
-function turnString(turn, phase)
-	return "Turn " .. turn .. " " .. PHASE_NAMES[1+phase/0x40] .. " phase"
+function getPhase()
+	return PHASE_NAMES[1 + memory.readbyte(addr.PHASE)/0x40]
 end
 
 function selected(tbl_)

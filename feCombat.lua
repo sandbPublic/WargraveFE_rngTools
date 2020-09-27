@@ -739,7 +739,10 @@ function P.combatObj:hitEvent(index, isAttacker)
 		--retHitEv.dmg = 999 
 	--end
 	
-	retHitEv.expWasGained = isAttacker -- assume true and falsify
+	-- assume exp is gained if attacker and player phase, or defender and enemy phase
+	-- then falsify
+	retHitEv.expWasGained = (isAttacker == (self.phase == "player"))
+	
 	retHitEv.didAssassinate = false
 	
 	local function nextRn()
@@ -825,7 +828,7 @@ function P.combatObj:staffHitEvent(index)
 	retStvHitEv.action = "STF-X"
 	retStvHitEv.RNsConsumed = 1
 	retStvHitEv.dmg = 0
-	retStvHitEv.expWasGained = true
+	retStvHitEv.expWasGained = (self.phase == "player")
 	
 	if self.attacker.hit <= rns.rng1:getRN(index) then
 		retStvHitEv.action = "STF-O"
@@ -836,20 +839,20 @@ function P.combatObj:staffHitEvent(index)
 end
 
 -- variable number of events, 1 to 6
--- X hit events, expGained, lvlUp, totalRNsConsumed, pHP, eHP
--- can carry enemy's hp from previous combat
+-- X hit events, expGained, lvlUp, totalRNsConsumed, atkHP, defHP
+-- can carry enemy's hp from previous combat (technically defenders hp but only relevant on player phase)
 -- todo track weapon uses for weapon breaking preventing doubling
-function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
+function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	local rHitSeq = {} -- numeric keys are hit events
 	local isAttackers = {} -- unnecessary to return with current functionality
 	rHitSeq.expGained = 1
 	rHitSeq.lvlUp = false
 	rHitSeq.totalRNsConsumed = 0
-	rHitSeq.pHP = self.player.currHP
+	rHitSeq.atkHP = self.attacker.currHP
 	
 	-- pass enemy HP from previous combats this phase if applicable
-	rHitSeq.eHP = carriedEnemyHP or self.enemy.currHP
-	if rHitSeq.eHP == 0 then
+	rHitSeq.defHP = carriedDefHP or self.defender.currHP
+	if rHitSeq.defHP == 0 then
 		rHitSeq.expGained = 0
 		return rHitSeq
 	end
@@ -881,6 +884,8 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 		setNext(DEFENDER)
 	end
 	
+	local isEnemyPhase = (self.phase == "enemy") -- other phase treated as player
+	
 	for ev_i, isAttacker in ipairs(isAttackers) do
 		local hE = self:hitEvent(rnOffset, isAttacker)
 		
@@ -888,50 +893,64 @@ function P.combatObj:hitSeq(rnOffset, carriedEnemyHP)
 		rnOffset = rnOffset + hE.RNsConsumed
 		rHitSeq.totalRNsConsumed = rHitSeq.totalRNsConsumed + hE.RNsConsumed
 		
+		-- process damage, due to drain/devil both combatants hp may change
 		if isAttacker then
 			if hE.action ~= "DEV" then
-				hE.dmg = math.min(hE.dmg, rHitSeq.eHP)
-				rHitSeq.eHP = rHitSeq.eHP - hE.dmg
+				hE.dmg = math.min(hE.dmg, rHitSeq.defHP)
+				rHitSeq.defHP = rHitSeq.defHP - hE.dmg
 			else
-				hE.dmg = math.min(hE.dmg, rHitSeq.pHP)
-				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
+				hE.dmg = math.min(hE.dmg, rHitSeq.atkHP)
+				rHitSeq.atkHP = rHitSeq.atkHP - hE.dmg
 			end
 			
 			if self.attacker.weaponType == DRAIN then
-				rHitSeq.pHP = math.min(rHitSeq.pHP + hE.dmg, self.attacker.maxHP)
+				rHitSeq.atkHP = math.min(rHitSeq.atkHP + hE.dmg, self.attacker.maxHP)
 			end
-			
-			if rHitSeq.eHP <= 0 then  -- enemy died, combat over
-				rHitSeq.eHP = 0
-				rHitSeq.expGained = self:expFrom(true, hE.didAssassinate)
-				rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
-				return rHitSeq
-			elseif hE.expWasGained then -- no kill
-				rHitSeq.expGained = self:expFrom()
-				rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
-			end	
 		else
 			if hE.action ~= "DEV" then
-				hE.dmg = math.min(hE.dmg, rHitSeq.pHP)
-				rHitSeq.pHP = rHitSeq.pHP - hE.dmg
+				hE.dmg = math.min(hE.dmg, rHitSeq.atkHP)
+				rHitSeq.atkHP = rHitSeq.atkHP - hE.dmg
 			else
-				hE.dmg = math.min(hE.dmg, rHitSeq.eHP)
-				rHitSeq.eHP = rHitSeq.eHP - hE.dmg
+				hE.dmg = math.min(hE.dmg, rHitSeq.defHP)
+				rHitSeq.defHP = rHitSeq.defHP - hE.dmg
 			end
 			
 			if self.defender.weaponType == DRAIN then
-				rHitSeq.eHP = math.min(rHitSeq.eHP + hE.dmg, self.defender.maxHP)
-			end
-
-			rHitSeq[ev_i].action = hE.action:lower()
-			
-			if rHitSeq.pHP <= 0 then  -- player died, combat over
-				rHitSeq.pHP = 0
-				rHitSeq.expGained = 0
-				rHitSeq.lvlUp = false
-				return rHitSeq
+				rHitSeq.defHP = math.min(rHitSeq.defHP + hE.dmg, self.defender.maxHP)
 			end
 		end
+		
+		if rHitSeq.atkHP <= 0 then rHitSeq.atkHP = 0 end
+		if rHitSeq.defHP <= 0 then rHitSeq.defHP = 0 end
+		
+		-- lowercase for enemy (attacker on EP, defender on PP)
+		if isAttacker == isEnemyPhase then
+			hE.action = hE.action:lower()
+		end
+		
+		if (rHitSeq.defHP == 0 and not isEnemyPhase) or 
+		   (rHitSeq.atkHP == 0 and isEnemyPhase) then  -- enemy died, combat over
+			
+			print("enemy died")
+			rHitSeq.expGained = self:expFrom(true, hE.didAssassinate)
+			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
+			return rHitSeq
+		end
+
+		if (rHitSeq.atkHP == 0 and not isEnemyPhase) or 
+		   (rHitSeq.defHP == 0 and isEnemyPhase) then  -- player died, combat over
+		   
+			rHitSeq.expGained = 0
+			rHitSeq.lvlUp = false
+			return rHitSeq
+		end
+		
+		if hE.expWasGained then -- no kill
+			
+			rHitSeq.expGained = self:expFrom()
+			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
+		
+		end	
 	end
 
 	return rHitSeq
@@ -1064,15 +1083,27 @@ function P.combatObj:new()
 	o.player = o.attacker
 	o.enemy = o.defender
 	
+	o.phase = getPhase()
+	if o.phase == "enemy" then
+		o.player = o.defender
+		o.enemy = o.attacker
+	end
+	
 	o:setExpGain()
 	o.bonusExp = 0
 
-	o.specialWeaponStr = ""
-	if o.attacker.weaponType ~= NORMAL then
-		o.specialWeaponStr = o.specialWeaponStr .. " " .. P.WEAPON_TYPE_STRINGS[o.attacker.weaponType]:upper()
+	local pWeapon = ""
+	if o.player.weaponType ~= NORMAL then
+		pWeapon = " " .. P.WEAPON_TYPE_STRINGS[o.player.weaponType]:upper()
 	end
-	if o.defender.weaponType ~= NORMAL then
-		o.specialWeaponStr = o.specialWeaponStr .. " " .. P.WEAPON_TYPE_STRINGS[o.defender.weaponType]
+	local eWeapon = ""
+	if o.enemy.weaponType ~= NORMAL then
+		eWeapon = " " .. P.WEAPON_TYPE_STRINGS[o.enemy.weaponType]
+	end
+	
+	o.specialWeaponStr = pWeapon .. eWeapon
+	if o.phase == "enemy" then
+		o.specialWeaponStr = eWeapon .. pWeapon
 	end
 	
 	return o

@@ -11,12 +11,26 @@ P.CURSOR_X = {0x2AA1C, 0x2BBCC, 0x2BCC4} -- also at +4
 P.CURSOR_X = RAM_BASE + P.CURSOR_X[GAME_VERSION - 5]
 P.CURSOR_Y = P.CURSOR_X + 2
 
--- todo money, {0x2AA50? 0x2BC00, 0x2BCF8?} -- 2 bytes, or more? 2 bytes maxes out at 65535, need extra half byte?
-P.FOG = {0x2AA55, 0x2BC05, 0x2BCFD} -- +0x39 from CURSOR_X ?
-P.FOG = RAM_BASE + P.FOG[GAME_VERSION - 5]
-P.CHAPTER = P.FOG + 1 -- FE6x chapters count from 32
-P.PHASE   = P.FOG + 2
-P.TURN    = P.FOG + 3
+P.MONEY    = {0x2AA50, 0x2BC00, 0x2BCF8} -- 4 bytes (except first bit, max out at 0x7FFFFFFF) todo FE6,8 untested
+P.MONEY    = RAM_BASE + P.MONEY[GAME_VERSION - 5]
+
+function P.getMoney()
+	return memory.readword(P.MONEY+2)*0x10000 + memory.readword(P.MONEY)
+end
+
+function P.setMoney(money)
+	local lowerWord = AND(money, 0x0000FFFF)
+	local upperWord = AND(money, 0xFFFF0000)/0x10000
+
+	memory.writeword(P.MONEY, lowerWord)
+	memory.writeword(P.MONEY+2, upperWord)
+end
+
+
+P.FOG      = P.MONEY + 5 -- {0x2AA55, 0x2BC05, 0x2BCFD}
+P.CHAPTER  = P.MONEY + 6 -- FE6x chapters count from 32
+P.PHASE    = P.MONEY + 7
+P.TURN     = P.MONEY + 8
 
 
 -- FE6 + 0x11DC = FE7, FE7 + 0xFC = FE8

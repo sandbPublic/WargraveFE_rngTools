@@ -6,13 +6,13 @@ register new rnEvent
 print rnEvent diagnostic
 U
 toggle rnEvent.combat
-print combat
+hold, <> change fog
 I
 toggle rnEvent.lvlUp
-toggle rnEvent dig
+hold, <> change money, ^v change step
 O
 toggle bonus exp
-toggle fog
+toggle rnEvent dig (FE8 only)
 P
 suggest rnEvent permutation
 search future event outcomes
@@ -20,20 +20,20 @@ H
 switch to 2ndary functions
 switch to primary functions
 J
-generate log file
+hold, <> change selected window
 hold, <^v> change hp weight
 K
 toggle window visibility
 move window (<^v>LR)
 L
-hold, <> display mode
-print stat, hold+<> to change -- todo reimplement
+generate log file
+print stat, hold+<> to change -- todo
 B
 change afa/metis
 switch RNG to 2ndary
 N
 save,print combat,stats,ranks&supports
---
+-- todo
 M
 hold, <> move rn, ^v change step
 print class&unit code info

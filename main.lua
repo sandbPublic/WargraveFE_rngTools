@@ -103,12 +103,11 @@ end
 local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
 
-local savedFog = 0
+local currMoney = 0
+local moneyStepSize = 10000
+
 local currTurn = 0
 local currPhase = "player"
-
-
-
 
 while true do
 	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
@@ -116,6 +115,13 @@ while true do
 		currPhase = getPhase()
 		print()
 		print("Turn " .. currTurn .. " " .. currPhase .. " phase")
+	end
+	
+	if currMoney ~= addr.getMoney() then
+		local moneyChange = addr.getMoney() - currMoney
+		print()
+		print(string.format("Money %d %+d -> %d", currMoney, moneyChange, addr.getMoney()))
+		currMoney = addr.getMoney()
 	end
 	
 	autolog.updateLastEvent()
@@ -183,7 +189,7 @@ while true do
 	if usingPrimaryFunctions then
 		if pressed(1) then rnEvent.deleteLastEvent() end
 		
-		if pressed(2) then
+		if pressed(2) then -- add event
 			rnEvent.addEvent()
 			rnEvent.update_rnEvents()
 			
@@ -198,17 +204,8 @@ while true do
 
 		if pressed(6) then rnEvent.suggestedPermutation() end
 		
-		if pressed(8) then autolog.writeLogs() end
-		
-		if pressed(9) then -- quick toggle visibility
-			if selected(feGUI.rects).opacity == 0 then
-				selected(feGUI.rects).opacity = 0.75
-			else
-				selected(feGUI.rects).opacity = 0
-			end
-		end
-		
-		if held(10) then -- hold down, then press left/right
+		if pressed(8) then print("selecting display: " .. selected(feGUI.rects).name) end
+		if held(8) then -- hold down, then press left/right
 			if pressed("left", gameCtrl) then
 				changeSelection(feGUI.rects, -1)
 				print("selecting display: " .. selected(feGUI.rects).name)
@@ -218,10 +215,20 @@ while true do
 				print("selecting display: " .. selected(feGUI.rects).name)
 			end
 		end
+		
+		if pressed(9) then -- quick toggle visibility
+			if selected(feGUI.rects).opacity == 0 then
+				selected(feGUI.rects).opacity = 0.75
+			else
+				selected(feGUI.rects).opacity = 0
+			end
+		end
+		
+		if pressed(10) then autolog.writeLogs() end
 				
 		if pressed(11) then unitData.currUnit():toggleAfas() end
 		
-		if pressed(12) then -- save battle params & stats
+		if pressed(12) then
 			printStringArray(combat.combatObj:new():toStrings())
 			
 			printStringArray(unitData.currUnit():statData_strings())
@@ -231,7 +238,8 @@ while true do
 			unitData.printSupports()
 		end
 		
-		if held(13) then -- hold down, then press direction
+		if pressed(13) then print("moving rn position...") end
+		if held(13) then -- move rn position
 			if pressed("left", gameCtrl) then
 				currentRNG:moveRNpos(-rnStepSize)
 				rnEvent.update_rnEvents(1)
@@ -255,31 +263,47 @@ while true do
 	else
 		if pressed(1) then rnEvent.undoDelete() end
 		
-		if pressed(2) then
-			rnEvent.printDiagnostic()
-		end
+		if pressed(2) then rnEvent.printDiagnostic() end
 		
-		if pressed(3) then
-			c = combat.combatObj:new()
-			print()
-			print(c.attacker)
-			print()
-			print(c.defender)
-		end
-		
-		if pressed(4) then rnEvent.toggle("dig") end
-		
-		if pressed(5) then -- toggle fog
-			if savedFog > 0 then
-				memory.writebyte(addr.FOG, savedFog)
-				print("fog set to " .. savedFog)
-				savedFog = 0
-			else
-				savedFog = memory.readbyte(addr.FOG)
-				memory.writebyte(addr.FOG, 0)
-				print("fog set to 0")
+		if pressed(3) then print("changing fog...") end
+		if held(3) then
+			local fog = memory.readbyte(addr.FOG)
+			
+			if pressed("left", gameCtrl) then
+				fog = (fog - 1) % 256
+				memory.writebyte(addr.FOG, fog)
+				print("fog set to " .. fog)
+			end
+			
+			if pressed("right", gameCtrl) then
+				fog = (fog + 1) % 256
+				memory.writebyte(addr.FOG, fog)
+				print("fog set to " .. fog)
 			end
 		end
+		
+		if pressed(4) then print("changing money...") end -- todo money
+		if held(4) then -- move rn position
+			if pressed("left", gameCtrl) then
+				addr.setMoney(math.max(currMoney - moneyStepSize, 0))
+			end
+			if pressed("right", gameCtrl) then
+				addr.setMoney(math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
+			end
+			if pressed("up", gameCtrl) then
+				moneyStepSize = moneyStepSize * 10
+				print("moneyStepSize now " .. moneyStepSize)
+			end
+			if pressed("down", gameCtrl) then
+				moneyStepSize = moneyStepSize / 10
+				if moneyStepSize < 1 then
+					moneyStepSize = 1
+				end
+				print("moneyStepSize now " .. moneyStepSize)
+			end
+		end
+		
+		if pressed(5) then rnEvent.toggle("dig") end
 	
 		if pressed(6) then rnEvent.searchFutureOutcomes() end
 	

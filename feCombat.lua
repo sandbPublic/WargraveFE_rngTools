@@ -931,7 +931,6 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 		if (rHitSeq.defHP == 0 and not isEnemyPhase) or 
 		   (rHitSeq.atkHP == 0 and isEnemyPhase) then  -- enemy died, combat over
 			
-			print("enemy died")
 			rHitSeq.expGained = self:expFrom(true, hE.didAssassinate)
 			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
 			return rHitSeq
@@ -985,25 +984,25 @@ local function createCombatant(offset)
 	
 	local nameCode = memory.readword(offset + addr.UNIT_NAME_CODE)
 	c.name         = unitData.hexCodeToName(nameCode)
-	c.class        = classes.HEX_CODES[memory.readword(offset + addr.UNIT_CLASS_CODE)] or classes.OTHER
-	c.level        = memory.readbyte(offset + addr.UNIT_LEVEL)
+	c.class        = classes.HEX_CODES[memory.readword(addr.UNIT_CLASS_CODE + offset)] or classes.OTHER
+	c.level        = memory.readbyte(addr.UNIT_LEVEL + offset)
 	
-	c.exp          = memory.readbyte(offset + addr.UNIT_EXP)
-	c.x            = memory.readbyte(offset + addr.UNIT_X)
-	c.y            = memory.readbyte(offset + addr.UNIT_Y)
+	c.exp          = memory.readbyte(addr.UNIT_EXP + offset)
+	c.x            = memory.readbyte(addr.UNIT_X + offset)
+	c.y            = memory.readbyte(addr.UNIT_Y + offset)
 
-	c.maxHP        = memory.readbyte(offset + addr.UNIT_MAX_HP)
-	c.luck         = memory.readbyte(offset + addr.UNIT_MAX_HP + 7)
-	local wCode    = memory.readbyte(offset + addr.UNIT_ITEMS)
+	c.maxHP        = memory.readbyte(addr.UNIT_MAX_HP + offset)
+	c.luck         = memory.readbyte(addr.UNIT_MAX_HP + 7 + offset)
+	local wCode    = memory.readbyte(addr.UNIT_ITEMS + offset)
 	c.weapon       = ITEM_CODES[wCode]
 	c.weaponType   = weaponIdToType(wCode)
-	c.weaponUses   = memory.readbyte(offset + addr.UNIT_ITEMS + 1)
-	c.atk          = memory.readbyte(offset + addr.UNIT_ATK)
-	c.def          = memory.readbyte(offset + addr.UNIT_DEF)
-	c.AS           = memory.readbyte(offset + addr.UNIT_AS)
-	c.hit          = memory.readbyte(offset + addr.UNIT_HIT)
-	c.crit         = memory.readbyte(offset + addr.UNIT_CRIT)
-	c.currHP       = memory.readbyte(offset + addr.UNIT_CURR_HP)
+	c.weaponUses   = memory.readbyte(addr.UNIT_ITEMS + 1 + offset)
+	c.atk          = memory.readbyte(addr.UNIT_ATK + offset)
+	c.def          = memory.readbyte(addr.UNIT_DEF + offset)
+	c.AS           = memory.readbyte(addr.UNIT_AS + offset)
+	c.hit          = memory.readbyte(addr.UNIT_HIT + offset)
+	c.crit         = memory.readbyte(addr.UNIT_CRIT + offset)
+	c.currHP       = memory.readbyte(addr.UNIT_CURR_HP + offset)
 	
 	return c
 end

@@ -13,12 +13,7 @@
 
 require("feAutolog")
 
-local function printStringArray(array)
-	print("")
-	for _, string_ in ipairs(array) do
-		print(string_)
-	end
-end
+
 
 local usingPrimaryFunctions = true
 
@@ -112,14 +107,18 @@ local savedFog = 0
 local currTurn = 0
 local currPhase = "player"
 
+
+
+
 while true do
 	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
 		currTurn = memory.readbyte(addr.TURN)
 		currPhase = getPhase()
 		print()
 		print("Turn " .. currTurn .. " " .. currPhase .. " phase")
-		print()
 	end
+	
+	autolog.updateLastEvent()
 	
 	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)
@@ -199,13 +198,7 @@ while true do
 
 		if pressed(6) then rnEvent.suggestedPermutation() end
 		
-		if pressed(8) then
-			
-		end
-		
-		if held(8) then -- hold down, press left/right
-			
-		end
+		if pressed(8) then autolog.writeLogs() end
 		
 		if pressed(9) then -- quick toggle visibility
 			if selected(feGUI.rects).opacity == 0 then
@@ -226,9 +219,7 @@ while true do
 			end
 		end
 				
-		if pressed(11) then 
-			unitData.currUnit():toggleAfas()
-		end
+		if pressed(11) then unitData.currUnit():toggleAfas() end
 		
 		if pressed(12) then -- save battle params & stats
 			printStringArray(combat.combatObj:new():toStrings())
@@ -341,7 +332,9 @@ while true do
 			print(string.format("Switching to %s rng", currentRNG:name()))
 		end
 		
-		if pressed(12) then autolog.writeLogs() end
+		if pressed(12) then 
+			-- todo
+		end
 		
 		if pressed(13) then
 			print()

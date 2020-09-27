@@ -20,7 +20,7 @@ H
 switch to 2ndary functions
 switch to primary functions
 J
-hold, <> change selected unit -- todo remove
+generate log file
 hold, <^v> change hp weight
 K
 toggle window visibility
@@ -33,7 +33,7 @@ change afa/metis
 switch RNG to 2ndary
 N
 save,print combat,stats,ranks&supports
-generate log file
+--
 M
 hold, <> move rn, ^v change step
 print class&unit code info

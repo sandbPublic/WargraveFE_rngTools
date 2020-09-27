@@ -34,23 +34,23 @@ function P.getByID(vID)
 	return nil
 end
 
-local rnEventObj = {}
+P.rnEventObj = {}
 
 -- auto-detected via experience gain, but can be set to true manually
-function rnEventObj:levelDetected()
+function P.rnEventObj:levelDetected()
 	return self.lvlUp or (self.mHitSeq.lvlUp and self.hasCombat)
 end
 
-function rnEventObj:levelScore()
+function P.rnEventObj:levelScore()
 	return self.unit:levelScoreInExp(self.postCombatRN_i)
 end
 
-function rnEventObj:digSucceed()
+function P.rnEventObj:digSucceed()
 	return rns.rng1:getRN(self.nextRN_i - 1) <= self.unit.stats[7]
 	-- luck+1% chance, therefore even 0 luck has 1% chance, confirmed luck 8 succeeds with rn = 8
 end
 
-function rnEventObj:resultString()
+function P.rnEventObj:resultString()
 	local rString = ""
 	if self.hasCombat then
 		rString = rString .. " " .. self.combatants.attacker.weapon .. " " .. combat.hitSeq_string(self.mHitSeq) 
@@ -71,7 +71,7 @@ function rnEventObj:resultString()
 	return rString
 end
 
-function rnEventObj:headerString(rnEvent_i)
+function P.rnEventObj:headerString(rnEvent_i)
 	local hString = "  "
 	if rnEvent_i == P.events.sel_i then
 		hString = "->" 
@@ -114,10 +114,13 @@ function rnEventObj:headerString(rnEvent_i)
 	end
 	
 	return hString .. string.format("%2d %s%s%s",
-		self.ID, self.unit.name, self:resultString(), detailString)
+		self.ID, 
+		self.unit.name, 
+		self:resultString(), 
+		detailString)
 end
 
-function rnEventObj:healable()
+function P.rnEventObj:healable()
 	if self.hasCombat and self.mHitSeq.atkHP < self.maxHP then
 		return true
 	end
@@ -145,7 +148,7 @@ end
 -- can adjust combat weight
 -- dig = 25
 -- if healing exp is relevant, +5 if player hp is less than max
-function rnEventObj:evaluation_fn(printV)
+function P.rnEventObj:evaluation_fn(printV)
 	local score = 0
 	local printStr = string.format(" %2d:", self.ID)
 	
@@ -249,7 +252,7 @@ function P.searchFutureOutcomes(event_i)
 	P.update_rnEvents(1)
 end
 
-function rnEventObj:printCache()
+function P.rnEventObj:printCache()
 	print()
 	if not self.cache then 
 		print("no cache")
@@ -285,7 +288,7 @@ function rnEventObj:printCache()
 	end
 end
 
-function rnEventObj:printDiagnostic()
+function P.rnEventObj:printDiagnostic()
 	print()
 	print(string.format("Diagnosis of rnEvent %d", self.ID))
 	
@@ -366,7 +369,7 @@ end
 
 -- functions that may require updating the list of valid permutations
 function P.addEvent(event)
-	event = event or rnEventObj:new()
+	event = event or P.rnEventObj:new()
 	
 	table.insert(P.events, event)
 	P.events.sel_i = #P.events
@@ -439,18 +442,13 @@ function P.swap()
 	end
 end
 
-function rnEventObj:setStats()
+function P.rnEventObj:setStats()
 	self.unit:setStats()
 	self.maxHP = self.unit.stats[1]
 	self.mExpValueFactor = self.unit:expValueFactor()
 end
 
-function rnEventObj:setEnemyHPstart(rnEvent_i)
-	if not self.hasCombat then 
-		self.enemyHPstart = 0
-		return
-	end
-
+function P.rnEventObj:setEnemyHPstart(rnEvent_i)
 	self.enemyHPstart = self.combatants.enemy.currHP
 	
 	if self.enemyID == 0 then return end
@@ -468,7 +466,7 @@ end
 
 -- assumes previous rnEvents have updates for optimization
 -- does not do anything with cached values
-function rnEventObj:updateFull()
+function P.rnEventObj:updateFull()
 	if self.hasCombat then
 		self.mHitSeq = self.combatants:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
 		
@@ -481,7 +479,7 @@ function rnEventObj:updateFull()
 	self.length = self.postCombatRN_i - self.startRN_i
 	
 	if self:levelDetected() then
-		self.length = self.length + 7 -- IF EMPTY LEVEL REROLLS, MORE THAN 7!!
+		self.length = self.length + 7 -- todo if empty level, rerolls, more than 7
 	end
 	
 	if self.dig then
@@ -501,14 +499,14 @@ end
 -- also saves number of entries and earliest/latest entry position.
 -- used to speed up evaluation when shuffling permutations to skip reconstructing combat and score
 
-function rnEventObj:clearCache()
+function P.rnEventObj:clearCache()
 	self.cache = {}
 	self.cache.count = 0
 	self.cache.min_i = 999999
 	self.cache.max_i = 0
 end
 
-function rnEventObj:writeToCache()
+function P.rnEventObj:writeToCache()
 	self.cache.count = self.cache.count + 1
 	if self.cache.min_i > self.postBurnsRN_i then
 		self.cache.min_i = self.postBurnsRN_i
@@ -523,7 +521,7 @@ function rnEventObj:writeToCache()
 	self.cache[self.postBurnsRN_i][self.enemyHPstart].enemyHPend = self.enemyHPend
 end
 
-function rnEventObj:readFromCache()
+function P.rnEventObj:readFromCache()
 	self.length = self.burns + self.cache[self.postBurnsRN_i][self.enemyHPstart].postBurnLength
 	self.nextRN_i = self.startRN_i + self.length
 	self.eval = self.cache[self.postBurnsRN_i][self.enemyHPstart].eval
@@ -531,7 +529,7 @@ function rnEventObj:readFromCache()
 end
 
 -- uses cache if valid, when called from setToPerm()
-function rnEventObj:update(rnEvent_i, cacheUpdateOnly)
+function P.rnEventObj:update(rnEvent_i, cacheUpdateOnly)
 	if rnEvent_i then -- if no ordering given, do not update startRN_i, used for searchFutureOutcomes
 		if rnEvent_i == 1 then 
 			self.startRN_i = rns.rng1.pos
@@ -611,7 +609,7 @@ end
 
 
 
-function rnEventObj:new()
+function P.rnEventObj:new()
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
@@ -639,7 +637,7 @@ function rnEventObj:new()
 	o.eHPweight = DEFAULT_EHP_WEIGHT
 	
 	o.enemyID = 0 -- for units attacking the same enemyID
-	o.enemyHPstart = 0 -- if a previous unit has damaged this enemy. HP at start of this rnEvent
+	o.enemyHPstart = o.combatants.enemy.currHP -- if a previous unit has damaged this enemy. HP at start of this rnEvent
 	o.enemyHPend = 0 -- HP at end of this rnEvent
 	-- TODO player HP (from multi combat due to dance, or EP)
 	

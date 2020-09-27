@@ -8,15 +8,28 @@ local logLineObj = {}
 local logs = {}
 local logCount = 0
 local logsWritten = 0
+local lastEvent = rnEvent.rnEventObj:new()
+
+-- combat RAM may not all be updated within one frame
+-- slots and most fields seem to be updated first
+-- enemy rn burns happen after slots etc are updated
+-- wait a frame to do first update
+-- hit and crit afterward, and exp and event rn consumed at same frame during enemy phase
+-- do partial update of just hit and crit
+local lastAttackerID = 0
+local lastDefenderID = 0
+local lastEventUpdateFrame = 0
+
 
 
 
 -- non modifying functions
 
 function P.writeLogs()
-	local fileName = string.format("autolog%dch%d-%d.txt",
-		os.time(),
+	local fileName = string.format("fe%dch%d-%d-%d.autolog.txt",
+		GAME_VERSION,
 		memory.readbyte(addr.CHAPTER),
+		os.time(),
 		logsWritten)
 	local f = io.open(fileName, "w")
 	
@@ -51,6 +64,22 @@ end
 
 -- modifying functions
 
+function P.updateLastEvent()
+	if (lastAttackerID ~= memory.readbyte(addr.UNIT_SLOT_ID)) or 
+       (lastDefenderID ~= memory.readbyte(addr.UNIT_SLOT_ID + addr.DEFENDER_OFFSET)) then
+	   
+		lastAttackerID = memory.readbyte(addr.UNIT_SLOT_ID)
+		lastDefenderID = memory.readbyte(addr.UNIT_SLOT_ID + addr.DEFENDER_OFFSET)
+		lastEventUpdateFrame = vba.framecount() + 1
+	end
+	
+	if lastEventUpdateFrame == vba.framecount() then
+		lastEvent = rnEvent.rnEventObj:new()
+		lastEvent.startRN_i = rns.rng1.pos
+		lastEvent.postBurnsRN_i  = rns.rng1.pos
+	end
+end
+
 function logLineObj:new()
 	local o = {}
 	setmetatable(o, self)
@@ -58,31 +87,41 @@ function logLineObj:new()
 	
 	o.turn = memory.readbyte(addr.TURN)
 	o.phase = getPhase()
+	
 	o.rnStart = rns.rng1.prevPos
 	o.rnEnd = rns.rng1.pos
 	o.rnsUsed = o.rnEnd - o.rnStart
 	
 	local function line(combatant)
-		return string.format("%-9s with %2d use %-12s  at %2d,%2d",
+		return string.format("%-9s at %2d,%2d with %2d use %-12s ",
 			combatant.name,
-			combatant.weaponUses,
-			combatant.weapon,
 			combatant.x,
-			combatant.y)
+			combatant.y,
+			combatant.weaponUses,
+			combatant.weapon)
 	end
 	
-	local c = combat.combatObj:new()  -- todo if loaded after rn burns, exp/lvl may be inaccurate?
-	local hitSeq = c:hitSeq(o.rnStart)
-	if hitSeq.totalRNsConsumed == o.rnsUsed then
-		o.outcome = combat.hitSeq_string(hitSeq)
-		o.attacker = line(c.attacker)
-		o.defender = line(c.defender)
+	if lastEvent.length == o.rnsUsed then
+		o.outcome = ""
+		if lastEvent.hasCombat then
+			o.outcome = " " .. combat.hitSeq_string(lastEvent.mHitSeq)
+		end
+		if lastEvent:levelDetected() then
+			o.outcome = o.outcome .. " " .. lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i)
+		end
+		o.attacker = line(lastEvent.combatants.attacker)
+		o.defender = line(lastEvent.combatants.defender)
 	end
 	
 	return o
 end
 
 function P.addLog()
+	-- do just in time update of fields that only update with rns on enemy phase
+	lastEvent.combatants.defender.hit = memory.readbyte(addr.UNIT_HIT + addr.DEFENDER_OFFSET)
+	lastEvent.combatants.defender.crit = memory.readbyte(addr.UNIT_CRIT + addr.DEFENDER_OFFSET)
+	lastEvent:updateFull()
+	
 	local newLog = logLineObj:new()
 	
 	while logs[logCount] and math.max(logs[logCount].rnStart, logs[logCount].rnEnd) 

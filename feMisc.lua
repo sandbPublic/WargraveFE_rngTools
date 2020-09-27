@@ -16,6 +16,13 @@ function getPhase()
 	return PHASE_NAMES[1 + memory.readbyte(addr.PHASE)/0x40]
 end
 
+function printStringArray(array)
+	print()
+	for _, string_ in ipairs(array) do
+		print(string_)
+	end
+end
+
 function selected(tbl_)
 	return tbl_[tbl_.sel_i]
 end

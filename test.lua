@@ -167,8 +167,8 @@ end
 if true then
 	print("---Autolog...---")
 	
-	autolog.addLog()
-	autolog.addLog()
+	autolog.addLog_RNconsumed()
+	autolog.addLog_RNconsumed()
 	autolog.writeLogs()
 	
 	print("---Autolog passed---")

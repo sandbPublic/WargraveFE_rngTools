@@ -103,7 +103,6 @@ end
 local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
 
-local currMoney = 0
 local moneyStepSize = 10000
 
 local currTurn = 0
@@ -113,23 +112,17 @@ while true do
 	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
 		currTurn = memory.readbyte(addr.TURN)
 		currPhase = getPhase()
+
 		print()
 		print("Turn " .. currTurn .. " " .. currPhase .. " phase")
 	end
 	
-	if currMoney ~= addr.getMoney() then
-		local moneyChange = addr.getMoney() - currMoney
-		print()
-		print(string.format("Money %d %+d -> %d", currMoney, moneyChange, addr.getMoney()))
-		currMoney = addr.getMoney()
-	end
-	
-	autolog.updateLastEvent()
+	autolog.passiveUpdate()
 	
 	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)
 		
-		autolog.addLog()
+		autolog.addLog_RNconsumed()
 	end
 
 	updateCtrl(keybCtrl, input.get())
@@ -282,13 +275,17 @@ while true do
 			end
 		end
 		
-		if pressed(4) then print("changing money...") end -- todo money
+		if pressed(4) then print("changing money by " .. moneyStepSize .. "...") end -- todo money
 		if held(4) then -- move rn position
+			local currMoney = addr.getMoney()
+		
 			if pressed("left", gameCtrl) then
 				addr.setMoney(math.max(currMoney - moneyStepSize, 0))
+				print("money now " .. math.max(currMoney - moneyStepSize, 0))
 			end
 			if pressed("right", gameCtrl) then
 				addr.setMoney(math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
+				print("money now " .. math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
 			end
 			if pressed("up", gameCtrl) then
 				moneyStepSize = moneyStepSize * 10

@@ -26,7 +26,6 @@ function P.setMoney(money)
 	memory.writeword(P.MONEY+2, upperWord)
 end
 
-
 P.FOG      = P.MONEY + 5 -- {0x2AA55, 0x2BC05, 0x2BCFD}
 P.CHAPTER  = P.MONEY + 6 -- FE6x chapters count from 32
 P.PHASE    = P.MONEY + 7
@@ -40,6 +39,20 @@ P.UNIT_CLASS_CODE = P.UNIT_NAME_CODE +  4 -- 2 bytes
 P.UNIT_LEVEL      = P.UNIT_NAME_CODE +  8 -- {0x3921C, 0x3A3F8, 0x3A4F4}
 P.UNIT_EXP        = P.UNIT_NAME_CODE +  9 -- {0x3921D, 0x3A3F9, 0x3A4F5}
 P.UNIT_SLOT_ID    = P.UNIT_NAME_CODE + 11 -- index of data source
+
+-- bitmap: 
+-- 00000001 0x01 pending stop
+-- 00000010 0x02 stopped via combat
+-- 01000010 0x42 stopped via wait
+-- 00010000 0x10 rescuing
+-- 00100001 0x21 is rescued before moving
+-- 00100011 0x23 is rescued after being taken or moving
+P.UNIT_MOVED      = P.UNIT_NAME_CODE + 12 -- {,0x3A3FC,} 
+function P.unitIsStopped()
+	return AND(memory.readbyte(P.UNIT_MOVED), 2) > 0
+end
+
+
 P.UNIT_X = {0x39222, 0x3A400, 0x3A4FC} -- + 14,16,16
 P.UNIT_X = RAM_BASE + P.UNIT_X[GAME_VERSION - 5]
 P.UNIT_Y = P.UNIT_X + 1

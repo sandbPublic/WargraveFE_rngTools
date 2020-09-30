@@ -93,7 +93,6 @@ function P.addLog_string(str)
 	
 	newLog.rnStart = rns.rng1.pos
 	newLog.rnEnd = rns.rng1.pos
-	newLog.rnsUsed = 0
 	newLog.str = str
 	
 	P.addLog(newLog)
@@ -109,11 +108,11 @@ function P.addLog_RNconsumed()
 	
 	newLog.rnStart = rns.rng1.prevPos
 	newLog.rnEnd = rns.rng1.pos
-	newLog.rnsUsed = newLog.rnEnd - newLog.rnStart
+	local rnsUsed = newLog.rnEnd - newLog.rnStart
 	
-	newLog.str = string.format("RN %5d->%5d (%d)", newLog.rnStart, newLog.rnEnd, newLog.rnsUsed)
+	newLog.str = string.format("RN %5d->%5d (%d)", newLog.rnStart, newLog.rnEnd, rnsUsed)
 	
-	if lastEvent.length == newLog.rnsUsed then
+	if lastEvent.length == rnsUsed then
 		newLog.str = newLog.str .. "\n"
 		if lastEvent.hasCombat then
 			newLog.str = newLog.str .. combat.hitSeq_string(lastEvent.mHitSeq) .. " "

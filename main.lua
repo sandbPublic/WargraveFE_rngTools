@@ -275,7 +275,7 @@ while true do
 			end
 		end
 		
-		if pressed(4) then print("changing money by " .. moneyStepSize .. "...") end -- todo money
+		if pressed(4) then print("changing money by " .. moneyStepSize .. "...") end
 		if held(4) then -- move rn position
 			local currMoney = addr.getMoney()
 		
@@ -335,13 +335,10 @@ while true do
 			end
 		end	
 		
-		-- todo reimplement
 		if pressed(10) then 
+			-- todo reimplement
 			-- print(combat.paramInRAM(true)) 
-		end
-		
-		if held(10) then
-			-- change combatant stat to print
+			-- print all stats rather than selecting?
 		end
 			
 		if pressed(11) then

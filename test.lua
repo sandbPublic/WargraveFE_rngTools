@@ -2,8 +2,8 @@ require("feAutolog")
 -- emu.frameadvance() does not work from within requires
 -- "attempt to yield across metamethod/C-call boundary"
 
--- Misc
-if true then
+
+if true then -- Misc
 	print("---Misc...---")
 	
 	local miscTest = {}
@@ -25,16 +25,22 @@ if true then
 	print("---Misc passed---")
 end
 
--- Class
-if true then
+if true then -- Class
 	print("---Class...---")
-	
-	
+	assert(classes.isNoncombat(classes.DANCER))
+	assert(classes.isNoncombat(classes.OTHER) == false)
+	assert(classes.hasSilencer(classes.ASSASSIN_F))
+	assert(classes.hasSilencer(classes.OTHER) == false)
+	assert(classes.hasPierce(classes.WYVERN_KNIGHT_F))
+	assert(classes.hasPierce(classes.OTHER) == false)
+	assert(classes.hasSureStrike(classes.SNIPER_F) == (GAME_VERSION == 8))
+	assert(classes.hasSureStrike(classes.OTHER) == false)
+	assert(classes.hasGreatShield(classes.GENERAL_F) == (GAME_VERSION == 8))
+	assert(classes.hasGreatShield(classes.OTHER) == false)
 	print("---Class passed---")
 end
 
--- Random Numbers
-if true then
+if true then -- Random Numbers
 	print("---Random numbers...---")
 	
 	assert(rns.rng1:name() == "primary")
@@ -52,30 +58,58 @@ if true then
 	print("---Random numbers passed---")
 end
 
--- Unit Data
-if true then
+if true then -- Unit Data
 	print("---Unit data...---")
+	
+	local u = unitData.currUnit()
+	
+	u:willLevelStats(0)
+	print(u:levelUpProcs_string(0))
+	u:levelScoreInExp(0)
+	u:expValueFactor()
+	
+	for stat_i = 1, 7 do
+		u:statsGained(stat_i)
+		u:statAverage(stat_i)
+		u:statDeviation(stat_i)
+		u:statStdDev(stat_i)
+		u:effectiveGrowthRate(stat_i)
+	end
+	
+	print(u:statData_strings())
+	u:toggleAfas()
+	u:setDynamicWeights()
+	u:setStats()
+	
 	unitData.printRanks()
 	unitData.printSupports()
-	-- todo unitObj tests
 	
 	print("---Unit data passed...---")
 end
 
--- Combat
-if true then
+if true then -- Combat
 	print("---Combat...---")
 	
 	--combat.paramInRAM()
-	c = combat.combatObj:new()
 	assert(combat.hitSeq_string({}) == "")
-	-- todo combatObj tests
+	
+	local c = combat.combatObj:new()
+	
+	c:combatant()
+	c:isUsingStaff()
+	assert(c:willLevel(0) == false)
+	assert(c:willLevel(100))
+	c:expFrom()
+	c:hitEvent(0)
+	c:staffHitEvent(0)
+	c:hitSeq(0)
+	c:toggleBonusExp()
+	c:setExpGain()
 	
 	print("---Combat passed---")
 end
 
--- Event
-if true then
+if true then -- Event
 	function eventTest()
 		changeSelection(rnEvent.events, 1)
 		changeSelection(rnEvent.events, -1)
@@ -143,8 +177,7 @@ if true then
 	print("---Event passed---")
 end
 
--- GUI
-if true then
+if true then -- GUI
 	print("---GUI...---")
 	feGUI.lookingAt(0)
 	feGUI.canAlter_rnEvent()
@@ -163,10 +196,11 @@ if true then
 	print("---GUI passed---")
 end
 
--- Autolog
-if true then
+if true then -- Autolog
 	print("---Autolog...---")
 	
+	autolog.passiveUpdate()
+	autolog.addLog_string("test")
 	autolog.addLog_RNconsumed()
 	autolog.addLog_RNconsumed()
 	autolog.writeLogs()

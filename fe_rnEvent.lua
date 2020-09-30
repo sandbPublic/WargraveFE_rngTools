@@ -639,7 +639,7 @@ function P.rnEventObj:new()
 	o.enemyID = 0 -- for units attacking the same enemyID
 	o.enemyHPstart = o.combatants.enemy.currHP -- if a previous unit has damaged this enemy. HP at start of this rnEvent
 	o.enemyHPend = 0 -- HP at end of this rnEvent
-	-- TODO player HP (from multi combat due to dance, or EP)
+	-- todo player HP (from multi combat due to dance, or EP)
 	
 	o.burns = 0
 	o.startRN_i = 0

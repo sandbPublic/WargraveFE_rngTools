@@ -108,6 +108,8 @@ local moneyStepSize = 10000
 local currTurn = 0
 local currPhase = "player"
 
+local RAMoffset = 0
+
 while true do
 	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
 		currTurn = memory.readbyte(addr.TURN)
@@ -352,27 +354,75 @@ while true do
 		end
 		
 		-- todo modify RAM values for slots
-		if pressed(12) then 
-			
+		
+		local function printRAMhelp()
+			print()
+			local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
+			local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
+			local address = addr.SLOT_1_START + (slotID-1)*72 + RAMoffset
+			print(string.format("modifying for %s slot %2d, offset %2d (%5X) = %3d", 
+				unitData.hexCodeToName(nameCode),
+				slotID,
+				RAMoffset,
+				AND(address, 0xFFFFF),
+				memory.readbyte(address)))
+			for k, v in pairs(addr) do
+				if v == RAMoffset then
+					print(k)
+				end
+			end
+		end
+		
+		if pressed(12) then
+			printRAMhelp()
+			print("<> to change value, ^v change offset")
 		end
 		if held(12) then 
 			if pressed("up", gameCtrl) then
-
+				RAMoffset = RAMoffset - 1
+				if RAMoffset < 0 then
+					RAMoffset = 0
+					print()
+					print("can't move offset outside slot")
+				else
+					printRAMhelp()
+				end
 			end
 			if pressed("down", gameCtrl) then
-
+				RAMoffset = RAMoffset + 1
+				if RAMoffset > 71 then
+					RAMoffset = 71
+					print()
+					print("can't move offset outside slot")
+				else
+					printRAMhelp()
+				end
 			end
 			if pressed("left", gameCtrl) then
-				
+				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
+				local address = addr.SLOT_1_START + (slotID-1)*72 + RAMoffset
+				local data = memory.readbyte(address)
+				data = data - 1
+				if data < 0 then
+					print()
+					print("Can't shift data below 0")
+				else
+					memory.writebyte(addr.SLOT_1_START + RAMoffset, data)
+					printRAMhelp()
+				end
 			end
 			if pressed("right", gameCtrl) then
-				
-			end
-			if pressed("L", gameCtrl) then
-			
-			end
-			if pressed("R", gameCtrl) then
-			
+				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
+				local address = addr.SLOT_1_START + (slotID-1)*72 + RAMoffset
+				local data = memory.readbyte(address)
+				data = data + 1
+				if data > 255 then
+					print()
+					print("Can't shift data above 255")
+				else
+					memory.writebyte(addr.SLOT_1_START + RAMoffset, data)
+					printRAMhelp()
+				end
 			end
 		end
 		

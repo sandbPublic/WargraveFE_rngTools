@@ -981,8 +981,8 @@ local function createCombatant(startAddr)
 	c.x            = memory.readbyte(startAddr + addr.X_OFFSET)
 	c.y            = memory.readbyte(startAddr + addr.Y_OFFSET)
 
-	c.maxHP        = memory.readbyte(startAddr + addr.MAX_OFFSET_HP)
-	c.luck         = memory.readbyte(startAddr + addr.MAX_OFFSET_HP + 7)
+	c.maxHP        = memory.readbyte(startAddr + addr.MAX_HP_OFFSET)
+	c.luck         = memory.readbyte(startAddr + addr.MAX_HP_OFFSET + 7)
 	local wCode    = memory.readbyte(startAddr + addr.ITEMS_OFFSET)
 	c.weapon       = ITEM_CODES[wCode]
 	c.weaponType   = weaponIdToType(wCode)
@@ -992,7 +992,7 @@ local function createCombatant(startAddr)
 	c.AS           = memory.readbyte(startAddr + addr.AS_OFFSET)
 	c.hit          = memory.readbyte(startAddr + addr.HIT_OFFSET)
 	c.crit         = memory.readbyte(startAddr + addr.CRIT_OFFSET)
-	c.currHP       = memory.readbyte(startAddr + addr.CURR_OFFSET_HP)
+	c.currHP       = memory.readbyte(startAddr + addr.CURR_HP_OFFSET)
 	
 	return c
 end

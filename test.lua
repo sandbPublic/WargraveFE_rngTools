@@ -54,9 +54,6 @@ if testAll then -- Random Numbers
 	assert(rns.rng2:generator(1) ~= nil)
 	assert(rns.rng2:generator(2) ~= nil)
 	
-	rns.rng1:printRawBytes(0, 10)
-	rns.rng2:printRawBytes(0, 10)
-	
 	print("---Random numbers passed---")
 end
 

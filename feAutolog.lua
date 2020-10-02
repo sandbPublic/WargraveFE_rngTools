@@ -51,11 +51,11 @@ end
 -- modifying functions
 
 function P.passiveUpdate()
-	if (lastAttackerID ~= memory.readbyte(addr.ATTACKER_START + addr.SLOT_OFFSET_ID)) or 
-       (lastDefenderID ~= memory.readbyte(addr.DEFENDER_START + addr.SLOT_OFFSET_ID)) then
+	if (lastAttackerID ~= memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)) or 
+       (lastDefenderID ~= memory.readbyte(addr.DEFENDER_START + addr.SLOT_ID_OFFSET)) then
 	   
-		lastAttackerID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_OFFSET_ID)
-		lastDefenderID = memory.readbyte(addr.DEFENDER_START + addr.SLOT_OFFSET_ID)
+		lastAttackerID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
+		lastDefenderID = memory.readbyte(addr.DEFENDER_START + addr.SLOT_ID_OFFSET)
 		lastEventUpdateFrame = vba.framecount() + 1
 	end
 	

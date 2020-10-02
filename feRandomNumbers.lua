@@ -104,13 +104,6 @@ function rnStreamObj:isAtCurrentPosition()
 			 gen == self:generator(1)+self:generator(2)*0x10000)
 end
 
-function rnStreamObj:printRawBytes(relativeStart, relativeEnd)
-	self:getRN(relativeEnd + self.pos)
-	for pos = relativeStart + self.pos, relativeEnd + self.pos do	
-		print(string.format("%0d: %04X", pos, self.rawBytes[pos]))
-	end
-end
-
  -- string, append space after each rn
 function rnStreamObj:rnSeqString(index, length)
 	self:getRN(index + length - 1)

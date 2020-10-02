@@ -1117,9 +1117,9 @@ local AFAS_I = INDEX_OF_NAME["Cormag"]
 local function statsInRAM()
 	local stats = {}
 	
-	stats[1] = memory.readbyte(addr.ATTACKER_START + addr.MAX_OFFSET_HP)
+	stats[1] = memory.readbyte(addr.ATTACKER_START + addr.MAX_HP_OFFSET)
 	for stat_i = 2, 7 do
-		stats[stat_i] = memory.readbyte(addr.ATTACKER_START + addr.MAX_OFFSET_HP + stat_i)  -- at +1 is current hp
+		stats[stat_i] = memory.readbyte(addr.ATTACKER_START + addr.MAX_HP_OFFSET + stat_i)  -- at +1 is current hp
 	end
 	stats[LEVEL_I] = memory.readbyte(addr.ATTACKER_START + addr.LEVEL_OFFSET)
 	stats[EXP_I] = memory.readbyte(addr.ATTACKER_START + addr.EXP_OFFSET)

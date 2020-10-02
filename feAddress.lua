@@ -46,7 +46,7 @@ P.NAME_CODE_OFFSET  =  0 -- {0x39214, 0x3A3F0, 0x3A4EC} 2 bytes
 P.CLASS_CODE_OFFSET =  4 -- {0x39216, 0x3A3F2, 0x3A4EE} 2 bytes
 P.LEVEL_OFFSET      =  8 -- {0x3921C, 0x3A3F8, 0x3A4F4}
 P.EXP_OFFSET        =  9 -- {0x3921D, 0x3A3F9, 0x3A4F5}
-P.SLOT_OFFSET_ID    = 11 -- index of data source
+P.SLOT_ID_OFFSET    = 11 -- index of data source
 
 -- bitmap: 
 -- 00000001 0x01 pending stop
@@ -65,11 +65,11 @@ P.X_OFFSET = P.X_OFFSET[GAME_VERSION - 5]
 P.Y_OFFSET = P.X_OFFSET + 1 -- {0x39223, 0x3A401, 0x3A4FD}
 
 
-P.MAX_OFFSET_HP     = P.X_OFFSET + 2           -- {0x39224, 0x3A402, 0x3A4FE}
+P.MAX_HP_OFFSET     = P.X_OFFSET + 2           -- {0x39224, 0x3A402, 0x3A4FE}
 -- next is current hp, then 6 other stats on stat screen
 -- note "current" hp may be POST COMBAT hp on combat preview....
 -- inventory list in 10 bytes, (item,uses) x5
-P.ITEMS_OFFSET      = P.MAX_OFFSET_HP + 12     -- {0x39230, 0x3A40E, 0x3A50A} 
+P.ITEMS_OFFSET      = P.MAX_HP_OFFSET + 12     -- {0x39230, 0x3A40E, 0x3A50A} 
 -- 8 consecutive bytes 26, 28, 28
 P.RANKS_OFFSET      = P.ITEMS_OFFSET + 10      -- {0x3923A, 0x3A418, 0x3A514}
 -- status eg poison at + 8?
@@ -89,7 +89,7 @@ P.CRIT_OFFSET       = P.ATK_OFFSET + 16        -- {0x3927C, 0x3A45A, 0x3A556}
 -- P.LEVEL_OFFSET2  = {0x39280, 0x3A460, 0x3A55C} FE6
 -- P.EXP_OFFSET2    = P.LEVEL_OFFSET2 + 1
 -- NOT redundant with stat screen, that address may show post combat hp
-P.CURR_OFFSET_HP    = {0x39282, 0x3A462, 0x3A55E}
-P.CURR_OFFSET_HP = RAM_BASE + P.CURR_OFFSET_HP[GAME_VERSION - 5]
+P.CURR_HP_OFFSET    = {0x39282, 0x3A462, 0x3A55E}
+P.CURR_HP_OFFSET = RAM_BASE + P.CURR_HP_OFFSET[GAME_VERSION - 5]
 
 return P

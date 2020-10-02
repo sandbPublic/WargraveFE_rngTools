@@ -31,14 +31,22 @@ P.CHAPTER  = P.MONEY + 6 -- FE6x chapters count from 32
 P.PHASE    = P.MONEY + 7
 P.TURN     = P.MONEY + 8
 
-
 -- FE6 + 0x11DC = FE7, FE7 + 0xFC = FE8
-P.UNIT_NAME_CODE  = {0x39214, 0x3A3F0, 0x3A4EC} -- 2 bytes
-P.UNIT_NAME_CODE  = RAM_BASE + P.UNIT_NAME_CODE[GAME_VERSION - 5]
-P.UNIT_CLASS_CODE = P.UNIT_NAME_CODE +  4 -- 2 bytes
-P.UNIT_LEVEL      = P.UNIT_NAME_CODE +  8 -- {0x3921C, 0x3A3F8, 0x3A4F4}
-P.UNIT_EXP        = P.UNIT_NAME_CODE +  9 -- {0x3921D, 0x3A3F9, 0x3A4F5}
-P.UNIT_SLOT_ID    = P.UNIT_NAME_CODE + 11 -- index of data source
+
+-- offsets are the same for slots, attacker, and defender
+-- unit data occupies 0x48 (72) bytes per slot, followed by additional combat data for attacker/defender
+P.SLOT_1_START   = {0x2AB78, 0x2BD50, 0x2BE4C}
+P.SLOT_1_START   = RAM_BASE + P.SLOT_1_START[GAME_VERSION - 5]
+P.ATTACKER_START = {0x39214, 0x3A3F0, 0x3A4EC}
+P.ATTACKER_START = RAM_BASE + P.ATTACKER_START[GAME_VERSION - 5]
+P.DEFENDER_START = {0x39290, 0x3A470, 0x3A56C}
+P.DEFENDER_START = RAM_BASE + P.DEFENDER_START[GAME_VERSION - 5]
+
+P.NAME_CODE_OFFSET  =  0 -- {0x39214, 0x3A3F0, 0x3A4EC} 2 bytes
+P.CLASS_CODE_OFFSET =  4 -- {0x39216, 0x3A3F2, 0x3A4EE} 2 bytes
+P.LEVEL_OFFSET      =  8 -- {0x3921C, 0x3A3F8, 0x3A4F4}
+P.EXP_OFFSET        =  9 -- {0x3921D, 0x3A3F9, 0x3A4F5}
+P.SLOT_OFFSET_ID    = 11 -- index of data source
 
 -- bitmap: 
 -- 00000001 0x01 pending stop
@@ -47,45 +55,41 @@ P.UNIT_SLOT_ID    = P.UNIT_NAME_CODE + 11 -- index of data source
 -- 00010000 0x10 rescuing
 -- 00100001 0x21 is rescued before moving
 -- 00100011 0x23 is rescued after being taken or moving
-P.UNIT_MOVED      = P.UNIT_NAME_CODE + 12 -- {,0x3A3FC,} 
+P.MOVED_OFFSET      = 12 -- {,0x3A3FC,} 
 function P.unitIsStopped()
-	return AND(memory.readbyte(P.UNIT_MOVED), 2) > 0
+	return AND(memory.readbyte(P.MOVED_OFFSET), 2) > 0
 end
 
+P.X_OFFSET = {14, 16, 16}   -- {0x39222, 0x3A400, 0x3A4FC}
+P.X_OFFSET = P.X_OFFSET[GAME_VERSION - 5]
+P.Y_OFFSET = P.X_OFFSET + 1 -- {0x39223, 0x3A401, 0x3A4FD}
 
-P.UNIT_X = {0x39222, 0x3A400, 0x3A4FC} -- + 14,16,16
-P.UNIT_X = RAM_BASE + P.UNIT_X[GAME_VERSION - 5]
-P.UNIT_Y = P.UNIT_X + 1
 
-
-P.UNIT_MAX_HP     = P.UNIT_NAME_CODE + 18 -- {0x39224, 0x3A402, 0x3A4FE}
+P.MAX_OFFSET_HP     = P.X_OFFSET + 2           -- {0x39224, 0x3A402, 0x3A4FE}
 -- next is current hp, then 6 other stats on stat screen
 -- note "current" hp may be POST COMBAT hp on combat preview....
-P.UNIT_ITEMS      = P.UNIT_MAX_HP + 12    -- {0x39230, 0x3A40E, 0x3A50A} 
--- weapons list in 10 bytes, (item,uses) x5
-P.UNIT_ATK        = P.UNIT_MAX_HP + 0x48  -- {0x3926C, 0x3A44A, 0x3A546} includes weapon triangle
-P.UNIT_DEF        = P.UNIT_ATK +  2       -- {0x3926E, 0x3A44C, 0x3A548} includes terrain bonus
-P.UNIT_AS         = P.UNIT_ATK +  4       -- {0x39270, 0x3A44E, 0x3A54A} 
-P.UNIT_HIT        = P.UNIT_ATK + 10       -- {0x39276, 0x3A454, 0x3A550} if can't attack, = 0xFF
--- redundant with stat screen values
--- P.UNIT_LUCK    = P.UNIT_ATK + 14       -- {0x3927A, 0x3A458, 0x3A554}
-P.UNIT_CRIT       = P.UNIT_ATK + 16       -- {0x3927C, 0x3A45A, 0x3A556}
--- P.UNIT_LEVEL2  = {0x39280, 0x3A460, 0x3A55C}
--- P.UNIT_EXP2    = P.UNIT_LEVEL2 + 1
--- NOT redundant with stat screen, that address may show post combat hp
-P.UNIT_CURR_HP    = {0x39282, 0x3A462, 0x3A55E}
-P.UNIT_CURR_HP = RAM_BASE + P.UNIT_CURR_HP[GAME_VERSION - 5]
-
+-- inventory list in 10 bytes, (item,uses) x5
+P.ITEMS_OFFSET      = P.MAX_OFFSET_HP + 12     -- {0x39230, 0x3A40E, 0x3A50A} 
 -- 8 consecutive bytes 26, 28, 28
-P.UNIT_RANKS = {0x3923A, 0x3A418, 0x3A514}
-P.UNIT_RANKS = RAM_BASE + P.UNIT_RANKS[GAME_VERSION - 5]
+P.RANKS_OFFSET      = P.ITEMS_OFFSET + 10      -- {0x3923A, 0x3A418, 0x3A514}
 -- status eg poison at + 8?
 -- 10? consecutive bytes
-P.UNIT_SUPPORTS = P.UNIT_RANKS + 10
+P.SUPPORTS_OFFSET   = P.RANKS_OFFSET + 10      -- {0x39244, 0x3A422, 0x3A51E}
 
--- same data structure exists for the defender in combat
-P.DEFENDER_OFFSET = {0x7C, 0x80, 0x80}
-P.DEFENDER_OFFSET = P.DEFENDER_OFFSET[GAME_VERSION - 5]
 
+
+
+P.ATK_OFFSET        = P.SUPPORTS_OFFSET + 0x28 -- {0x3926C, 0x3A44A, 0x3A546} includes weapon triangle
+P.DEF_OFFSET        = P.ATK_OFFSET +  2        -- {0x3926E, 0x3A44C, 0x3A548} includes terrain bonus
+P.AS_OFFSET         = P.ATK_OFFSET +  4        -- {0x39270, 0x3A44E, 0x3A54A} 
+P.HIT_OFFSET        = P.ATK_OFFSET + 10        -- {0x39276, 0x3A454, 0x3A550} if can't attack, = 0xFF
+-- redundant with stat screen values
+-- P.LUCK_OFFSET    = P.ATK_OFFSET + 14        -- {0x3927A, 0x3A458, 0x3A554}
+P.CRIT_OFFSET       = P.ATK_OFFSET + 16        -- {0x3927C, 0x3A45A, 0x3A556}
+-- P.LEVEL_OFFSET2  = {0x39280, 0x3A460, 0x3A55C} FE6
+-- P.EXP_OFFSET2    = P.LEVEL_OFFSET2 + 1
+-- NOT redundant with stat screen, that address may show post combat hp
+P.CURR_OFFSET_HP    = {0x39282, 0x3A462, 0x3A55E}
+P.CURR_OFFSET_HP = RAM_BASE + P.CURR_OFFSET_HP[GAME_VERSION - 5]
 
 return P

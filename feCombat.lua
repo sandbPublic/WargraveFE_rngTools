@@ -64,7 +64,7 @@ local function weaponIdToType(id)
 	return "normal"
 end
 
-local ITEM_CODES = {
+ITEM_CODES = {
 	-- FE6
 	{
 		"Iron Sword",
@@ -590,7 +590,7 @@ local ITEM_CODES = {
 }
 
 ITEM_CODES = ITEM_CODES[GAME_VERSION - 5]
-while #ITEM_CODES < 255 do
+while #ITEM_CODES <= 255 do
 	table.insert(ITEM_CODES, "Item code too large")
 end
 ITEM_CODES[0] = "Nothing"
@@ -969,30 +969,30 @@ function P.combatObj:toggleBonusExp()
 	print(string.format("bonus xp: %d", self.bonusExp)) 
 end
 
-local function createCombatant(offset)
+local function createCombatant(startAddr)
 	c = {}
 	
-	local nameCode = memory.readword(offset + addr.UNIT_NAME_CODE)
+	local nameCode = memory.readword(startAddr + addr.NAME_CODE_OFFSET)
 	c.name         = unitData.hexCodeToName(nameCode)
-	c.class        = classes.HEX_CODES[memory.readword(addr.UNIT_CLASS_CODE + offset)] or classes.OTHER
-	c.level        = memory.readbyte(addr.UNIT_LEVEL + offset)	
-	c.exp          = memory.readbyte(addr.UNIT_EXP + offset)
+	c.class        = classes.HEX_CODES[memory.readword(startAddr + addr.CLASS_CODE_OFFSET)] or classes.OTHER
+	c.level        = memory.readbyte(startAddr + addr.LEVEL_OFFSET)	
+	c.exp          = memory.readbyte(startAddr + addr.EXP_OFFSET)
 	
-	c.x            = memory.readbyte(addr.UNIT_X + offset)
-	c.y            = memory.readbyte(addr.UNIT_Y + offset)
+	c.x            = memory.readbyte(startAddr + addr.X_OFFSET)
+	c.y            = memory.readbyte(startAddr + addr.Y_OFFSET)
 
-	c.maxHP        = memory.readbyte(addr.UNIT_MAX_HP + offset)
-	c.luck         = memory.readbyte(addr.UNIT_MAX_HP + 7 + offset)
-	local wCode    = memory.readbyte(addr.UNIT_ITEMS + offset)
+	c.maxHP        = memory.readbyte(startAddr + addr.MAX_OFFSET_HP)
+	c.luck         = memory.readbyte(startAddr + addr.MAX_OFFSET_HP + 7)
+	local wCode    = memory.readbyte(startAddr + addr.ITEMS_OFFSET)
 	c.weapon       = ITEM_CODES[wCode]
 	c.weaponType   = weaponIdToType(wCode)
-	c.weaponUses   = memory.readbyte(addr.UNIT_ITEMS + 1 + offset)
-	c.atk          = memory.readbyte(addr.UNIT_ATK + offset)
-	c.def          = memory.readbyte(addr.UNIT_DEF + offset)
-	c.AS           = memory.readbyte(addr.UNIT_AS + offset)
-	c.hit          = memory.readbyte(addr.UNIT_HIT + offset)
-	c.crit         = memory.readbyte(addr.UNIT_CRIT + offset)
-	c.currHP       = memory.readbyte(addr.UNIT_CURR_HP + offset)
+	c.weaponUses   = memory.readbyte(startAddr + addr.ITEMS_OFFSET + 1)
+	c.atk          = memory.readbyte(startAddr + addr.ATK_OFFSET)
+	c.def          = memory.readbyte(startAddr + addr.DEF_OFFSET)
+	c.AS           = memory.readbyte(startAddr + addr.AS_OFFSET)
+	c.hit          = memory.readbyte(startAddr + addr.HIT_OFFSET)
+	c.crit         = memory.readbyte(startAddr + addr.CRIT_OFFSET)
+	c.currHP       = memory.readbyte(startAddr + addr.CURR_OFFSET_HP)
 	
 	return c
 end
@@ -1092,8 +1092,8 @@ function P.combatObj:new()
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.attacker = createCombatant(0)
-	o.defender = createCombatant(addr.DEFENDER_OFFSET)
+	o.attacker = createCombatant(addr.ATTACKER_START)
+	o.defender = createCombatant(addr.DEFENDER_START)
 	o.phase = getPhase()
 	
 	o:setNonRAM()

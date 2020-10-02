@@ -148,6 +148,7 @@ while true do
 			rnEvent.change("burns", rnStepSize)
 		end
 		
+		-- change enemyID -- todo get from RAM
 		if pressed("L", gameCtrl) then
 			rnEvent.change("enemyID", -1)
 		end
@@ -350,15 +351,36 @@ while true do
 			print(string.format("Switching to %s rng", currentRNG:name()))
 		end
 		
+		-- todo modify RAM values for slots
 		if pressed(12) then 
-			-- todo
+			
+		end
+		if held(12) then 
+			if pressed("up", gameCtrl) then
+
+			end
+			if pressed("down", gameCtrl) then
+
+			end
+			if pressed("left", gameCtrl) then
+				
+			end
+			if pressed("right", gameCtrl) then
+				
+			end
+			if pressed("L", gameCtrl) then
+			
+			end
+			if pressed("R", gameCtrl) then
+			
+			end
 		end
 		
 		if pressed(13) then
 			print()
-			local nameCode = memory.readword(addr.UNIT_NAME_CODE)
+			local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
 			print(string.format("unit %s 0x%04X", unitData.hexCodeToName(nameCode), nameCode))
-			local classCode = memory.readword(addr.UNIT_CLASS_CODE)
+			local classCode = memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)
 			local class = classes.HEX_CODES[classCode] or classes.OTHER
 			print(string.format("class %d 0x%04X", class, classCode))
 		end

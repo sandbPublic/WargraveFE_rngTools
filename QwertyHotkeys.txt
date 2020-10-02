@@ -33,7 +33,7 @@ change afa/metis
 switch RNG to 2ndary
 N
 save,print combat,stats,ranks&supports
--- todo
+-- todo modify RAM
 M
 hold, <> move rn, ^v change step
 print class&unit code info

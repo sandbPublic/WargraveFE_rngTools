@@ -51,11 +51,11 @@ end
 -- modifying functions
 
 function P.passiveUpdate()
-	if (lastAttackerID ~= memory.readbyte(addr.UNIT_SLOT_ID)) or 
-       (lastDefenderID ~= memory.readbyte(addr.UNIT_SLOT_ID + addr.DEFENDER_OFFSET)) then
+	if (lastAttackerID ~= memory.readbyte(addr.ATTACKER_START + addr.SLOT_OFFSET_ID)) or 
+       (lastDefenderID ~= memory.readbyte(addr.DEFENDER_START + addr.SLOT_OFFSET_ID)) then
 	   
-		lastAttackerID = memory.readbyte(addr.UNIT_SLOT_ID)
-		lastDefenderID = memory.readbyte(addr.UNIT_SLOT_ID + addr.DEFENDER_OFFSET)
+		lastAttackerID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_OFFSET_ID)
+		lastDefenderID = memory.readbyte(addr.DEFENDER_START + addr.SLOT_OFFSET_ID)
 		lastEventUpdateFrame = vba.framecount() + 1
 	end
 	
@@ -79,9 +79,9 @@ function P.passiveUpdate()
 			currMoney, 
 			moneyChange, 
 			addr.getMoney(),
-			memory.readbyte(addr.UNIT_X),
-			memory.readbyte(addr.UNIT_Y),
-			unitData.hexCodeToName(memory.readword(addr.UNIT_NAME_CODE))))
+			memory.readbyte(addr.ATTACKER_START + addr.X_OFFSET),
+			memory.readbyte(addr.ATTACKER_START + addr.Y_OFFSET),
+			unitData.hexCodeToName(memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET))))
 			
 		currMoney = addr.getMoney()
 	end
@@ -100,8 +100,8 @@ end
 
 function P.addLog_RNconsumed()
 	-- do just in time update of fields that only update with rns on enemy phase
-	lastEvent.combatants.defender.hit = memory.readbyte(addr.UNIT_HIT + addr.DEFENDER_OFFSET)
-	lastEvent.combatants.defender.crit = memory.readbyte(addr.UNIT_CRIT + addr.DEFENDER_OFFSET)
+	lastEvent.combatants.defender.hit = memory.readbyte(addr.DEFENDER_START + addr.HIT_OFFSET)
+	lastEvent.combatants.defender.crit = memory.readbyte(addr.DEFENDER_START + addr.CRIT_OFFSET)
 	lastEvent:updateFull()
 	
 	local newLog = {}

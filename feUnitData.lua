@@ -1117,12 +1117,12 @@ local AFAS_I = INDEX_OF_NAME["Cormag"]
 local function statsInRAM()
 	local stats = {}
 	
-	stats[1] = memory.readbyte(addr.UNIT_MAX_HP)
+	stats[1] = memory.readbyte(addr.ATTACKER_START + addr.MAX_OFFSET_HP)
 	for stat_i = 2, 7 do
-		stats[stat_i] = memory.readbyte(addr.UNIT_MAX_HP + stat_i)  -- at +1 is current hp
+		stats[stat_i] = memory.readbyte(addr.ATTACKER_START + addr.MAX_OFFSET_HP + stat_i)  -- at +1 is current hp
 	end
-	stats[LEVEL_I] = memory.readbyte(addr.UNIT_LEVEL)
-	stats[EXP_I] = memory.readbyte(addr.UNIT_EXP)
+	stats[LEVEL_I] = memory.readbyte(addr.ATTACKER_START + addr.LEVEL_OFFSET)
+	stats[EXP_I] = memory.readbyte(addr.ATTACKER_START + addr.EXP_OFFSET)
 	
 	return stats
 end
@@ -1134,7 +1134,7 @@ end
 local RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
 function P.printRanks()
 	for i, name in ipairs(RANK_NAMES) do
-		local rank = memory.readbyte(addr.UNIT_RANKS + i - 1)
+		local rank = memory.readbyte(addr.ATTACKER_START + addr.RANKS_OFFSET + i - 1)
 		if rank > 0 then
 			print(name .. " rank " .. rank)
 		end
@@ -1143,7 +1143,7 @@ end
 
 function P.printSupports()
 	for i = 0, 9 do
-		local support = memory.readbyte(addr.UNIT_SUPPORTS + i)
+		local support = memory.readbyte(addr.ATTACKER_START + addr.SUPPORTS_OFFSET + i)
 		if support > 0 then
 			print("Support " .. i .. " " .. support)
 		end
@@ -1448,7 +1448,7 @@ function unitObj:new(unit_i)
 		o.bases[i] = o.bases[i] + boost
 	end
 
-	o.class = classes.HEX_CODES[memory.readword(addr.UNIT_CLASS_CODE)] or classes.OTHER
+	o.class = classes.HEX_CODES[memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)] or classes.OTHER
 	o.promotion = PROMOTIONS[unit_i]
 	
 	o.canPromote = o.class == BASE_CLASSES[unit_i] and o.class ~= o.promotion
@@ -1476,9 +1476,9 @@ end
 units[0] = unitObj:new(0)
 
 function P.currUnit()
-	local name = P.hexCodeToName(memory.readword(addr.UNIT_NAME_CODE))
+	local name = P.hexCodeToName(memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET))
 	if getPhase() == "enemy" then
-		name = P.hexCodeToName(memory.readword(addr.DEFENDER_OFFSET + addr.UNIT_NAME_CODE))
+		name = P.hexCodeToName(memory.readword(addr.DEFENDER_START + addr.NAME_CODE_OFFSET))
 	end
 	
 	local u = units[0]

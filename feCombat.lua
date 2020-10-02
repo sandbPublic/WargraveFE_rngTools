@@ -38,41 +38,30 @@ local POISON_CLAW_ID  = 175 -- FE8 only
 local POISON_TALON_ID = 176 -- FE8 only
 local STONE_ID        = 181 -- FE8 only
 
--- special weapon types
-local NORMAL = 1
-local BRAVE  = 2
-local DEVIL  = 3
-local DRAIN  = 4
-local HALVE  = 5 -- prevents doubling. damage unimplemented. in FE6 all but 1 hp
-local POISON = 6 -- unimplemented, value of opportunity to restore vs minor hp loss
-local STONE  = 7 -- treated as 999 dmg
-
-P.WEAPON_TYPE_STRINGS = {"normal", "brave", "devil", "drain", "halve", "poison", "stone"}
-
 local function weaponIdToType(id)
 	if (id == BRAVE_S_ID[GAME_VERSION] 
 	 or id == BRAVE_L_ID[GAME_VERSION] 
 	 or id == BRAVE_A_ID[GAME_VERSION] 
 	 or id == BRAVE_B_ID[GAME_VERSION]) then
-		return BRAVE
+		return "brave"
 	elseif id == DEVIL_A_ID[GAME_VERSION] then
-		return DEVIL
+		return "devil"
 	elseif id == NOSFERATU_ID[GAME_VERSION] or id == RUNESWORD_ID[GAME_VERSION] then
-		return DRAIN
+		return "drain"
 	elseif id == ECLIPSE_ID[GAME_VERSION] then
-		return HALVE
+		return "halve"
 	elseif (id == POISON_S_ID[GAME_VERSION] 
 		 or id == POISON_L_ID[GAME_VERSION] 
 		 or id == POISON_A_ID[GAME_VERSION] 
 		 or id == POISON_B_ID[GAME_VERSION]
 		 or id == POISON_CLAW_ID
 		 or id == POISON_TALON_ID) then
-		return POISON
+		return "poison"
 	elseif id == STONE_ID then
-		return STONE
+		return "stone"
 	end
 	
-	return NORMAL
+	return "normal"
 end
 
 local ITEM_CODES = {
@@ -730,12 +719,13 @@ function P.combatObj:hitEvent(index, isAttacker)
 	retHitEv.RNsConsumed = 0
 	retHitEv.dmg = combatant.dmg
 	
-	if combatant.weaponType == STONE then
+	if combatant.weaponType == "stone" then
 		retHitEv.dmg = 999
 	end
 	
 	-- todo, only matters if eclipse happens after the target is damaged by another unit
-	--if combatant.weaponType == HALVE then
+	-- prevents doubling. damage unimplemented. in FE6 all but 1 hp
+	--if combatant.weaponType == "halve" then
 		--retHitEv.dmg = 999 
 	--end
 	
@@ -804,7 +794,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 			end
 			
 			-- crit/devil priority?
-			if combatant.weaponType == DEVIL then
+			if combatant.weaponType == "devil" then
 				local devilRN = nextRn()
 			
 				if ((31 - combatant.luck > devilRN) and (GAME_VERSION >= 7)) or 
@@ -866,7 +856,7 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	
 	local function setNext(isAttacker)
 		table.insert(isAttackers, isAttacker)
-		if self:combatant(isAttacker).weaponType == BRAVE then
+		if self:combatant(isAttacker).weaponType == "brave" then
 			table.insert(isAttackers, isAttacker)
 		end
 	end
@@ -903,7 +893,7 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 				rHitSeq.atkHP = rHitSeq.atkHP - hE.dmg
 			end
 			
-			if self.attacker.weaponType == DRAIN then
+			if self.attacker.weaponType == "drain" then
 				rHitSeq.atkHP = math.min(rHitSeq.atkHP + hE.dmg, self.attacker.maxHP)
 			end
 		else
@@ -915,7 +905,7 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 				rHitSeq.defHP = rHitSeq.defHP - hE.dmg
 			end
 			
-			if self.defender.weaponType == DRAIN then
+			if self.defender.weaponType == "drain" then
 				rHitSeq.defHP = math.min(rHitSeq.defHP + hE.dmg, self.defender.maxHP)
 			end
 		end
@@ -985,9 +975,9 @@ local function createCombatant(offset)
 	local nameCode = memory.readword(offset + addr.UNIT_NAME_CODE)
 	c.name         = unitData.hexCodeToName(nameCode)
 	c.class        = classes.HEX_CODES[memory.readword(addr.UNIT_CLASS_CODE + offset)] or classes.OTHER
-	c.level        = memory.readbyte(addr.UNIT_LEVEL + offset)
-	
+	c.level        = memory.readbyte(addr.UNIT_LEVEL + offset)	
 	c.exp          = memory.readbyte(addr.UNIT_EXP + offset)
+	
 	c.x            = memory.readbyte(addr.UNIT_X + offset)
 	c.y            = memory.readbyte(addr.UNIT_Y + offset)
 
@@ -1005,6 +995,39 @@ local function createCombatant(offset)
 	c.currHP       = memory.readbyte(addr.UNIT_CURR_HP + offset)
 	
 	return c
+end
+
+-- values dependent on both combatants being created, or not member of combatants
+function P.combatObj:setNonRAM()
+	local speedDifference = self.attacker.AS - self.defender.AS
+	self.attacker.doubles = (speedDifference >= 4 and self.attacker.weaponType ~= "halve")
+	self.defender.doubles = (speedDifference <= -4 and self.defender.weaponType ~= "halve")	
+	
+	self.attacker.dmg = math.max(0, self.attacker.atk - self.defender.def)
+	self.defender.dmg = math.max(0, self.defender.atk - self.attacker.def)  
+	
+	self.player = self.attacker
+	self.enemy = self.defender
+	if self.phase == "enemy" then
+		self.player = self.defender
+		self.enemy = self.attacker
+	end
+
+	local pWeapon = ""
+	if self.player.weaponType ~= "normal" then
+		pWeapon = " " .. self.player.weaponType:upper()
+	end
+	local eWeapon = ""
+	if self.enemy.weaponType ~= "normal" then
+		eWeapon = " " .. self.enemy.weaponType
+	end
+	
+	self.specialWeaponStr = pWeapon .. eWeapon
+	if self.phase == "enemy" then
+		self.specialWeaponStr = eWeapon .. pWeapon
+	end
+	
+	self.bonusExp = 0
 end
 
 -- depends on bonus exp (thief or boss) and assassinates
@@ -1071,39 +1094,10 @@ function P.combatObj:new()
 	
 	o.attacker = createCombatant(0)
 	o.defender = createCombatant(addr.DEFENDER_OFFSET)
-	
-	local speedDifference = o.attacker.AS - o.defender.AS
-	o.attacker.doubles = (speedDifference >= 4 and o.attacker.weaponType ~= HALVE)
-	o.defender.doubles = (speedDifference <= -4 and o.defender.weaponType ~= HALVE)	
-	
-	o.attacker.dmg = math.max(0, o.attacker.atk - o.defender.def)
-	o.defender.dmg = math.max(0, o.defender.atk - o.attacker.def)  
-	
-	o.player = o.attacker
-	o.enemy = o.defender
-	
 	o.phase = getPhase()
-	if o.phase == "enemy" then
-		o.player = o.defender
-		o.enemy = o.attacker
-	end
 	
+	o:setNonRAM()
 	o:setExpGain()
-	o.bonusExp = 0
-
-	local pWeapon = ""
-	if o.player.weaponType ~= NORMAL then
-		pWeapon = " " .. P.WEAPON_TYPE_STRINGS[o.player.weaponType]:upper()
-	end
-	local eWeapon = ""
-	if o.enemy.weaponType ~= NORMAL then
-		eWeapon = " " .. P.WEAPON_TYPE_STRINGS[o.enemy.weaponType]
-	end
-	
-	o.specialWeaponStr = pWeapon .. eWeapon
-	if o.phase == "enemy" then
-		o.specialWeaponStr = eWeapon .. pWeapon
-	end
 	
 	return o
 end

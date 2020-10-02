@@ -2,8 +2,10 @@ require("feAutolog")
 -- emu.frameadvance() does not work from within requires
 -- "attempt to yield across metamethod/C-call boundary"
 
+local testAll = true
 
-if true then -- Misc
+
+if testAll then -- Misc
 	print("---Misc...---")
 	
 	local miscTest = {}
@@ -25,7 +27,7 @@ if true then -- Misc
 	print("---Misc passed---")
 end
 
-if true then -- Class
+if testAll then -- Class
 	print("---Class...---")
 	assert(classes.isNoncombat(classes.DANCER))
 	assert(classes.isNoncombat(classes.OTHER) == false)
@@ -40,7 +42,7 @@ if true then -- Class
 	print("---Class passed---")
 end
 
-if true then -- Random Numbers
+if testAll then -- Random Numbers
 	print("---Random numbers...---")
 	
 	assert(rns.rng1:name() == "primary")
@@ -58,7 +60,7 @@ if true then -- Random Numbers
 	print("---Random numbers passed---")
 end
 
-if true then -- Unit Data
+if testAll then -- Unit Data
 	print("---Unit data...---")
 	
 	local u = unitData.currUnit()
@@ -87,7 +89,7 @@ if true then -- Unit Data
 	print("---Unit data passed...---")
 end
 
-if true then -- Combat
+if testAll then -- Combat
 	print("---Combat...---")
 	
 	--combat.paramInRAM()
@@ -101,15 +103,102 @@ if true then -- Combat
 	assert(c:willLevel(100))
 	c:expFrom()
 	c:hitEvent(0)
+	
+	c.attacker.name         = "a"
+	c.attacker.class        = classes.LORD
+	c.attacker.level        = 1
+	c.attacker.exp          = 0
+	c.attacker.x            = 0
+	c.attacker.y            = 0
+	c.attacker.maxHP        = 20
+	c.attacker.luck         = 0
+	c.attacker.weapon       = 1
+	c.attacker.weaponType   = "normal"
+	c.attacker.weaponUses   = 20
+	c.attacker.atk          = 10
+	c.attacker.def          = 5
+	c.attacker.AS           = 5
+	c.attacker.hit          = 100
+	c.attacker.crit         = 0
+	c.attacker.currHP       = 20
+	
+	c.defender.name         = "b"
+	c.defender.class        = classes.OTHER
+	c.defender.level        = 1
+	c.defender.exp          = 0
+	c.defender.x            = 0
+	c.defender.y            = 0
+	c.defender.maxHP        = 20
+	c.defender.luck         = 0
+	c.defender.weapon       = 1
+	c.defender.weaponType   = "normal"
+	c.defender.weaponUses   = 20
+	c.defender.atk          = 10
+	c.defender.def          = 5
+	c.defender.AS           = 5
+	c.defender.hit          = 100
+	c.defender.crit         = 0
+	c.defender.currHP       = 20
+	
+	local hitSeq
+	
+	local function reset()
+		c:setNonRAM()
+		c:setExpGain()
+		hitSeq = c:hitSeq(0)
+	end
+	
+	reset()
+	
+	assert(#hitSeq == 2)
+	assert(combat.hitSeq_string(hitSeq) == "X x 10xp")
+	assert(hitSeq.atkHP == 15)
+	assert(hitSeq.defHP == 15)
+	
+	
+	c.attacker.atk = 14
+	c.attacker.AS = 10
+	c.defender.level = 10
+	reset()
+	
+	assert(#hitSeq == 3)
+	assert(combat.hitSeq_string(hitSeq) == "X x X 13xp")
+	assert(hitSeq.atkHP == 15)
+	assert(hitSeq.defHP == 2)
+	
+	
+	c.attacker.weaponType = "brave"
+	c.attacker.exp = 50
+	c.defender.hit = 0
+	reset()
+	
+	assert(#c:hitSeq(0) == 4)
+	assert(combat.hitSeq_string(hitSeq) == "X X o X 60xp Lvl")
+	assert(hitSeq.atkHP == 20)
+	assert(hitSeq.defHP == 0)
+	
+	
+	c.attacker.atk = 6
+	c.defender.weaponType = "drain"
+	c.defender.hit = 100
+	c.defender.crit = 100
+	reset()
+	
+	assert(#c:hitSeq(0) == 5)
+	assert(combat.hitSeq_string(hitSeq) == "X X c X X 13xp")
+	assert(hitSeq.atkHP == 5)
+	assert(hitSeq.defHP == 18)
+	
 	c:staffHitEvent(0)
 	c:hitSeq(0)
 	c:toggleBonusExp()
-	c:setExpGain()
+	
+	-- todo test rn and game version dependent factors
 	
 	print("---Combat passed---")
 end
 
-if true then -- Event
+if testAll then -- Event
 	function eventTest()
 		changeSelection(rnEvent.events, 1)
 		changeSelection(rnEvent.events, -1)
@@ -177,7 +266,7 @@ if true then -- Event
 	print("---Event passed---")
 end
 
-if true then -- GUI
+if testAll then -- GUI
 	print("---GUI...---")
 	feGUI.lookingAt(0)
 	feGUI.canAlter_rnEvent()
@@ -196,7 +285,7 @@ if true then -- GUI
 	print("---GUI passed---")
 end
 
-if true then -- Autolog
+if testAll then -- Autolog
 	print("---Autolog...---")
 	
 	autolog.passiveUpdate()

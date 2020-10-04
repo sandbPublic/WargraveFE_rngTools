@@ -78,7 +78,7 @@ if testAll then -- Unit Data
 	print(u:statData_strings())
 	u:toggleAfas()
 	u:setDynamicWeights()
-	u:setStats()
+	u:loadRAMvalues()
 	
 	unitData.printRanks()
 	unitData.printSupports()

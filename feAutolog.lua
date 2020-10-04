@@ -31,7 +31,6 @@ local currMoney = 0
 
 local slotStopped = {}
 local slotRescued = {}
-local SLOTS_TO_CHECK = 48
 
 -- helps distinguish enemy rn burns from events,
 -- since we don't reverse construct EP events after combats
@@ -76,14 +75,14 @@ function P.passiveUpdate()
 		
 		autolog.addLog_string("\nTurn " .. currTurn .. " " .. currPhase .. " phase")
 		
-		for slot = 1, SLOTS_TO_CHECK do
+		for slot = 1, addr.SLOTS_TO_CHECK do
 			slotStopped[slot] = addr.unitIsStopped(slot)
 			slotRescued[slot] = addr.unitIsRescued(slot)
 		end
 	end
 	
 	if getPhase() == "player" then -- check movements
-		for slot = 1, SLOTS_TO_CHECK do -- check all slots for rescues, drops and refreshes
+		for slot = 1, addr.SLOTS_TO_CHECK do -- check all slots for rescues, drops and refreshes
 			if slotStopped[slot] ~= addr.unitIsStopped(slot) then
 				slotStopped[slot] = addr.unitIsStopped(slot)
 				

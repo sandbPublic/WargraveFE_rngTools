@@ -444,8 +444,7 @@ function P.swap()
 end
 
 function P.rnEventObj:setStats()
-	self.unit:setClass()
-	self.unit:setStats()
+	self.unit:loadRAMvalues()
 	self.mExpValueFactor = self.unit:expValueFactor()
 end
 

@@ -66,7 +66,7 @@ end
 
 
 
---todo afa's offsets
+
 P.NAME_CODE_OFFSET  =  0 -- {0x39214, 0x3A3F0, 0x3A4EC} 2 bytes
 P.CLASS_CODE_OFFSET =  4 -- {0x39216, 0x3A3F2, 0x3A4EE} 2 bytes
 P.LEVEL_OFFSET      =  8 -- {0x3921C, 0x3A3F8, 0x3A4F4} -- these update after combat
@@ -80,7 +80,12 @@ P.SLOT_ID_OFFSET    = 11 -- {0x3921F, 0x3A3FB, 0x3A4F7} index of data source
 -- 00010000 0x10 rescuing
 -- 00100001 0x21 is rescued before moving
 -- 00100011 0x23 is rescued after being taken or moving
-P.MOVE_STATUS_OFFSET = 12 -- {,0x3A3FC,} 
+P.MOVE_STATUS_OFFSET = 12 -- {,0x3A3FC,} --todo FE6,8
+
+-- bitmap:
+-- 00110010 0x32 Afa's?
+-- 0001011? 0x16 and 0x17 Droppable item?
+P.AFA_OFFSET         = 13 -- {,0x3A3FD,} --todo FE6,8
 
 P.X_OFFSET = {14, 16, 16}   -- {0x39222, 0x3A400, 0x3A4FC} FE6 not aligned
 P.X_OFFSET = P.X_OFFSET[GAME_VERSION - 5]
@@ -124,6 +129,19 @@ function P.unitIsRescued(slot)
 	return AND(P.byteFromSlot(slot, P.MOVE_STATUS_OFFSET), 32) > 0
 end
 
+function P.unitHasAfas(start)
+	return (GAME_VERSION > 6) and (AND(memory.readbyte(start + addr.AFA_OFFSET), 32) > 0)
+end
+
+P.canAddAfas = (GAME_VERSION == 7 and memory.readbyte(P.CHAPTER) >= 31) or -- ch 31 == hector chapter 24
+               (GAME_VERSION == 8) -- todo confirm chapter code for metis tome
+P.SLOTS_TO_CHECK = 48
+for slot = 1, addr.SLOTS_TO_CHECK do
+	if P.unitHasAfas(P.addrFromSlot(slot, 0)) then
+		P.canAddAfas = false -- use this to determine if stat up display should show ? for gains possible with Afa
+		break
+	end
+end
 
 
 

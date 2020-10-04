@@ -1109,7 +1109,6 @@ WILL_END_AT[0] = 0
 
 -- determine if healer is present manually
 P.HEALER_DEPLOYED = false
-local AFAS_I = INDEX_OF_NAME["Cormag"]
  
 
 
@@ -1199,7 +1198,7 @@ function unitObj:willLevelStats(HP_RN_i)
 			ret[stat_i] = 1 -- stat grows without afa's
 		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and self.hasAfas then
 			ret[stat_i] = 2 -- stat grows because of afa's
-		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and AFAS_I == 0 then
+		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and GAME_VERSION > 6 then
 			ret[stat_i] = -2 -- stat would grow with afa's
 		else
 			ret[stat_i] = 0 -- stat doesn't grow
@@ -1220,7 +1219,7 @@ function unitObj:levelUpProcs_string(HP_RN_i)
 		elseif proc == 2 then
 			seq = seq .. "!" -- grows this stat because of Afa's
 			noStatWillRise = false
-		elseif proc == -2 then
+		elseif proc == -2 and addr.canAddAfas then
 			seq = seq .. "?" -- stat would grow with afa's
 		elseif proc == -1 then
 			seq = seq .. "_" -- can't grow stat
@@ -1369,10 +1368,8 @@ function unitObj:toggleAfas()
 
 	if self.hasAfas then
 		str = str .. "removed from "
-		AFAS_I = 0
 	else
 		str = str .. "applied to "
-		AFAS_I = INDEX_OF_NAME[self.name]
 	end
 	print(str .. self.name)
 	
@@ -1423,18 +1420,7 @@ function unitObj:setDynamicWeights()
 	end
 end
 
-function unitObj:setStats()
-	self.stats = statsInRAM()
-	
-	self:setDynamicWeights()
-	
-	self.avgLevelValue = 0
-	for i = 1, 7 do
-		self.avgLevelValue = self.avgLevelValue + self.growths[i]*self.dynamicWeights[i]
-	end
-end
-
-function unitObj:setClass()
+function unitObj:loadRAMvalues()
 	self.class = classes.HEX_CODES[memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)] or classes.OTHER
 	self.canPromote = self.class == BASE_CLASSES[unit_i] and self.class ~= self.promotion
 	if self.canPromote then
@@ -1443,6 +1429,17 @@ function unitObj:setClass()
 		end
 		self.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
 	end
+	
+	self.stats = statsInRAM()
+	
+	self:setDynamicWeights()
+	
+	self.avgLevelValue = 0
+	for i = 1, 7 do
+		self.avgLevelValue = self.avgLevelValue + self.growths[i]*self.dynamicWeights[i]
+	end
+	
+	self.hasAfas = addr.unitHasAfas(addr.ATTACKER_START) -- todo incorporate phase
 end
 
 function unitObj:new(unit_i)
@@ -1462,37 +1459,34 @@ function unitObj:new(unit_i)
 	o.promotion = PROMOTIONS[unit_i]
 	o.willPromoteAt = WILL_PROMOTE_AT[unit_i]
 	o.willEndAt = WILL_END_AT[unit_i]
-	o.hasAfas = (unit_i == AFAS_I)
 	
-	o:setClass()
-	o:setStats()
+	o:loadRAMvalues()
 	
 	return o
 end
 
 local units = {}
-
 for unit_i = 1, #NAMES do
 	table.insert(units, unitObj:new(unit_i))
 end
 units[0] = unitObj:new(0)
 
 function P.currUnit()
-	local name = P.hexCodeToName(memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET))
+	local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
 	if getPhase() == "enemy" then
-		name = P.hexCodeToName(memory.readword(addr.DEFENDER_START + addr.NAME_CODE_OFFSET))
+		nameCode = memory.readword(addr.DEFENDER_START + addr.NAME_CODE_OFFSET)
 	end
+	local name = P.hexCodeToName(nameCode)
 	
 	local u = units[0]
 	if INDEX_OF_NAME[name] then
 		u = units[INDEX_OF_NAME[name]]
 	else
-		print("unit not found " .. name)
+		print(string.format("unit not found %s %0X", name, nameCode))
 		INDEX_OF_NAME[name] = 0 -- will "find" unit 0 if checking for this code again
 	end
 	
-	u:setClass()
-	u:setStats()
+	u:loadRAMvalues()
 	
 	return u
 end

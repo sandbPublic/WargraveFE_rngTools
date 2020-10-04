@@ -196,7 +196,11 @@ while true do
 		
 		if pressed(4) then rnEvent.toggle("lvlUp") end	
 		
-		if pressed(5) then selected(rnEvent.events).combatants:toggleBonusExp() end
+		if pressed(5) then 
+			if #rnEvent.events > 0 then
+				selected(rnEvent.events).combatants:toggleBonusExp() 
+			end
+		end
 
 		if pressed(6) then rnEvent.suggestedPermutation() end
 		
@@ -222,7 +226,11 @@ while true do
 		
 		if pressed(10) then autolog.writeLogs() end
 				
-		if pressed(11) then unitData.currUnit():toggleAfas() end
+		if pressed(11) then
+			if #rnEvent.events > 0 then
+				selected(rnEvent.events).unit:toggleAfas()
+			end
+		end
 		
 		if pressed(12) then
 			printStringArray(combat.combatObj:new():toStrings())

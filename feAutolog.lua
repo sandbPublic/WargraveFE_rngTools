@@ -31,6 +31,29 @@ local currMoney = 0
 
 local slotStopped = {}
 local slotRescued = {}
+local slotEquipedWith = {}
+local slotEquipedUses = {}
+for slot = 1, 64 do
+	slotEquipedWith[slot] = {0, 0, 0, 0, 0}
+	slotEquipedUses[slot] = {0, 0, 0, 0, 0}
+end
+
+local function nameFromSlot(slot)
+	return unitData.hexCodeToName(addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET))
+end
+
+local lastDeployedSlot = 1
+local function updateLastDeployedSlot()
+	for slot = 1, 255 do
+		if addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET) == 0 then
+			return
+		end
+		if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
+			lastDeployedSlot = slot
+		end
+	end
+end
+updateLastDeployedSlot()
 
 -- helps distinguish enemy rn burns from events,
 -- since we don't reverse construct EP events after combats
@@ -39,18 +62,11 @@ local newEvent = false
 
 
 
--- non modifying functions
-
-local function nameFromSlot(slot)
-	return unitData.hexCodeToName(addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET))
-end
-
-
-
-
--- modifying functions
-
 function P.passiveUpdate()
+	if vba.framecount() % 30 == 0 then -- check twice per second for deployed/new units
+		updateLastDeployedSlot()
+	end
+
 	if (lastAttackerID ~= memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)) or 
        (lastDefenderID ~= memory.readbyte(addr.DEFENDER_START + addr.SLOT_ID_OFFSET)) then
 	   
@@ -75,38 +91,61 @@ function P.passiveUpdate()
 		
 		autolog.addLog_string("\nTurn " .. currTurn .. " " .. currPhase .. " phase")
 		
-		for slot = 1, addr.SLOTS_TO_CHECK do
-			slotStopped[slot] = addr.unitIsStopped(slot)
-			slotRescued[slot] = addr.unitIsRescued(slot)
+		for slot = 1, lastDeployedSlot do -- until empty player slots
+			if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then -- if on map
+				slotStopped[slot] = addr.unitIsStopped(slot)
+				slotRescued[slot] = addr.unitIsRescued(slot)
+				
+				for item_i = 1, 5 do
+					local offset = 2 * item_i - 2
+					local item = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset)
+					local uses = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset + 1)
+					
+					if slotEquipedWith[slot][item_i] ~= item or 
+					   slotEquipedUses[slot][item_i] ~= uses then
+					   
+						slotEquipedWith[slot][item_i] = item
+						slotEquipedUses[slot][item_i] = uses
+						
+						autolog.addLog_string(string.format("%s item %d: %d use %s",
+							nameFromSlot(slot),
+							item_i,
+							uses,
+							combat.ITEM_NAMES[item]))
+					end
+				end
+			end
 		end
 	end
 	
 	if getPhase() == "player" then -- check movements
-		for slot = 1, addr.SLOTS_TO_CHECK do -- check all slots for rescues, drops and refreshes
-			if slotStopped[slot] ~= addr.unitIsStopped(slot) then
-				slotStopped[slot] = addr.unitIsStopped(slot)
+		for slot = 1, lastDeployedSlot do -- until empty player slots
+			if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
+				if slotStopped[slot] ~= addr.unitIsStopped(slot) then
+					slotStopped[slot] = addr.unitIsStopped(slot)
+					
+					local action = "stop"
+					if not slotStopped[slot] then action = "refresh" end
+					
+					P.addLog_string(string.format("at %2d,%2d %s %s",
+						addr.byteFromSlot(slot, addr.X_OFFSET),
+						addr.byteFromSlot(slot, addr.Y_OFFSET),
+						nameFromSlot(slot),
+						action))
+				end
 				
-				local action = "stop"
-				if not slotStopped[slot] then action = "refresh" end
-				
-				P.addLog_string(string.format("at %2d,%2d %s %s",
-					addr.byteFromSlot(slot, addr.X_OFFSET),
-					addr.byteFromSlot(slot, addr.Y_OFFSET),
-					nameFromSlot(slot),
-					action))
-			end
-			
-			if slotRescued[slot] ~= addr.unitIsRescued(slot) then
-				slotRescued[slot] = addr.unitIsRescued(slot)
-				
-				local action = "rescue"
-				if not slotRescued[slot] then action = "drop" end
-				
-				P.addLog_string(string.format("at %2d,%2d %s %s",
-					addr.byteFromSlot(slot, addr.X_OFFSET),
-					addr.byteFromSlot(slot, addr.Y_OFFSET),
-					nameFromSlot(slot),
-					action))
+				if slotRescued[slot] ~= addr.unitIsRescued(slot) then
+					slotRescued[slot] = addr.unitIsRescued(slot)
+					
+					local action = "rescue"
+					if not slotRescued[slot] then action = "drop" end
+					
+					P.addLog_string(string.format("at %2d,%2d %s %s",
+						addr.byteFromSlot(slot, addr.X_OFFSET),
+						addr.byteFromSlot(slot, addr.Y_OFFSET),
+						nameFromSlot(slot),
+						action))
+				end
 			end
 		end
 	end

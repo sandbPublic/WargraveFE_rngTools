@@ -109,7 +109,7 @@ if testAll then -- Combat
 	c.attacker.y            = 0
 	c.attacker.maxHP        = 20
 	c.attacker.luck         = 0
-	c.attacker.weapon       = 1
+	c.attacker.weapon       = ""
 	c.attacker.weaponType   = "normal"
 	c.attacker.weaponUses   = 20
 	c.attacker.atk          = 10
@@ -127,7 +127,7 @@ if testAll then -- Combat
 	c.defender.y            = 0
 	c.defender.maxHP        = 20
 	c.defender.luck         = 0
-	c.defender.weapon       = 1
+	c.defender.weapon       = ""
 	c.defender.weaponType   = "normal"
 	c.defender.weaponUses   = 20
 	c.defender.atk          = 10

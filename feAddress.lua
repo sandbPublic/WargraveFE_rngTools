@@ -41,6 +41,7 @@ P.SELECTED_SLOT  = RAM_BASE + P.SELECTED_SLOT[GAME_VERSION - 5]
 
 -- offsets are the same for slots, attacker, and defender
 -- unit data occupies 0x48 (72) bytes per slot, followed by additional combat data for attacker/defender
+-- initial slots are deployed units, then undeployed units, then recruited units, then empty slots
 -- enemy slots start at 129, other at 66? (FE7)
 -- slots index from 1, not 0
 P.SLOT_1_START   = {0x2AB78, 0x2BD50, 0x2BE4C}
@@ -87,7 +88,7 @@ P.MOVE_STATUS_OFFSET = 12 -- {,0x3A3FC,} --todo FE6,8
 -- 0001011? 0x16 and 0x17 Droppable item?
 P.AFA_OFFSET         = 13 -- {,0x3A3FD,} --todo FE6,8
 
-P.X_OFFSET = {14, 16, 16}   -- {0x39222, 0x3A400, 0x3A4FC} FE6 not aligned
+P.X_OFFSET = {14, 16, 16}   -- {0x39222, 0x3A400, 0x3A4FC} FE6 not aligned, if 0xFF, not deployed
 P.X_OFFSET = P.X_OFFSET[GAME_VERSION - 5]
 P.Y_OFFSET = P.X_OFFSET + 1 -- {0x39223, 0x3A401, 0x3A4FD}
 
@@ -107,15 +108,14 @@ P.SUPPORTS_OFFSET = P.RANKS_OFFSET + 10   -- {0x39244, 0x3A422, 0x3A51E}
 
 
 
-
--- check slots 1 to 32, return 0 if not found
-function P.hoverPlayerSlot()
-	for slotID = 1, 32 do
-		if (P.byteFromSlot(slotID, P.X_OFFSET) == memory.readbyte(P.CURSOR_X)) and
-		   (P.byteFromSlot(slotID, P.Y_OFFSET) == memory.readbyte(P.CURSOR_Y)) and 
-		   not P.unitIsRescued(slotID) then
+-- slot cursor is over, return 0 if not found
+function P.hoverSlot()
+	for slot = 1, 255 do
+		if (P.byteFromSlot(slot, P.X_OFFSET) == memory.readbyte(P.CURSOR_X)) and
+		   (P.byteFromSlot(slot, P.Y_OFFSET) == memory.readbyte(P.CURSOR_Y)) and 
+		   not P.unitIsRescued(slot) then
 		   
-		   return slotID
+		   return slot
 		end
 	end
 	return 0
@@ -133,15 +133,6 @@ function P.unitHasAfas(start)
 	return (GAME_VERSION > 6) and (AND(memory.readbyte(start + addr.AFA_OFFSET), 32) > 0)
 end
 
-P.canAddAfas = (GAME_VERSION == 7 and memory.readbyte(P.CHAPTER) >= 31) or -- ch 31 == hector chapter 24
-               (GAME_VERSION == 8) -- todo confirm chapter code for metis tome
-P.SLOTS_TO_CHECK = 48
-for slot = 1, addr.SLOTS_TO_CHECK do
-	if P.unitHasAfas(P.addrFromSlot(slot, 0)) then
-		P.canAddAfas = false -- use this to determine if stat up display should show ? for gains possible with Afa
-		break
-	end
-end
 
 
 

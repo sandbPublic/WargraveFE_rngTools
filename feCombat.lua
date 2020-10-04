@@ -64,7 +64,7 @@ local function weaponIdToType(id)
 	return "normal"
 end
 
-ITEM_CODES = {
+P.ITEM_NAMES = {
 	-- FE6
 	{
 		"Iron Sword",
@@ -589,11 +589,11 @@ ITEM_CODES = {
 	}
 }
 
-ITEM_CODES = ITEM_CODES[GAME_VERSION - 5]
-while #ITEM_CODES <= 255 do
-	table.insert(ITEM_CODES, "Item code too large")
+P.ITEM_NAMES = P.ITEM_NAMES[GAME_VERSION - 5]
+while #P.ITEM_NAMES <= 255 do
+	table.insert(P.ITEM_NAMES, "Item code too large")
 end
-ITEM_CODES[0] = "Nothing"
+P.ITEM_NAMES[0] = "Nothing"
 
 
 
@@ -982,7 +982,7 @@ local function createCombatant(startAddr)
 	c.maxHP        = memory.readbyte(startAddr + addr.MAX_HP_OFFSET)
 	c.luck         = memory.readbyte(startAddr + addr.MAX_HP_OFFSET + 7)
 	local wCode    = memory.readbyte(startAddr + addr.ITEMS_OFFSET)
-	c.weapon       = ITEM_CODES[wCode]
+	c.weapon       = P.ITEM_NAMES[wCode]
 	c.weaponType   = weaponIdToType(wCode)
 	c.weaponUses   = memory.readbyte(startAddr + addr.ITEMS_OFFSET + 1)
 	c.atk          = memory.readbyte(startAddr + addr.ATK_OFFSET)

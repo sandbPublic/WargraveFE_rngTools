@@ -347,8 +347,8 @@ while true do
 		end	
 		
 		if pressed(10) then
-			print("hoverPlayerSlot")
-			print(addr.hoverPlayerSlot())
+			print("hoverSlot")
+			print(addr.hoverSlot())
 			-- todo reimplement
 			-- print(combat.paramInRAM(true)) 
 			-- print all stats rather than selecting?

@@ -1107,9 +1107,18 @@ PROMOTED_AT[0] = 0
 WILL_PROMOTE_AT[0] = 0
 WILL_END_AT[0] = 0
 
--- determine if healer is present manually
+-- determine if healer is present manually todo
 P.HEALER_DEPLOYED = false
  
+local CAN_ADD_AFAS = (GAME_VERSION == 7 and memory.readbyte(addr.CHAPTER) >= 31) or -- ch 31 == hector chapter 24
+                     (GAME_VERSION == 8) -- todo confirm chapter code for metis tome
+
+for slot = 1, 255 do
+	if addr.unitHasAfas(addr.addrFromSlot(slot, 0)) then
+		CAN_ADD_AFAS = false -- use this to determine if stat up display should show ? for gains possible with Afa
+		break
+	end
+end
 
 
 
@@ -1219,7 +1228,7 @@ function unitObj:levelUpProcs_string(HP_RN_i)
 		elseif proc == 2 then
 			seq = seq .. "!" -- grows this stat because of Afa's
 			noStatWillRise = false
-		elseif proc == -2 and addr.canAddAfas then
+		elseif proc == -2 and addr.CAN_ADD_AFAS then
 			seq = seq .. "?" -- stat would grow with afa's
 		elseif proc == -1 then
 			seq = seq .. "_" -- can't grow stat

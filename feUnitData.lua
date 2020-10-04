@@ -575,6 +575,8 @@ if GAME_VERSION == 7 then
 	classes.ARCHSAGE		-- Athos
 	}
 
+	initializeCommonValues()
+	
 	do -- HEX_CODES
 HEX_CODES[0xCE4C] = "Eliwood"
 HEX_CODES[0xCE80] = "Hector"
@@ -617,7 +619,7 @@ HEX_CODES[0xD5D0] = "Nils"
 HEX_CODES[0xD604] = "Athos"
 HEX_CODES[0xD638] = "Merlinus"
 HEX_CODES[0xD66C] = "Nils"
-HEX_CODES[0xD6A0] = "Uther (no thumbnail)"
+HEX_CODES[0xD6A0] = "Uther" -- (no thumbnail)
 HEX_CODES[0xD6D4] = "Vaida"
 HEX_CODES[0xD708] = "Wallace"
 HEX_CODES[0xD73C] = "Lyn"
@@ -628,12 +630,12 @@ HEX_CODES[0xD80C] = "Florina"
 HEX_CODES[0xD840] = "Rath"
 HEX_CODES[0xD874] = "Dart"
 HEX_CODES[0xD8A8] = "Isadora"
-HEX_CODES[0xD8DC] = "Eleanora (no thumbnail)"
+HEX_CODES[0xD8DC] = "Eleanora" -- (no thumbnail)
 HEX_CODES[0xD910] = "Legault"
 HEX_CODES[0xD944] = "Karla"
 HEX_CODES[0xD978] = "Harken"
-HEX_CODES[0xD9AC] = "Leila (no thumbnail)"
-HEX_CODES[0xD9E0] = "Bramimond (no thumbnail)"
+HEX_CODES[0xD9AC] = "Leila" -- (no thumbnail)
+HEX_CODES[0xD9E0] = "Bramimond" -- (no thumbnail)
 HEX_CODES[0xDA14] = "Kishuna"
 HEX_CODES[0xDA48] = "Groznyi"
 HEX_CODES[0xDA7C] = "Wire"
@@ -642,7 +644,7 @@ HEX_CODES[0xDAE4] = "Zagan"
 HEX_CODES[0xDB18] = "Boies"
 HEX_CODES[0xDB4C] = "Puzon"
 HEX_CODES[0xDB80] = "Bandit"
-HEX_CODES[0xDBB4] = "Santals (no thumbnail)"
+HEX_CODES[0xDBB4] = "Santals" -- (no thumbnail)
 HEX_CODES[0xDBE8] = "Nergal"
 HEX_CODES[0xDC1C] = "Erik"
 HEX_CODES[0xDC50] = "Sealen"
@@ -661,7 +663,7 @@ HEX_CODES[0xDEC0] = "Black Fang"
 HEX_CODES[0xDEF4] = "Paul"
 HEX_CODES[0xDF28] = "Jasmine"
 HEX_CODES[0xDF5C] = "Black Fang"
-HEX_CODES[0xDF90] = "Jerme (morph)"
+HEX_CODES[0xDF90] = "Jerme" --  (morph)
 HEX_CODES[0xDFC4] = "Pascal"
 HEX_CODES[0xDFF8] = "Kenneth"
 HEX_CODES[0xE02C] = "Jerme"
@@ -698,7 +700,7 @@ HEX_CODES[0xE644] = "Caelin"
 HEX_CODES[0xE678] = "Laus"
 HEX_CODES[0xE6AC] = "Laus"
 HEX_CODES[0xE6E0] = "Zephiel"
-HEX_CODES[0xE714] = "Elbert (no thumbnail)"
+HEX_CODES[0xE714] = "Elbert" -- (no thumbnail)
 HEX_CODES[0xE748] = "Black Fang"
 HEX_CODES[0xE77C] = "Black Fang"
 HEX_CODES[0xE7B0] = "Black Fang"
@@ -733,7 +735,7 @@ HEX_CODES[0xED60] = "Bandit"
 HEX_CODES[0xED94] = "Bandit"
 HEX_CODES[0xEDC8] = "Bandit"
 HEX_CODES[0xEDFC] = "Bandit"
-HEX_CODES[0xEE30] = "Natalie (thumbnail only)"
+HEX_CODES[0xEE30] = "Natalie" -- (thumbnail only)
 HEX_CODES[0xEE64] = "Bool"
 HEX_CODES[0xEE98] = "Bandit"
 HEX_CODES[0xEECC] = "Bandit"
@@ -819,11 +821,9 @@ HEX_CODES[0xFED8] = "Guardian"
 HEX_CODES[0xFF0C] = "Morph"
 HEX_CODES[0xFF40] = "Guardian"
 HEX_CODES[0xFF74] = "Black Fang"
-HEX_CODES[0xFFA8] = "Lloyd (morph)"
-HEX_CODES[0xFFDC] = "Linus (morph)"
+HEX_CODES[0xFFA8] = "Lloyd" -- (morph)
+HEX_CODES[0xFFDC] = "Linus" --  (morph)
 	end
-	
-	initializeCommonValues()
 	
 	if HARD_MODE then
 		BASE_STATS[INDEX_OF_NAME["Guy"]]      = {21, 06, 11, 11, 05, 00, 05, 03}
@@ -1032,6 +1032,8 @@ if GAME_VERSION == 8 then
 	classes.NECROMANCER			--Lyon
 	}
 
+	initializeCommonValues()
+	
 	do -- HEX_CODES
 HEX_CODES[0x3D64] = "Eirika"
 HEX_CODES[0x3D98] = "Seth"
@@ -1078,8 +1080,6 @@ HEX_CODES[0x45B8] = "Fado"
 HEX_CODES[0x45EC] = "Ismaire"
 HEX_CODES[0x4620] = "Hayden"
 	end
-	
-	initializeCommonValues()
 	
 	BOOSTERS[INDEX_OF_NAME["Lute"]] = {0, 0, 2, 0, 2, 0, 0}
 	BOOSTERS[INDEX_OF_NAME["Tana"]] = {7, 0, 0, 0, 2, 0, 0}
@@ -1434,6 +1434,17 @@ function unitObj:setStats()
 	end
 end
 
+function unitObj:setClass()
+	self.class = classes.HEX_CODES[memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)] or classes.OTHER
+	self.canPromote = self.class == BASE_CLASSES[unit_i] and self.class ~= self.promotion
+	if self.canPromote then
+		for i, gain in ipairs(classes.PROMO_GAINS[self.class]) do
+			self.bases[i] = self.bases[i] + gain
+		end
+		self.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
+	end
+end
+
 function unitObj:new(unit_i)
 	local o = {}
 	setmetatable(o, self)
@@ -1448,21 +1459,12 @@ function unitObj:new(unit_i)
 		o.bases[i] = o.bases[i] + boost
 	end
 
-	o.class = classes.HEX_CODES[memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)] or classes.OTHER
 	o.promotion = PROMOTIONS[unit_i]
-	
-	o.canPromote = o.class == BASE_CLASSES[unit_i] and o.class ~= o.promotion
-	if o.canPromote then
-		for i, gain in ipairs(classes.PROMO_GAINS[o.class]) do
-			o.bases[i] = o.bases[i] + gain
-		end
-		o.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
-	end
-	
 	o.willPromoteAt = WILL_PROMOTE_AT[unit_i]
 	o.willEndAt = WILL_END_AT[unit_i]
 	o.hasAfas = (unit_i == AFAS_I)
 	
+	o:setClass()
 	o:setStats()
 	
 	return o
@@ -1488,7 +1490,10 @@ function P.currUnit()
 		print("unit not found " .. name)
 		INDEX_OF_NAME[name] = 0 -- will "find" unit 0 if checking for this code again
 	end
+	
+	u:setClass()
 	u:setStats()
+	
 	return u
 end
 

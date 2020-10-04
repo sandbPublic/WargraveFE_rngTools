@@ -118,6 +118,8 @@ P.OTHER_PROMOTED    = nextInd()
 
 end
 
+-- todo inanimate classes eg wall, snag
+
 P.EXP_POWER = {}
 P.PROMOTED = {}
 P.EXP_KILL_MODIFIER = {}

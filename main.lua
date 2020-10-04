@@ -338,7 +338,9 @@ while true do
 			end
 		end	
 		
-		if pressed(10) then 
+		if pressed(10) then
+			print("hoverPlayerSlot")
+			print(addr.hoverPlayerSlot())
 			-- todo reimplement
 			-- print(combat.paramInRAM(true)) 
 			-- print all stats rather than selecting?
@@ -353,13 +355,11 @@ while true do
 			print(string.format("Switching to %s rng", currentRNG:name()))
 		end
 		
-		-- todo modify RAM values for slots
-		
 		local function printRAMhelp()
 			print()
 			local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
 			local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
-			local address = addr.SLOT_1_START + (slotID-1)*72 + RAMoffset
+			local address = addr.addrFromSlot(slotID, RAMoffset)
 			print(string.format("modifying for %s slot %2d, offset %2d (%5X) = %3d", 
 				unitData.hexCodeToName(nameCode),
 				slotID,
@@ -400,27 +400,25 @@ while true do
 			end
 			if pressed("left", gameCtrl) then
 				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
-				local address = addr.SLOT_1_START + (slotID-1)*72 + RAMoffset
-				local data = memory.readbyte(address)
+				local data = addr.byteFromSlot(slotID, RAMoffset)
 				data = data - 1
 				if data < 0 then
 					print()
 					print("Can't shift data below 0")
 				else
-					memory.writebyte(addr.SLOT_1_START + RAMoffset, data)
+					memory.writebyte(addr.addrFromSlot(slotID, RAMoffset), data)
 					printRAMhelp()
 				end
 			end
 			if pressed("right", gameCtrl) then
 				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
-				local address = addr.SLOT_1_START + (slotID-1)*72 + RAMoffset
-				local data = memory.readbyte(address)
+				local data = addr.byteFromSlot(slotID, RAMoffset)
 				data = data + 1
 				if data > 255 then
 					print()
 					print("Can't shift data above 255")
 				else
-					memory.writebyte(addr.SLOT_1_START + RAMoffset, data)
+					memory.writebyte(addr.addrFromSlot(slotID, RAMoffset), data)
 					printRAMhelp()
 				end
 			end
@@ -433,6 +431,7 @@ while true do
 			local classCode = memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)
 			local class = classes.HEX_CODES[classCode] or classes.OTHER
 			print(string.format("class %d 0x%04X", class, classCode))
+			print(string.format("slot %d", memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)))
 		end
 	end
 	

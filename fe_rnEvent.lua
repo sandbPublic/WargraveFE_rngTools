@@ -121,7 +121,7 @@ function P.rnEventObj:headerString(rnEvent_i)
 end
 
 function P.rnEventObj:healable()
-	if self.hasCombat and self.mHitSeq.atkHP < self.maxHP then
+	if self.hasCombat and self.mHitSeq.atkHP < self.combatants.player.maxHP then
 		return true
 	end
 	return self:levelDetected() 
@@ -164,8 +164,8 @@ function P.rnEventObj:evaluation_fn(printV)
 			local eHPendFrac = self.mHitSeq.defHP/self.combatants.enemy.maxHP
 			local eLostValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
 			
-			local pHPstartFrac = self.combatants.player.currHP/self.maxHP
-			local pHPendFrac = self.mHitSeq.atkHP/self.maxHP
+			local pHPstartFrac = self.combatants.player.currHP/self.combatants.player.maxHP
+			local pHPendFrac = self.mHitSeq.atkHP/self.combatants.player.maxHP
 			local pLostValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
 			
 			score = score + self.eHPweight * eLostValue 
@@ -317,6 +317,7 @@ function P.rnEventObj:printDiagnostic()
 		print(self.combatants.defender)
 		print()
 		print(self.combatants.phase .. " phase " .. self.combatants.specialWeaponStr)
+		print("expFromDmg " .. self.combatants.expFromDmg .. " expFromKill " .. self.combatants.expFromKill)
 	end
 	
 	print(string.format("Eval %5.2f", self.eval))
@@ -443,8 +444,8 @@ function P.swap()
 end
 
 function P.rnEventObj:setStats()
+	self.unit:setClass()
 	self.unit:setStats()
-	self.maxHP = self.unit.stats[1]
 	self.mExpValueFactor = self.unit:expValueFactor()
 end
 
@@ -466,6 +467,7 @@ end
 
 -- assumes previous rnEvents have updates for optimization
 -- does not do anything with cached values
+-- this does not update startRN_i or postBurnsRN_i
 function P.rnEventObj:updateFull()
 	if self.hasCombat then
 		self.mHitSeq = self.combatants:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
@@ -581,7 +583,6 @@ end
 
 function P.updateStats()
 	if #P.events <= 0 then return end
-	
 	selected(P.events):setStats()
 	invalidateCache()
 end
@@ -618,7 +619,6 @@ function P.rnEventObj:new()
 	o.comesAfter = {} -- enforces dependencies: certain rnEvents must precede others
 	
 	o.unit = unitData.currUnit()
-	o:setStats() -- todo do we get enemy stats on EP?
 	o.combatants = combat.combatObj:new()
 	
 	o.hasCombat = true -- most rnEvents will be combats without levels or digs

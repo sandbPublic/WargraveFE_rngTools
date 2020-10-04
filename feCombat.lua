@@ -972,11 +972,9 @@ end
 local function createCombatant(startAddr)
 	c = {}
 	
-	local nameCode = memory.readword(startAddr + addr.NAME_CODE_OFFSET)
-	c.name         = unitData.hexCodeToName(nameCode)
+	c.name         = unitData.hexCodeToName(memory.readword(startAddr + addr.NAME_CODE_OFFSET))
 	c.class        = classes.HEX_CODES[memory.readword(startAddr + addr.CLASS_CODE_OFFSET)] or classes.OTHER
-	c.level        = memory.readbyte(startAddr + addr.LEVEL_OFFSET)	
-	c.exp          = memory.readbyte(startAddr + addr.EXP_OFFSET)
+	
 	
 	c.x            = memory.readbyte(startAddr + addr.X_OFFSET)
 	c.y            = memory.readbyte(startAddr + addr.Y_OFFSET)
@@ -992,6 +990,8 @@ local function createCombatant(startAddr)
 	c.AS           = memory.readbyte(startAddr + addr.AS_OFFSET)
 	c.hit          = memory.readbyte(startAddr + addr.HIT_OFFSET)
 	c.crit         = memory.readbyte(startAddr + addr.CRIT_OFFSET)
+	c.level        = memory.readbyte(startAddr + addr.LEVEL2_OFFSET)
+	c.exp          = memory.readbyte(startAddr + addr.EXP2_OFFSET)
 	c.currHP       = memory.readbyte(startAddr + addr.CURR_HP_OFFSET)
 	
 	return c

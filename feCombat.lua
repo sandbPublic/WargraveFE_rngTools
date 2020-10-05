@@ -974,7 +974,7 @@ local function createCombatant(startAddr)
 	
 	c.name         = unitData.hexCodeToName(memory.readword(startAddr + addr.NAME_CODE_OFFSET))
 	c.class        = classes.HEX_CODES[memory.readword(startAddr + addr.CLASS_CODE_OFFSET)] or classes.OTHER
-	
+	c.slot         = memory.readbyte(startAddr + addr.SLOT_ID_OFFSET) -- for carrying hp in multi combats
 	
 	c.x            = memory.readbyte(startAddr + addr.X_OFFSET)
 	c.y            = memory.readbyte(startAddr + addr.Y_OFFSET)

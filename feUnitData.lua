@@ -1118,6 +1118,7 @@ PROMOTIONS[0] = classes.OTHER_PROMOTED
 PROMOTED_AT[0] = 0
 WILL_PROMOTE_AT[0] = 0
 WILL_END_AT[0] = 0
+HEX_CODES[0x0000] = "empty slot"
 
 -- determine if healer is present manually todo
 P.HEALER_DEPLOYED = false

@@ -103,8 +103,8 @@ function P.rnEventObj:headerString(rnEvent_i)
 		end
 	end
 	
-	if self.enemyID ~= 0 then
-		detailString = detailString .. string.format(" eID %d %2dhp", self.enemyID, self.enemyHPstart)
+	if self.enemyHPwasCarried then
+		detailString = detailString .. " eHP carried: " .. self.enemyHPstart
 	end
 
 	detailString = detailString .. self.combatants.specialWeaponStr
@@ -451,17 +451,17 @@ end
 function P.rnEventObj:setEnemyHPstart(rnEvent_i)
 	self.enemyHPstart = self.combatants.enemy.currHP
 	
-	if self.enemyID == 0 then return end
-	
 	-- copy eHP from end of earliest previous combat that shares an enemy id if one exists
 	for prevCombat_i = rnEvent_i-1, 1, -1 do
 		local prev_rnEvent = P.events[prevCombat_i]
 	
-		if prev_rnEvent.enemyID == self.enemyID and prev_rnEvent.hasCombat then
+		if prev_rnEvent.combatants.enemy.slot == self.combatants.enemy.slot and prev_rnEvent.hasCombat then
 			self.enemyHPstart = prev_rnEvent.enemyHPend
+			self.enemyHPwasCarried = true
 			return
 		end
 	end
+	self.enemyHPwasCarried = false
 end
 
 -- assumes previous rnEvents have updates for optimization
@@ -594,7 +594,7 @@ function P.toggle(k)
 	invalidateCache()
 end
 
--- burns, enemyID, pHPweight, eHPweight
+-- burns, pHPweight, eHPweight
 -- technically burns do not require a cache invalidation,
 -- and the other fields would be valid as negative, 
 -- but this allows function consolidation
@@ -635,7 +635,7 @@ function P.rnEventObj:new()
 	o.pHPweight = DEFAULT_PHP_WEIGHT
 	o.eHPweight = DEFAULT_EHP_WEIGHT
 	
-	o.enemyID = 0 -- for units attacking the same enemyID
+	o.enemyHPwasCarried = false
 	o.enemyHPstart = o.combatants.enemy.currHP -- if a previous unit has damaged this enemy. HP at start of this rnEvent
 	o.enemyHPend = 0 -- HP at end of this rnEvent
 	-- todo player HP (from multi combat due to dance, or EP)

@@ -150,14 +150,6 @@ while true do
 			rnEvent.change("burns", rnStepSize)
 		end
 		
-		-- change enemyID -- todo get from RAM
-		if pressed("L", gameCtrl) then
-			rnEvent.change("enemyID", -1)
-		end
-		if pressed("R", gameCtrl) then
-			rnEvent.change("enemyID", 1)
-		end
-		
 		-- change selection
 		if pressed("up", gameCtrl) then
 			changeSelection(rnEvent.events, -1)

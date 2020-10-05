@@ -228,7 +228,7 @@ if testAll then -- Event
 	rnEvent.undoDelete()
 	eventTest()
 	
-	changeFields = {"burns", "enemyID", "pHPweight", "eHPweight"}
+	changeFields = {"burns", "pHPweight", "eHPweight"}
 	changeAmounts = {1, -1, 10, -10, -1000}
 	
 	for i, field in ipairs(changeFields) do

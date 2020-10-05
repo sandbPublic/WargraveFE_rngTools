@@ -85,12 +85,13 @@ function P.passiveUpdate()
 		newEvent = true
 	end
 	
-	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
+	if (currTurn ~= memory.readbyte(addr.TURN)) or (currPhase ~= getPhase()) then
+		
 		currTurn = memory.readbyte(addr.TURN)
 		currPhase = getPhase()
+		updateLastDeployedSlot()
 		
-		autolog.addLog_string("\nTurn " .. currTurn .. " " .. currPhase .. " phase")
-		
+		autolog.addLog_string("\n\nTurn " .. currTurn .. " " .. currPhase .. " phase")
 		for slot = 1, lastDeployedSlot do -- until empty player slots
 			if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then -- if on map
 				slotStopped[slot] = addr.unitIsStopped(slot)
@@ -116,6 +117,7 @@ function P.passiveUpdate()
 				end
 			end
 		end
+		autolog.addLog_string("")
 	end
 	
 	if getPhase() == "player" then -- check movements

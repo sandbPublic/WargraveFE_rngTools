@@ -47,29 +47,32 @@ local function initializeCommonValues()
 end
 
 if GAME_VERSION == 6 then
-	-- disambiguate Marcus, Merlinus, Bartre, and Karel from FE7
+	-- todo is this needed? disambiguate Marcus, Merlinus, Bartre, and Karel from FE7
 	NAMES = {
-	"Roy", "Marcus6", "Allen", "Lance", "Wolt", 
-	"Bors", "Merlinus6", "Ellen", "Dieck", "Wade", 
+	"Roy", "Marcus", "Allen", "Lance", "Wolt", 
+	"Bors", "Merlinus", "Ellen", "Dieck", "Wade",
+	
 	"Lott", "Thany", "Chad", "Lugh", "Clarine", 
 	"Rutger", "Saul", "Dorothy", "Sue", "Zealot",
 	 
 	"Treck", "Noah", "Astohl", "Lilina", "Wendy", 
 	"Barth", "Ogier", "Fir", "Shin", "Gonzales", 
+
 	"Geese", "Klein", "Tate", "Lalum", "Echidna", 
-	"Elphin", "Bartre6", "Ray", "Cath", "Milady", 
+	"Elphin", "Bartre", "Ray", "Cath", "Milady", 
 
 	"Percival", "Cecilia", "Sophia", "Igrene", "Garret", 
 	"Fa", "Hugh", "Zeis", "Douglas", "Niime", 
-	"Dayan", "Juno", "Yodel", "Karel6"}
+
+	"Dayan", "Juno", "Yodel", "Karel"}
 	GROWTHS = {
 	{80, 40, 50, 40, 25, 30, 60}, -- Roy
-	{60, 25, 20, 25, 15, 20, 20}, -- Marcus6
+	{60, 25, 20, 25, 15, 20, 20}, -- Marcus
 	{85, 45, 40, 45, 25, 10, 40}, -- Allen
 	{80, 40, 45, 50, 20, 15, 35}, -- Lance
 	{80, 40, 50, 40, 20, 10, 40}, -- Wolt
 	{90, 30, 30, 40, 35, 10, 50}, -- Bors
-	{00, 00, 50, 50, 20, 05, 00}, -- Merlinus6
+	{00, 00, 50, 50, 20, 05, 00}, -- Merlinus
 	{45, 50, 30, 20, 05, 60, 70}, -- Ellen
 	{90, 40, 40, 30, 20, 15, 35}, -- Dieck
 	{75, 50, 45, 20, 30, 05, 45}, -- Wade 
@@ -99,7 +102,7 @@ if GAME_VERSION == 6 then
 	{70, 10, 05, 70, 20, 30, 80}, -- Lalum
 	{75, 30, 25, 30, 15, 15, 20}, -- Echidna
 	{80, 05, 05, 65, 25, 55, 65}, -- Elphin
-	{70, 40, 20, 30, 20, 05, 20}, -- Bartre6
+	{70, 40, 20, 30, 20, 05, 20}, -- Bartre
 	{55, 45, 55, 40, 15, 35, 15}, -- Ray
 	{80, 40, 45, 85, 15, 20, 50}, -- Cath
 	{75, 50, 50, 45, 20, 05, 25}, -- Miredy
@@ -116,16 +119,16 @@ if GAME_VERSION == 6 then
 	{55, 20, 20, 15, 10, 10, 20}, -- Dayan
 	{50, 20, 35, 30, 10, 10, 45}, -- Juno
 	{20, 30, 15, 10, 10, 20, 20}, -- Yodel
-	{10, 30, 40, 40, 10, 00, 20}  -- Karel6
+	{10, 30, 40, 40, 10, 00, 20}  -- Karel
 	}
 	BASE_STATS = {
 	{18, 05, 05, 07, 05, 00, 07, 01}, -- Roy
-	{32, 09, 14, 11, 09, 08, 10, 01}, -- Marcus6
+	{32, 09, 14, 11, 09, 08, 10, 01}, -- Marcus
 	{21, 07, 04, 06, 06, 00, 03, 01}, -- Allen
 	{20, 05, 06, 08, 06, 00, 02, 01}, -- Lance
 	{18, 04, 04, 05, 04, 00, 02, 01}, -- Wolt
 	{20, 07, 04, 03, 11, 00, 04, 01}, -- Bors
-	{15, 00, 03, 03, 03, 00, 10, 01}, -- Merlinus6
+	{15, 00, 03, 03, 03, 00, 10, 01}, -- Merlinus
 	{16, 01, 06, 08, 00, 06, 08, 02}, -- Ellen
 	{26, 09, 12, 10, 06, 01, 05, 05}, -- Dieck
 	{28, 08, 03, 05, 03, 00, 04, 02}, -- Wade
@@ -155,7 +158,7 @@ if GAME_VERSION == 6 then
 	{14, 01, 02, 11, 02, 04, 09, 01}, -- Lalum
 	{35, 13, 19, 18, 08, 07, 06, 01}, -- Echidna
 	{15, 01, 03, 10, 04, 01, 11, 01}, -- Elphin
-	{48, 22, 11, 10, 10, 03, 14, 02}, -- Bartre6, note serenes is incorrect, level 2, not 1
+	{48, 22, 11, 10, 10, 03, 14, 02}, -- Bartre, note serenes is incorrect, level 2, not 1
 	{23, 12, 09, 09, 05, 10, 06, 12}, -- Ray
 	{16, 03, 07, 11, 02, 01, 08, 05}, -- Cath, more stats if recruited later
 	{30, 12, 11, 10, 13, 03, 05, 10}, -- Miredy
@@ -172,7 +175,7 @@ if GAME_VERSION == 6 then
 	{43, 14, 16, 20, 10, 12, 12, 12}, -- Dayan
 	{33, 11, 14, 16, 08, 12, 14, 09}, -- Juno
 	{35, 19, 18, 14, 05, 30, 11, 20}, -- Yodel
-	{44, 20, 28, 23, 15, 13, 18, 19}  -- Karel6
+	{44, 20, 28, 23, 15, 13, 18, 19}  -- Karel
 	}
 	BASE_CLASSES = {
 	classes.LORD, 			-- Roy
@@ -309,7 +312,7 @@ HEX_CODES[0x79D0] = "Ellen"
 HEX_CODES[0x7A00] = "Yodel"
 HEX_CODES[0x7A30] = "Yodel"
 HEX_CODES[0x7A60] = "Chad"
-HEX_CODES[0x7A90] = "Karel6"
+HEX_CODES[0x7A90] = "Karel"
 HEX_CODES[0x7AC0] = "Fir"
 HEX_CODES[0x7AF0] = "Rutger"
 HEX_CODES[0x7B20] = "Dieck"
@@ -319,12 +322,12 @@ HEX_CODES[0x7BB0] = "Allen"
 HEX_CODES[0x7BE0] = "Lance"
 HEX_CODES[0x7C10] = "Percival"
 HEX_CODES[0x7C40] = "Igrene"
-HEX_CODES[0x7C70] = "Marcus6"
+HEX_CODES[0x7C70] = "Marcus"
 HEX_CODES[0x7CA0] = "Astohl"
 HEX_CODES[0x7CD0] = "Wade"
 HEX_CODES[0x7D00] = "Lott"
-HEX_CODES[0x7D30] = "Bartre6"
-HEX_CODES[0x7D60] = "Bartre6"
+HEX_CODES[0x7D30] = "Bartre"
+HEX_CODES[0x7D60] = "Bartre"
 HEX_CODES[0x7D90] = "Lugh"
 HEX_CODES[0x7DC0] = "Lilina"
 HEX_CODES[0x7DF0] = "Hugh"
@@ -354,7 +357,7 @@ HEX_CODES[0x8240] = "Echidna"
 HEX_CODES[0x8270] = "Cecilia"
 HEX_CODES[0x82A0] = "Geese"
 HEX_CODES[0x82D0] = "Geese"
-HEX_CODES[0x8300] = "Merlinus6"
+HEX_CODES[0x8300] = "Merlinus"
 HEX_CODES[0x8330] = "Eliwood"
 HEX_CODES[0x8360] = "Guinevere"
 	end
@@ -384,15 +387,17 @@ if GAME_VERSION == 7 then
 	NAMES = {
 	"Eliwood", "Lowen", "Marcus", "Rebecca", "Dorcas",
 	"Bartre", "Hector", "Oswin", "Serra", "Matthew",
+	
 	"Guy", "Merlinus", "Erk", "Priscilla", "Lyn",
 	"Wil", "Kent", "Sain", "Florina", "Raven",
 
 	"Lucius", "Canas", "Dart", "Fiora", "Legault",
-	"Ninian/Nils", "Isadora", "Heath", "Rath", "Hawkeye",
-	"Geitz", "Wallace", "Farina", "Pent", "Louise",
-	"Karel", "Harken", "Nino", "Jaffar", "Vaida",
-
-	"Karla", "Renault", "Athos"
+	"Ninian", "Nils", "Isadora", "Heath", "Rath", 
+	
+	"Hawkeye", "Geitz", "Wallace", "Farina", "Pent", 
+	"Louise", "Karel", "Harken", "Nino", "Jaffar", 
+	
+	"Vaida", "Karla", "Renault", "Athos"
 	}
 	GROWTHS = {
 	{80, 45, 50, 40, 30, 35, 45}, -- Eliwood
@@ -420,7 +425,8 @@ if GAME_VERSION == 7 then
 	{70, 65, 20, 60, 20, 15, 35}, -- Dart
 	{70, 35, 60, 50, 20, 50, 30}, -- Fiora
 	{60, 25, 45, 60, 25, 25, 60}, -- Legault
-	{85, 05, 05, 70, 30, 70, 80}, -- Nils/Ninian
+	{85, 05, 05, 70, 30, 70, 80}, -- Ninian
+	{85, 05, 05, 70, 30, 70, 80}, -- Nils
 	{75, 30, 35, 50, 20, 25, 45}, -- Isadora
 	{80, 50, 50, 45, 30, 20, 20}, -- Heath
 	{80, 50, 40, 50, 10, 25, 30}, -- Rath
@@ -465,7 +471,8 @@ if GAME_VERSION == 7 then
 	{34, 12, 08, 08, 06, 01, 03, 08}, -- Dart
 	{21, 08, 11, 13, 06, 07, 06, 07}, -- Fiora
 	{26, 08, 11, 15, 08, 03, 10, 12}, -- Legault
-	{14, 00, 00, 12, 05, 04, 10, 01}, -- Ninian/Nils
+	{14, 00, 00, 12, 05, 04, 10, 01}, -- Ninian
+	{14, 00, 00, 12, 05, 04, 10, 01}, -- Nils
 	{28, 13, 12, 16, 08, 06, 10, 01}, -- Isadora
 	{28, 11, 08, 07, 10, 01, 07, 07}, -- Heath
 	{27, 09, 10, 11, 08, 02, 05, 09}, -- Rath
@@ -510,7 +517,8 @@ if GAME_VERSION == 7 then
 	classes.PIRATE,			-- Dart
 	classes.PEGASUS_KNIGHT, -- Fiora
 	classes.THIEF,			-- Legault
-	classes.DANCER,			-- Ninian/Nils
+	classes.DANCER,			-- Ninian
+	classes.BARD,			-- Nils
 	classes.PALADIN_F,		-- Isadora
 	classes.WYVERN_RIDER,	-- Heath
 	classes.NOMAD,			-- Rath
@@ -555,7 +563,8 @@ if GAME_VERSION == 7 then
 	classes.BERSERKER,		-- Dart
 	classes.FALCO_KNIGHT, 	-- Fiora
 	classes.ASSASSIN_M,		-- Legault
-	classes.DANCER,			-- Ninian/Nils
+	classes.DANCER,			-- Ninian
+	classes.BARD,			-- Nils
 	classes.PALADIN_F,		-- Isadora
 	classes.WYVERN_LORD_M,	-- Heath
 	classes.TROOPER_M,		-- Rath
@@ -826,27 +835,30 @@ HEX_CODES[0xFFDC] = "Linus" --  (morph)
 	end
 	
 	if HARD_MODE then
-		BASE_STATS[INDEX_OF_NAME["Guy"]]      = {21, 06, 11, 11, 05, 00, 05, 03}
-		BASE_STATS[INDEX_OF_NAME["Raven"]]    = {25, 08, 11, 13, 05, 01, 02, 05}
-		BASE_STATS[INDEX_OF_NAME["Legault"]]  = {26, 08, 11, 15, 08, 03, 10, 12}
-		BASE_STATS[INDEX_OF_NAME["Heath"]]    = {28, 11, 08, 07, 10, 01, 07, 07}
-		BASE_STATS[INDEX_OF_NAME["Geitz"]]    = {40, 17, 12, 13, 11, 03, 10, 03}
-		BASE_STATS[INDEX_OF_NAME["Harken"]]   = {38, 21, 20, 17, 15, 10, 12, 08}
-		BASE_STATS[INDEX_OF_NAME["Vaida"]]    = {43, 20, 19, 13, 21, 06, 11, 09}
+		BASE_STATS[INDEX_OF_NAME["Guy"]]     = {21, 06, 11, 11, 05, 00, 05, 03}
+		BASE_STATS[INDEX_OF_NAME["Raven"]]   = {25, 08, 11, 13, 05, 01, 02, 05}
+		BASE_STATS[INDEX_OF_NAME["Legault"]] = {26, 08, 11, 15, 08, 03, 10, 12}
+		BASE_STATS[INDEX_OF_NAME["Heath"]]   = {28, 11, 08, 07, 10, 01, 07, 07}
+		BASE_STATS[INDEX_OF_NAME["Geitz"]]   = {40, 17, 12, 13, 11, 03, 10, 03}
+		BASE_STATS[INDEX_OF_NAME["Harken"]]  = {38, 21, 20, 17, 15, 10, 12, 08}
+		BASE_STATS[INDEX_OF_NAME["Vaida"]]   = {43, 20, 19, 13, 21, 06, 11, 09}
 	end
 
-	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian/Nils"]] = {30, 00, 00, 19, 30, 10, 10}	
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian"]] = {30, 00, 00, 19, 30, 10, 10}
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Nils"]]   = {30, 00, 00, 19, 30, 10, 10}	
 end
 
 if GAME_VERSION == 8 then
 	NAMES = {
 	"Eirika", "Seth", "Franz", "Gilliam", "Moulder",
 	"Vanessa", "Ross", "Garcia", "Neimi", "Colm",
+	
 	"Artur", "Lute", "Natasha", "Joshua", "Ephraim",
 	"Forde", "Kyle", "Tana", "Amelia", "Innes",
 
 	"Gerik", "Tethys", "Marisa", "L\'Arachel", "Dozla",
 	"Saleh", "Ewan", "Cormag", "Rennac", "Duessel",
+	
 	"Knoll", "Myrrh", "Syrene", "Caellach", "Orson",
 	"Riev", "Ismaire", "Selena", "Glen", "Hayden",
 
@@ -1136,7 +1148,13 @@ local function statsInRAM()
 end
 
 function P.hexCodeToName(hexCode)
-	return HEX_CODES[hexCode] or string.format("%04X", hexCode)
+	if HEX_CODES[hexCode] then
+		return HEX_CODES[hexCode]
+	else
+		print(string.format("\n\nunrecognized unit name, code %04X\n\n", hexCode))
+		
+		return string.format("%04X", hexCode)
+	end
 end
 
 local RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
@@ -1490,9 +1508,6 @@ function P.currUnit()
 	local u = units[0]
 	if INDEX_OF_NAME[name] then
 		u = units[INDEX_OF_NAME[name]]
-	else
-		print(string.format("unit not found %s %0X", name, nameCode))
-		INDEX_OF_NAME[name] = 0 -- will "find" unit 0 if checking for this code again
 	end
 	
 	u:loadRAMvalues()

@@ -710,7 +710,7 @@ function P.combatObj:expFrom(didKill, didAssassinate)
 	return math.floor(rExpFrom)
 end
 
--- string action type, int dmg, int rnsConsumed, bool expWasGained, bool didAssassinate
+-- string action type, int dmg, int rnsConsumed, bool expWasGained, bool didAssassinate, bool durabilityUsed
 function P.combatObj:hitEvent(index, isAttacker)
 	local combatant = self:combatant(isAttacker)
 
@@ -751,6 +751,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 		
 		if willHit then
 			retHitEv.action = "X"
+			retHitEv.durabilityUsed = true
 			
 			-- confirmed gShield, Pierce, crit, Silencer order
 			-- then Devil?
@@ -807,6 +808,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 			retHitEv.action = "O"
 			retHitEv.dmg = 0
 			retHitEv.expWasGained = false
+			retHitEv.durabilityUsed = combatant.usesMagic
 		end
 	end
 	
@@ -832,9 +834,10 @@ end
 -- X hit events, expGained, lvlUp, totalRNsConsumed, atkHP, defHP
 -- can carry enemy's hp from previous combat (technically defenders hp but only relevant on player phase)
 -- todo track weapon uses for weapon breaking preventing doubling
+-- physical weapons do not consume a use when missing, magic does
+-- if a brave weapon consumes last use on first hit, will still do 2nd "brave" hit
 function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	local rHitSeq = {} -- numeric keys are hit events
-	local isAttackers = {} -- unnecessary to return with current functionality
 	rHitSeq.expGained = 1
 	rHitSeq.lvlUp = false
 	rHitSeq.totalRNsConsumed = 0
@@ -842,6 +845,7 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	
 	-- pass enemy HP from previous combats this phase if applicable
 	rHitSeq.defHP = carriedDefHP or self.defender.currHP
+	
 	if rHitSeq.defHP == 0 then
 		rHitSeq.expGained = 0
 		return rHitSeq
@@ -854,37 +858,31 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 		return rHitSeq
 	end
 	
-	local function setNext(isAttacker)
-		table.insert(isAttackers, isAttacker)
-		if self:combatant(isAttacker).weaponType == "brave" then
-			table.insert(isAttackers, isAttacker)
-		end
-	end
-	
-	setNext(ATTACKER)
-	defenderCounters = (self.defender.hit ~= 255)
-	
-	if defenderCounters then
-		setNext(DEFENDER)
-	end
-	
-	if self.attacker.doubles then
-		setNext(ATTACKER)
-	elseif self.defender.doubles and defenderCounters then
-		setNext(DEFENDER)
-	end
-	
+	local nextIsAttacker = true
+	local attackerUses = self.attacker.weaponUses
+	local defenderUses = self.defender.weaponUses
 	local isEnemyPhase = (self.phase == "enemy") -- other phase treated as player
+	local terminateCombat = false
 	
-	for ev_i, isAttacker in ipairs(isAttackers) do
+	local function processNextAttack(isAttacker)
 		local hE = self:hitEvent(rnOffset, isAttacker)
 		
-		rHitSeq[ev_i] = hE
+		rHitSeq[#rHitSeq + 1] = hE
 		rnOffset = rnOffset + hE.RNsConsumed
 		rHitSeq.totalRNsConsumed = rHitSeq.totalRNsConsumed + hE.RNsConsumed
 		
+		-- lowercase for enemy (attacker on EP, defender on PP)
+		if isAttacker == isEnemyPhase then
+			hE.action = hE.action:lower()
+		end
+		
 		-- process damage, due to drain/devil both combatants hp may change
+		-- reduce item durability if needed
 		if isAttacker then
+			if hE.durabilityUsed then
+				attackerUses = attackerUses - 1
+			end
+		
 			if hE.action ~= "DEV" then
 				hE.dmg = math.min(hE.dmg, rHitSeq.defHP)
 				rHitSeq.defHP = rHitSeq.defHP - hE.dmg
@@ -897,6 +895,10 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 				rHitSeq.atkHP = math.min(rHitSeq.atkHP + hE.dmg, self.attacker.maxHP)
 			end
 		else
+			if hE.durabilityUsed then
+				defenderUses = defenderUses - 1
+			end
+		
 			if hE.action ~= "DEV" then
 				hE.dmg = math.min(hE.dmg, rHitSeq.atkHP)
 				rHitSeq.atkHP = rHitSeq.atkHP - hE.dmg
@@ -909,39 +911,64 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 				rHitSeq.defHP = math.min(rHitSeq.defHP + hE.dmg, self.defender.maxHP)
 			end
 		end
-		
+	
 		if rHitSeq.atkHP <= 0 then rHitSeq.atkHP = 0 end
 		if rHitSeq.defHP <= 0 then rHitSeq.defHP = 0 end
-		
-		-- lowercase for enemy (attacker on EP, defender on PP)
-		if isAttacker == isEnemyPhase then
-			hE.action = hE.action:lower()
-		end
 		
 		if (rHitSeq.defHP == 0 and not isEnemyPhase) or 
 		   (rHitSeq.atkHP == 0 and isEnemyPhase) then  -- enemy died, combat over
 			
 			rHitSeq.expGained = self:expFrom(true, hE.didAssassinate)
 			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
-			return rHitSeq
-		end
-
-		if (rHitSeq.atkHP == 0 and not isEnemyPhase) or 
+			terminateCombat = true
+			
+		elseif (rHitSeq.atkHP == 0 and not isEnemyPhase) or 
 		   (rHitSeq.defHP == 0 and isEnemyPhase) then  -- player died, combat over
 		   
 			rHitSeq.expGained = 0
 			rHitSeq.lvlUp = false
-			return rHitSeq
-		end
+			terminateCombat = true
 		
-		if hE.expWasGained then -- no kill
-			
+		elseif hE.expWasGained then -- no kill
 			rHitSeq.expGained = self:expFrom()
 			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
-		
 		end	
 	end
-
+	
+	
+	processNextAttack(true)
+	if terminateCombat then return rHitSeq end
+	if self.attacker.weaponType == "brave" then
+		processNextAttack(true)
+		if terminateCombat then return rHitSeq end
+	end
+	
+	local defenderCounters = (self.defender.hit ~= 255)
+	if defenderCounters then
+		processNextAttack(false)
+		if terminateCombat then return rHitSeq end
+		if self.defender.weaponType == "brave" then
+			processNextAttack(false)
+			if terminateCombat then return rHitSeq end
+		end
+	end
+	
+	if self.attacker.doubles and attackerUses > 0 then
+		processNextAttack(true)
+		if terminateCombat then return rHitSeq end
+		if self.attacker.weaponType == "brave" then
+			processNextAttack(true)
+			if terminateCombat then return rHitSeq end
+		end
+	elseif self.defender.doubles and defenderCounters and defenderUses > 0 then
+		processNextAttack(false)
+		if terminateCombat then return rHitSeq end
+		if self.defender.weaponType == "brave" then
+			processNextAttack(false)
+			if terminateCombat then return rHitSeq end
+		end
+	end
+	
 	return rHitSeq
 end
 
@@ -985,6 +1012,13 @@ local function createCombatant(startAddr)
 	c.weapon       = P.ITEM_NAMES[wCode]
 	c.weaponType   = weaponIdToType(wCode)
 	c.weaponUses   = memory.readbyte(startAddr + addr.ITEMS_OFFSET + 1)
+	
+	for i = 4, 7 do
+		if memory.readbyte(startAddr + addr.RANKS_OFFSET + i) > 0 then
+			c.usesMagic = true
+		end
+	end
+	
 	c.atk          = memory.readbyte(startAddr + addr.ATK_OFFSET)
 	c.def          = memory.readbyte(startAddr + addr.DEF_OFFSET)
 	c.AS           = memory.readbyte(startAddr + addr.AS_OFFSET)

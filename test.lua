@@ -4,7 +4,6 @@ require("feAutolog")
 
 local testAll = true
 
-
 if testAll then -- Misc
 	print("---Misc...---")
 	
@@ -147,10 +146,14 @@ if testAll then -- Combat
 	
 	reset()
 	
-	assert(#hitSeq == 2)
-	assert(combat.hitSeq_string(hitSeq) == "X x 10xp")
-	assert(hitSeq.atkHP == 15)
-	assert(hitSeq.defHP == 15)
+	assert(#hitSeq == 2, 
+		"#hitSeq = " .. #hitSeq .. ", expected 2")
+	assert(combat.hitSeq_string(hitSeq) == "X x 10xp", 
+		"combat.hitSeq_string(hitSeq) = " .. combat.hitSeq_string(hitSeq) .. ", expected X x 10xp")
+	assert(hitSeq.atkHP == 15,
+		"hitSeq.atkHP = " .. hitSeq.atkHP .. ", expected 15")
+	assert(hitSeq.defHP == 15,
+		"hitSeq.defHP = " .. hitSeq.defHP .. ", expected 15")
 	
 	
 	c.attacker.atk = 14
@@ -158,10 +161,14 @@ if testAll then -- Combat
 	c.defender.level = 10
 	reset()
 	
-	assert(#hitSeq == 3)
-	assert(combat.hitSeq_string(hitSeq) == "X x X 13xp")
-	assert(hitSeq.atkHP == 15)
-	assert(hitSeq.defHP == 2)
+	assert(#hitSeq == 3, 
+		"#hitSeq = " .. #hitSeq .. ", expected 3")
+	assert(combat.hitSeq_string(hitSeq) == "X x X 13xp", 
+		"combat.hitSeq_string(hitSeq) = " .. combat.hitSeq_string(hitSeq) .. ", expected X x X 13xp")
+	assert(hitSeq.atkHP == 15,
+		"hitSeq.atkHP = " .. hitSeq.atkHP .. ", expected 15")
+	assert(hitSeq.defHP == 2,
+		"hitSeq.defHP = " .. hitSeq.defHP .. ", expected 2")
 	
 	
 	c.attacker.weaponType = "brave"
@@ -169,10 +176,18 @@ if testAll then -- Combat
 	c.defender.hit = 0
 	reset()
 	
-	assert(#c:hitSeq(0) == 4)
-	assert(combat.hitSeq_string(hitSeq) == "X X o X 60xp Lvl")
-	assert(hitSeq.atkHP == 20)
-	assert(hitSeq.defHP == 0)
+	for k, v in pairs(hitSeq) do
+		print(k, v)
+		print()
+	end
+	assert(#hitSeq == 4, 
+		"#hitSeq = " .. #hitSeq .. ", expected 4")
+	assert(combat.hitSeq_string(hitSeq) == "X X o X 60xp Lvl", 
+		"combat.hitSeq_string(hitSeq) = " .. combat.hitSeq_string(hitSeq) .. ", expected X X o X 60xp Lvl")
+	assert(hitSeq.atkHP == 20,
+		"hitSeq.atkHP = " .. hitSeq.atkHP .. ", expected 20")
+	assert(hitSeq.defHP == 0,
+		"hitSeq.defHP = " .. hitSeq.defHP .. ", expected 0")
 	
 	
 	c.attacker.atk = 6
@@ -181,10 +196,14 @@ if testAll then -- Combat
 	c.defender.crit = 100
 	reset()
 	
-	assert(#c:hitSeq(0) == 5)
-	assert(combat.hitSeq_string(hitSeq) == "X X c X X 13xp")
-	assert(hitSeq.atkHP == 5)
-	assert(hitSeq.defHP == 18)
+	assert(#hitSeq == 5, 
+		"#hitSeq = " .. #hitSeq .. ", expected 5")
+	assert(combat.hitSeq_string(hitSeq) == "X X c X X 13xp", 
+		"combat.hitSeq_string(hitSeq) = " .. combat.hitSeq_string(hitSeq) .. ", expected X X c X X 13xp")
+	assert(hitSeq.atkHP == 5,
+		"hitSeq.atkHP = " .. hitSeq.atkHP .. ", expected 5")
+	assert(hitSeq.defHP == 18,
+		"hitSeq.defHP = " .. hitSeq.defHP .. ", expected 18")
 	
 	c:staffHitEvent(0)
 	c:hitSeq(0)

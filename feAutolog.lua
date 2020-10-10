@@ -97,6 +97,7 @@ function P.passiveUpdate()
 				slotStopped[slot] = addr.unitIsStopped(slot)
 				slotRescued[slot] = addr.unitIsRescued(slot)
 				
+				-- todo update when unit stops as well
 				for item_i = 1, 5 do
 					local offset = 2 * item_i - 2
 					local item = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset)

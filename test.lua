@@ -111,6 +111,7 @@ if testAll then -- Combat
 	c.attacker.weapon       = ""
 	c.attacker.weaponType   = "normal"
 	c.attacker.weaponUses   = 20
+	c.attacker.usesMagic    = false
 	c.attacker.atk          = 10
 	c.attacker.def          = 5
 	c.attacker.AS           = 5
@@ -129,6 +130,7 @@ if testAll then -- Combat
 	c.defender.weapon       = ""
 	c.defender.weaponType   = "normal"
 	c.defender.weaponUses   = 20
+	c.attacker.usesMagic    = false
 	c.defender.atk          = 10
 	c.defender.def          = 5
 	c.defender.AS           = 5

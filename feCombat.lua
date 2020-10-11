@@ -853,7 +853,6 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	
 	if self:isUsingStaff() then
 		rHitSeq[1] = self:staffHitEvent(rnOffset)
-		isAttackers[1] = true
 		rHitSeq.totalRNsConsumed = 1
 		return rHitSeq
 	end

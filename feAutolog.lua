@@ -29,7 +29,7 @@ local currPhase = "player"
 
 local currMoney = 0
 
-local slotLoc = {}
+local slotLoc = {} -- todo for warp/rescue staffing
 local slotIsStopped = {}
 local slotCarrying = {}
 local slotEquipedWith = {}
@@ -62,7 +62,11 @@ end
 -- since we don't reverse construct EP events after combats
 local newEvent = false 
 
-
+-- don't add redundant log that a unit stopped after certain logs
+-- because a unit may canto (including after combat in FE7 if on a "trapped" tile)
+-- need to mark the spot so cantoing units WILL log their stop location after actions 
+-- that always stop non-cantoing units
+local skipNextStopAt = {-1, -1}
 
 
 function P.passiveUpdate()
@@ -162,6 +166,9 @@ function P.passiveUpdate()
 			
 			if partnerSlot ~= 0 then
 				logAtLoc(" carries " .. nameFromSlot(partnerSlot))
+				
+				skipNextStopAt.x = addr.byteFromSlot(selSlot, addr.X_OFFSET)
+				skipNextStopAt.y = addr.byteFromSlot(selSlot, addr.Y_OFFSET)
 			else
 				local direction = "? "
 				
@@ -185,6 +192,9 @@ function P.passiveUpdate()
 			
 				P.addLog(slotLocString(selSlot) .. " drops " .. 
 					direction .. slotLocString(slotCarrying[selSlot]))
+					
+				skipNextStopAt.x = addr.byteFromSlot(selSlot, addr.X_OFFSET)
+				skipNextStopAt.y = addr.byteFromSlot(selSlot, addr.Y_OFFSET)
 			end
 		
 			slotCarrying[selSlot] = partnerSlot
@@ -196,7 +206,16 @@ function P.passiveUpdate()
 			updateInventories()
 			
 			if slotIsStopped[selSlot] then
-				logAtLoc(" stops")
+				if skipNextStopAt.x == addr.byteFromSlot(selSlot, addr.X_OFFSET) and
+				   skipNextStopAt.y == addr.byteFromSlot(selSlot, addr.Y_OFFSET) then
+				   
+				   skipNextStopAt.x = -1
+				   skipNextStopAt.y = -1
+				   
+					print("skipped stop")
+				else
+					logAtLoc(" stops")
+				end
 			end
 			
 			for slot = 1, lastDeployedSlot do
@@ -225,9 +244,7 @@ function P.passiveUpdate()
 	end
 end
 
--- don't add redundant log that a unit stopped after event logged
--- prevents the next log after an event is logged
-local skipNextLog = false
+
 
 function P.addLog_RNconsumed()	
 	local rnsUsed = rns.rng1.pos - rns.rng1.prevPos
@@ -256,9 +273,8 @@ function P.addLog_RNconsumed()
 			
 			logStr = eventStr .. "\n" .. logStr
 			
-			P.addLog(logStr)
-			skipNextLog = true
-			return
+			skipNextStopAt.x = addr.byteFromSlot(memory.readbyte(addr.SELECTED_SLOT), addr.X_OFFSET)
+			skipNextStopAt.y = addr.byteFromSlot(memory.readbyte(addr.SELECTED_SLOT), addr.Y_OFFSET)
 		else
 			logStr = "Event does not match rns\n" .. logStr
 			print()
@@ -269,28 +285,25 @@ function P.addLog_RNconsumed()
 			line(lastEvent.combatants.defender) .. logStr
 		newEvent = false
 	end
+	
 	P.addLog(logStr)
 end
 
 function P.addLog(str)
-	if skipNextLog then
-		skipNextLog = false
-	else
-		local newLog = {}
-		newLog.frame = emu.framecount()
-		newLog.str = str
-	
-		-- erase subsequent logs if jumped back via savestate
-		-- script should be started at or before first savestate
-		-- only erase logs when new log added, gives moment to write logs
-		-- if accidentally jumped to savestate
-		while logs[logCount] and logs[logCount].frame > newLog.frame do
-			logCount = logCount - 1
-		end
-		
-		logCount = logCount + 1
-		logs[logCount] = newLog
+	local newLog = {}
+	newLog.frame = emu.framecount()
+	newLog.str = str
+
+	-- erase subsequent logs if jumped back via savestate
+	-- script should be started at or before first savestate
+	-- only erase logs when new log added, gives moment to write logs
+	-- if accidentally jumped to savestate
+	while logs[logCount] and logs[logCount].frame > newLog.frame do
+		logCount = logCount - 1
 	end
+	
+	logCount = logCount + 1
+	logs[logCount] = newLog
 end
 
 -- note this saves under vba movie directory when running movie

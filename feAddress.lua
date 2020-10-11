@@ -36,7 +36,7 @@ P.TURN     = P.MONEY + 8
 
 -- FE6 + 0x11DC = FE7, FE7 + 0xFC = FE8
 
-P.SELECTED_SLOT  = {0x2AB76, 0x2BD48, 0x2BE4A} -- {,3A868,} even if not loaded as attacker todo FE6,8 validation
+P.SELECTED_SLOT  = {0x2AB76, 0x2BD48, 0x2BE4A} -- also {,3A868,} even if not loaded as attacker todo FE6,8 validation
 P.SELECTED_SLOT  = RAM_BASE + P.SELECTED_SLOT[GAME_VERSION - 5]
 
 -- offsets are the same for slots, attacker, and defender
@@ -58,11 +58,11 @@ function P.addrFromSlot(slot, offset)
 end
 
 function P.byteFromSlot(slot, offset)
-	return memory.readbyte(P.addrFromSlot(slot, offset))
+	return memory.readbyte(P.SLOT_1_START + (slot - 1) * 72 + offset)
 end
 
 function P.wordFromSlot(slot, offset)
-	return memory.readword(P.addrFromSlot(slot, offset))
+	return memory.readword(P.SLOT_1_START + (slot - 1) * 72 + offset)
 end
 
 
@@ -96,6 +96,9 @@ P.MAX_HP_OFFSET = P.X_OFFSET + 2           -- {0x39224, 0x3A402, 0x3A4FE}
 -- next is current hp, then 6 other stats on stat screen
 -- "current" hp may be POST COMBAT hp on combat preview, even before rns consumed on player phase?....
 -- 8 consecutive bytes
+
+-- which slot is currently being rescued, or rescuing this slot
+P.CARRYING_SLOT_OFFSET = P.MAX_HP_OFFSET + 9 -- {,0x3A40B?,}
 
 -- inventory list in 10 bytes, (item,uses) x5
 P.ITEMS_OFFSET = P.MAX_HP_OFFSET + 12     -- {0x39230, 0x3A40E, 0x3A50A} 

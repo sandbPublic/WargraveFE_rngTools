@@ -361,13 +361,16 @@ function P.addLog_RNconsumed()
 	end
 	
 	if currPhase == "player" then
-		if lastEvent.length == rnsUsed then -- todo autodetect levels?
+		if lastEvent.length == rnsUsed then
 			P.addLog(line(lastEvent.combatants.attacker))
 			updateNextStopSkip()
-			P.addLog(line(lastEvent.combatants.defender))
 			
 			local resultStr = ""
 			if lastEvent.hasCombat then
+				P.addLog(line(lastEvent.combatants.defender))
+				-- item durability not yet updated, manually update
+				slotData[memory.readbyte(addr.SELECTED_SLOT)].uses[1] = lastEvent.mHitSeq.attacker.endUses
+				
 				resultStr = resultStr .. combat.hitSeq_string(lastEvent.mHitSeq)
 			end
 			if lastEvent:levelDetected() then
@@ -375,12 +378,6 @@ function P.addLog_RNconsumed()
 			end
 			
 			P.addLog(resultStr)
-			
-			-- don't want to log durability reduction from combat
-			-- todo restructure combat hitSeq to output hp and weapon durability, and input prior hitSeq
-			-- local selSlot = memory.readbyte(addr.SELECTED_SLOT)
-			-- slotEquipedUses[selSlot][1] = addr.byteFromSlot(selSlot, addr.ITEMS_OFFSET + 1)
-			-- RAM does not update fast enough?
 		else
 			P.addLog("Event does not match rns")
 			print()

@@ -5,7 +5,7 @@ feGUI = P
 
 
 
-
+-- todo window for autologs?
 P.rects = {}
 P.RN_EVENT_I 	= 1
 P.RN_STREAM_I	= 2

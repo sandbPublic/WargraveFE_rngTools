@@ -121,7 +121,7 @@ function P.rnEventObj:headerString(rnEvent_i)
 end
 
 function P.rnEventObj:healable()
-	if self.hasCombat and self.mHitSeq.atkHP < self.combatants.player.maxHP then
+	if self.hasCombat and self.mHitSeq.attacker.endHP < self.combatants.player.maxHP then
 		return true
 	end
 	return self:levelDetected() 
@@ -161,11 +161,11 @@ function P.rnEventObj:evaluation_fn(printV)
 			if printV then printStr = printStr .. string.format(" staff hit %02d", hitValue) end
 		else			
 			local eHPstartFrac = self.enemyHPstart/self.combatants.enemy.maxHP
-			local eHPendFrac = self.mHitSeq.defHP/self.combatants.enemy.maxHP
+			local eHPendFrac = self.mHitSeq.defender.endHP/self.combatants.enemy.maxHP
 			local eLostValue = nonlinearhpValue(eHPstartFrac) - nonlinearhpValue(eHPendFrac)
 			
 			local pHPstartFrac = self.combatants.player.currHP/self.combatants.player.maxHP
-			local pHPendFrac = self.mHitSeq.atkHP/self.combatants.player.maxHP
+			local pHPendFrac = self.mHitSeq.attacker.endHP/self.combatants.player.maxHP
 			local pLostValue = nonlinearhpValue(pHPstartFrac) - nonlinearhpValue(pHPendFrac)
 			
 			score = score + self.eHPweight * eLostValue 
@@ -304,8 +304,8 @@ function P.rnEventObj:printDiagnostic()
 		print(str)
 		print(string.format("expGained=%2d pHP=%2d eHP=%2d eHPstart=%2d eHPend=%2d", 
 			self.mHitSeq.expGained,
-			self.mHitSeq.atkHP,
-			self.mHitSeq.defHP,
+			self.mHitSeq.attacker.endHP,
+			self.mHitSeq.defender.endHP,
 			self.enemyHPstart,
 			self.enemyHPend))
 		
@@ -473,7 +473,7 @@ function P.rnEventObj:updateFull()
 		
 		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
 		
-		self.enemyHPend = self.mHitSeq.defHP
+		self.enemyHPend = self.mHitSeq.defender.endHP
 	else
 		self.postCombatRN_i = self.postBurnsRN_i
 	end

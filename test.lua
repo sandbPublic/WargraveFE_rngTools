@@ -93,12 +93,11 @@ if testAll then -- Combat
 	
 	local c = combat.combatObj:new()
 	
-	c:combatant()
 	c:isUsingStaff()
 	c:willLevel(0)
 	c:willLevel(100) -- don't assert, loaded attacker could be level 20
 	c:expFrom()
-	c:hitEvent(0)
+	c:hitEvent(0, "attacker")
 	
 	c.attacker.name         = "a"
 	c.attacker.class        = classes.LORD
@@ -152,10 +151,10 @@ if testAll then -- Combat
 		"#hitSeq = " .. #hitSeq .. ", expected 2")
 	assert(combat.hitSeq_string(hitSeq) == "X x 10xp", 
 		"combat.hitSeq_string(hitSeq) = " .. combat.hitSeq_string(hitSeq) .. ", expected X x 10xp")
-	assert(hitSeq.atkHP == 15,
-		"hitSeq.atkHP = " .. hitSeq.atkHP .. ", expected 15")
-	assert(hitSeq.defHP == 15,
-		"hitSeq.defHP = " .. hitSeq.defHP .. ", expected 15")
+	assert(hitSeq.attacker.endHP == 15,
+		"hitSeq.attacker.endHP = " .. hitSeq.attacker.endHP .. ", expected 15")
+	assert(hitSeq.defender.endHP == 15,
+		"hitSeq.defender.endHP = " .. hitSeq.defender.endHP .. ", expected 15")
 	
 	
 	c.attacker.atk = 14
@@ -167,10 +166,10 @@ if testAll then -- Combat
 		"#hitSeq = " .. #hitSeq .. ", expected 3")
 	assert(combat.hitSeq_string(hitSeq) == "X x X 13xp", 
 		"combat.hitSeq_string(hitSeq) = " .. combat.hitSeq_string(hitSeq) .. ", expected X x X 13xp")
-	assert(hitSeq.atkHP == 15,
-		"hitSeq.atkHP = " .. hitSeq.atkHP .. ", expected 15")
-	assert(hitSeq.defHP == 2,
-		"hitSeq.defHP = " .. hitSeq.defHP .. ", expected 2")
+	assert(hitSeq.attacker.endHP == 15,
+		"hitSeq.attacker.endHP = " .. hitSeq.attacker.endHP .. ", expected 15")
+	assert(hitSeq.defender.endHP == 2,
+		"hitSeq.defender.endHP = " .. hitSeq.defender.endHP .. ", expected 2")
 	
 	
 	c.attacker.weaponType = "brave"
@@ -186,10 +185,10 @@ if testAll then -- Combat
 		"#hitSeq = " .. #hitSeq .. ", expected 4")
 	assert(combat.hitSeq_string(hitSeq) == "X X o X 60xp Lvl", 
 		"combat.hitSeq_string(hitSeq) = " .. combat.hitSeq_string(hitSeq) .. ", expected X X o X 60xp Lvl")
-	assert(hitSeq.atkHP == 20,
-		"hitSeq.atkHP = " .. hitSeq.atkHP .. ", expected 20")
-	assert(hitSeq.defHP == 0,
-		"hitSeq.defHP = " .. hitSeq.defHP .. ", expected 0")
+	assert(hitSeq.attacker.endHP == 20,
+		"hitSeq.attacker.endHP = " .. hitSeq.attacker.endHP .. ", expected 20")
+	assert(hitSeq.defender.endHP == 0,
+		"hitSeq.defender.endHP = " .. hitSeq.defender.endHP .. ", expected 0")
 	
 	
 	c.attacker.atk = 6
@@ -202,13 +201,12 @@ if testAll then -- Combat
 		"#hitSeq = " .. #hitSeq .. ", expected 5")
 	assert(combat.hitSeq_string(hitSeq) == "X X c X X 13xp", 
 		"combat.hitSeq_string(hitSeq) = " .. combat.hitSeq_string(hitSeq) .. ", expected X X c X X 13xp")
-	assert(hitSeq.atkHP == 5,
-		"hitSeq.atkHP = " .. hitSeq.atkHP .. ", expected 5")
-	assert(hitSeq.defHP == 18,
-		"hitSeq.defHP = " .. hitSeq.defHP .. ", expected 18")
+	assert(hitSeq.attacker.endHP == 5,
+		"hitSeq.attacker.endHP = " .. hitSeq.attacker.endHP .. ", expected 5")
+	assert(hitSeq.defender.endHP == 18,
+		"hitSeq.defender.endHP = " .. hitSeq.defender.endHP .. ", expected 18")
 	
 	c:staffHitEvent(0)
-	c:hitSeq(0)
 	c:toggleBonusExp()
 	
 	-- todo test rn and game version dependent factors
@@ -306,8 +304,8 @@ end
 if testAll then -- Autolog
 	print("---Autolog...---")
 	
+	autolog.addLog("TEST")
 	autolog.passiveUpdate()
-	autolog.addLog_string("test")
 	autolog.addLog_RNconsumed()
 	autolog.addLog_RNconsumed()
 	autolog.writeLogs()

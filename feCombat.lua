@@ -602,11 +602,6 @@ P.combatObj = {}
 
 -- non modifying functions
 
-function P.combatObj:combatant(isAttacker)
-	if isAttacker then return self.attacker end
-	return self.defender
-end
-
 function P.combatObj:isUsingStaff()
 	return self.attacker.atk == 0xFF -- healing only?
 end
@@ -711,27 +706,27 @@ function P.combatObj:expFrom(didKill, didAssassinate)
 end
 
 -- string action type, int dmg, int rnsConsumed, bool expWasGained, bool didAssassinate, bool durabilityUsed
-function P.combatObj:hitEvent(index, isAttacker)
-	local combatant = self:combatant(isAttacker)
-
+function P.combatObj:hitEvent(index, actor)
+	local c = self[actor] -- combatant
+	
 	local retHitEv = {}
 	retHitEv.action = ""
 	retHitEv.RNsConsumed = 0
-	retHitEv.dmg = combatant.dmg
+	retHitEv.dmg = c.dmg
 	
-	if combatant.weaponType == "stone" then
+	if c.weaponType == "stone" then
 		retHitEv.dmg = 999
 	end
 	
 	-- todo, only matters if eclipse happens after the target is damaged by another unit
 	-- prevents doubling. damage unimplemented. in FE6 all but 1 hp
-	--if combatant.weaponType == "halve" then
+	--if c.weaponType == "halve" then
 		--retHitEv.dmg = 999 
 	--end
 	
 	-- assume exp is gained if attacker and player phase, or defender and enemy phase
 	-- then falsify
-	retHitEv.expWasGained = (isAttacker == (self.phase == "player"))
+	retHitEv.expWasGained = ((actor == "attacker") == (self.phase == "player"))
 	
 	retHitEv.didAssassinate = false
 	
@@ -740,11 +735,11 @@ function P.combatObj:hitEvent(index, isAttacker)
 		return rns.rng1:getRN(index+retHitEv.RNsConsumed-1)--use consumed rn
 	end
 		
-	if combatant.hit ~= 255 then -- no action	
-		local willHit = (combatant.hit > (nextRn()+nextRn())/2)
+	if c.hit ~= 255 then -- no action	
+		local willHit = (c.hit > (nextRn()+nextRn())/2)
 				
-		if classes.hasSureStrike(combatant.class) then
-			if combatant.level > nextRn() then
+		if classes.hasSureStrike(c.class) then
+			if c.level > nextRn() then
 				willHit = true
 			end
 		end
@@ -756,27 +751,30 @@ function P.combatObj:hitEvent(index, isAttacker)
 			-- confirmed gShield, Pierce, crit, Silencer order
 			-- then Devil?
 			
-			if classes.hasGreatShield(self:combatant(not isAttacker).class) then
-				if combatant.level > nextRn() then  -- gShield works on attackers level
+			local nonActorClass = self.attacker.class
+			if actor == "attacker" then nonActorClass = self.defender.class end
+			
+			if classes.hasGreatShield(nonActorClass) then
+				if c.level > nextRn() then  -- gShield works on actor's level
 					retHitEv.action = "G" -- does crit even roll?
 					retHitEv.dmg = 0
 				end
 			end
 			
-			if classes.hasPierce(combatant.class) then
-				if combatant.level > nextRn() then
+			if classes.hasPierce(c.class) then
+				if c.level > nextRn() then
 					retHitEv.action = "P"
 					retHitEv.dmg = self.attacker.atk
 				end
 			end
 			
-			if combatant.crit > nextRn() then
+			if c.crit > nextRn() then
 				local silencerRn = 0
 				if GAME_VERSION >= 7 then 
 					silencerRn = nextRn() -- does not roll against Demon King
 				end
 				
-				if classes.hasSilencer(combatant.class) and
+				if classes.hasSilencer(c.class) and
 					(25 > silencerRn or -- bosses are resistant to silencer
 					(50 > silencerRn and self.bonusExp ~= 40)) then
 					
@@ -795,11 +793,11 @@ function P.combatObj:hitEvent(index, isAttacker)
 			end
 			
 			-- crit/devil priority?
-			if combatant.weaponType == "devil" then
+			if c.weaponType == "devil" then
 				local devilRN = nextRn()
 			
-				if ((31 - combatant.luck > devilRN) and (GAME_VERSION >= 7)) or 
-					(21 - combatant.level > devilRN) then
+				if ((31 - c.luck > devilRN) and (GAME_VERSION >= 7)) or 
+					(21 - c.level > devilRN) then
 					retHitEv.action = "DEV"
 					retHitEv.expWasGained = false -- untested
 				end
@@ -808,7 +806,7 @@ function P.combatObj:hitEvent(index, isAttacker)
 			retHitEv.action = "O"
 			retHitEv.dmg = 0
 			retHitEv.expWasGained = false
-			retHitEv.durabilityUsed = combatant.usesMagic
+			retHitEv.durabilityUsed = c.usesMagic
 		end
 	end
 	
@@ -833,20 +831,25 @@ end
 -- variable number of events, 1 to 6
 -- X hit events, expGained, lvlUp, totalRNsConsumed, atkHP, defHP
 -- can carry enemy's hp from previous combat (technically defenders hp but only relevant on player phase)
--- todo track weapon uses for weapon breaking preventing doubling
 -- physical weapons do not consume a use when missing, magic does
 -- if a brave weapon consumes last use on first hit, will still do 2nd "brave" hit
+
+-- todo carry more from previous combat? both HP and durability? return durability
 function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	local rHitSeq = {} -- numeric keys are hit events
 	rHitSeq.expGained = 1
 	rHitSeq.lvlUp = false
 	rHitSeq.totalRNsConsumed = 0
-	rHitSeq.atkHP = self.attacker.currHP
 	
-	-- pass enemy HP from previous combats this phase if applicable
-	rHitSeq.defHP = carriedDefHP or self.defender.currHP
+	rHitSeq.attacker = {}
+	rHitSeq.attacker.endHP = self.attacker.currHP
+	rHitSeq.attacker.endUses = self.attacker.weaponUses
 	
-	if rHitSeq.defHP == 0 then
+	rHitSeq.defender = {}
+	rHitSeq.defender.endHP = carriedDefHP or self.defender.currHP
+	rHitSeq.defender.endUses = self.defender.weaponUses
+	
+	if rHitSeq.defender.endHP == 0 then
 		rHitSeq.expGained = 0
 		return rHitSeq
 	end
@@ -858,71 +861,55 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	end
 	
 	local nextIsAttacker = true
-	local attackerUses = self.attacker.weaponUses
-	local defenderUses = self.defender.weaponUses
 	local isEnemyPhase = (self.phase == "enemy") -- other phase treated as player
 	local terminateCombat = false
 	
-	local function processNextAttack(isAttacker)
-		local hE = self:hitEvent(rnOffset, isAttacker)
+	local function processNextAttack(actor)
+		local hE = self:hitEvent(rnOffset, actor)
 		
 		rHitSeq[#rHitSeq + 1] = hE
 		rnOffset = rnOffset + hE.RNsConsumed
 		rHitSeq.totalRNsConsumed = rHitSeq.totalRNsConsumed + hE.RNsConsumed
 		
-		-- lowercase for enemy (attacker on EP, defender on PP)
-		if isAttacker == isEnemyPhase then
-			hE.action = hE.action:lower()
-		end
+		local nonActor = "attacker"
+		if actor == "attacker" then nonActor = "defender" end
 		
 		-- process damage, due to drain/devil both combatants hp may change
 		-- reduce item durability if needed
-		if isAttacker then
-			if hE.durabilityUsed then
-				attackerUses = attackerUses - 1
-			end
-		
-			if hE.action ~= "DEV" then
-				hE.dmg = math.min(hE.dmg, rHitSeq.defHP)
-				rHitSeq.defHP = rHitSeq.defHP - hE.dmg
-			else
-				hE.dmg = math.min(hE.dmg, rHitSeq.atkHP)
-				rHitSeq.atkHP = rHitSeq.atkHP - hE.dmg
-			end
-			
-			if self.attacker.weaponType == "drain" then
-				rHitSeq.atkHP = math.min(rHitSeq.atkHP + hE.dmg, self.attacker.maxHP)
-			end
-		else
-			if hE.durabilityUsed then
-				defenderUses = defenderUses - 1
-			end
-		
-			if hE.action ~= "DEV" then
-				hE.dmg = math.min(hE.dmg, rHitSeq.atkHP)
-				rHitSeq.atkHP = rHitSeq.atkHP - hE.dmg
-			else
-				hE.dmg = math.min(hE.dmg, rHitSeq.defHP)
-				rHitSeq.defHP = rHitSeq.defHP - hE.dmg
-			end
-			
-			if self.defender.weaponType == "drain" then
-				rHitSeq.defHP = math.min(rHitSeq.defHP + hE.dmg, self.defender.maxHP)
-			end
+
+		if hE.durabilityUsed then
+			rHitSeq[actor].endUses = rHitSeq[actor].endUses - 1
 		end
 	
-		if rHitSeq.atkHP <= 0 then rHitSeq.atkHP = 0 end
-		if rHitSeq.defHP <= 0 then rHitSeq.defHP = 0 end
+		if hE.action ~= "DEV" then
+			hE.dmg = math.min(hE.dmg, rHitSeq[nonActor].endHP)
+			rHitSeq[nonActor].endHP = rHitSeq[nonActor].endHP - hE.dmg
+		else
+			hE.dmg = math.min(hE.dmg, rHitSeq[actor].endHP)
+			rHitSeq[actor].endHP = rHitSeq[actor].endHP - hE.dmg
+		end
 		
-		if (rHitSeq.defHP == 0 and not isEnemyPhase) or 
-		   (rHitSeq.atkHP == 0 and isEnemyPhase) then  -- enemy died, combat over
+		if self[actor].weaponType == "drain" then
+			rHitSeq[actor].endHP = math.min(rHitSeq[actor].endHP + hE.dmg, self[actor].maxHP)
+		end
+		
+		-- lowercase for enemy (attacker on EP, defender on PP)
+		if (actor == "attacker") == isEnemyPhase then
+			hE.action = hE.action:lower()
+		end
+		
+		if rHitSeq.attacker.endHP <= 0 then rHitSeq.attacker.endHP = 0 end
+		if rHitSeq.defender.endHP <= 0 then rHitSeq.defender.endHP = 0 end
+		
+		if (rHitSeq.defender.endHP == 0 and not isEnemyPhase) or 
+		   (rHitSeq.attacker.endHP == 0 and isEnemyPhase) then  -- enemy died, combat over
 			
 			rHitSeq.expGained = self:expFrom(true, hE.didAssassinate)
 			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
 			terminateCombat = true
 			
-		elseif (rHitSeq.atkHP == 0 and not isEnemyPhase) or 
-		   (rHitSeq.defHP == 0 and isEnemyPhase) then  -- player died, combat over
+		elseif (rHitSeq.attacker.endHP == 0 and not isEnemyPhase) or 
+		   (rHitSeq.defender.endHP == 0 and isEnemyPhase) then  -- player died, combat over
 		   
 			rHitSeq.expGained = 0
 			rHitSeq.lvlUp = false
@@ -935,35 +922,35 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	end
 	
 	
-	processNextAttack(true)
+	processNextAttack("attacker")
 	if terminateCombat then return rHitSeq end
 	if self.attacker.weaponType == "brave" then
-		processNextAttack(true)
+		processNextAttack("attacker")
 		if terminateCombat then return rHitSeq end
 	end
 	
 	local defenderCounters = (self.defender.hit ~= 255)
 	if defenderCounters then
-		processNextAttack(false)
+		processNextAttack("defender")
 		if terminateCombat then return rHitSeq end
 		if self.defender.weaponType == "brave" then
-			processNextAttack(false)
+			processNextAttack("defender")
 			if terminateCombat then return rHitSeq end
 		end
 	end
 	
-	if self.attacker.doubles and attackerUses > 0 then
-		processNextAttack(true)
+	if self.attacker.doubles and rHitSeq.attacker.endUses > 0 then
+		processNextAttack("attacker")
 		if terminateCombat then return rHitSeq end
 		if self.attacker.weaponType == "brave" then
-			processNextAttack(true)
+			processNextAttack("attacker")
 			if terminateCombat then return rHitSeq end
 		end
-	elseif self.defender.doubles and defenderCounters and defenderUses > 0 then
-		processNextAttack(false)
+	elseif self.defender.doubles and defenderCounters and rHitSeq.defender.endUses > 0 then
+		processNextAttack("defender")
 		if terminateCombat then return rHitSeq end
 		if self.defender.weaponType == "brave" then
-			processNextAttack(false)
+			processNextAttack("defender")
 			if terminateCombat then return rHitSeq end
 		end
 	end

@@ -119,7 +119,7 @@ while true do
 		print("Turn " .. currTurn .. " " .. currPhase .. " phase")
 	end
 	
-	autolog.passiveUpdate()
+	autolog.passiveUpdate() -- do this first or rn change will prevent log erasure
 	
 	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)

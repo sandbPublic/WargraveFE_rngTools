@@ -23,7 +23,7 @@ J
 hold, <> change selected window
 hold, <^v> change hp weight
 K
-toggle window visibility
+toggle window visibility -- todo consolidate with change selected
 move window (<^v>LR)
 L
 generate log file

@@ -103,8 +103,6 @@ if testAll then -- Combat
 	c.attacker.class        = classes.LORD
 	c.attacker.level        = 1
 	c.attacker.exp          = 0
-	c.attacker.x            = 0
-	c.attacker.y            = 0
 	c.attacker.maxHP        = 20
 	c.attacker.luck         = 0
 	c.attacker.weapon       = ""
@@ -122,8 +120,6 @@ if testAll then -- Combat
 	c.defender.class        = classes.OTHER
 	c.defender.level        = 1
 	c.defender.exp          = 0
-	c.defender.x            = 0
-	c.defender.y            = 0
 	c.defender.maxHP        = 20
 	c.defender.luck         = 0
 	c.defender.weapon       = ""

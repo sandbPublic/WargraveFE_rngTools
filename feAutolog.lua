@@ -3,12 +3,14 @@ require("feGUI")
 local P = {}
 autolog = P
 
-local logLineObj = {}
-
+-- todo use tree structure, not array
 local logs = {}
 local logCount = 0
 local filesWritten = 0
-local lastEvent = rnEvent.rnEventObj:new()
+
+
+
+
 -- combat RAM may not all be updated within one frame
 -- upon selecing the weapon for the combat, slots and most fields seem to be updated first
 -- hit and crit set to 0, then correct value next frame
@@ -19,23 +21,34 @@ local lastEvent = rnEvent.rnEventObj:new()
 -- data AFTER rn is used will have post event exp/lvl?
 -- for now only update and log on player phase
 -- todo figure out how to do ep
+local lastEvent
 local lastAttackerID = 0
 local lastDefenderID = 0
 local nextUpdateFrame = -1
-
 -- helps distinguish enemy rn burns from events,
 -- since we don't reverse construct EP events after combats
 local newEvent = false 
+local function updateLastEvent()
+	lastEvent = rnEvent.rnEventObj:new()
+	lastEvent.startRN_i = rns.rng1.pos
+	lastEvent.postBurnsRN_i = rns.rng1.pos
+	lastEvent:updateFull()	
+	newEvent = true
+end
+updateLastEvent()
 
--- don't add redundant log that a unit stopped after certain logs
+
+
+
+-- don't add redundant log that a unit stopped after certain logs (combat, carry/drop, change money)
 -- because a unit may canto (including after combat in FE7 if on a "trapped" tile)
--- need to mark the spot so cantoing units WILL log their stop location after actions 
--- that always stop non-cantoing units
-local skipNextStopAt = {}
-local function updateNextStopSkip()
-	skipNextStopAt.x = addr.byteFromSlot(memory.readbyte(addr.SELECTED_SLOT), addr.X_OFFSET)
-	skipNextStopAt.y = addr.byteFromSlot(memory.readbyte(addr.SELECTED_SLOT), addr.Y_OFFSET)
-	skipNextStopAt.logNumber = logCount -- save this to append relative move string after stop
+-- mark the spot: if they stop on that spot, skip the stop log
+-- if they canto off, also log where they stop as normal
+-- either way, then clear skipNextStopLogAt
+local skipNextStopLogAt = {}
+local function skipNextStopLog()
+	skipNextStopLogAt.x = addr.byteFromSlot(memory.readbyte(addr.SELECTED_SLOT), addr.X_OFFSET)
+	skipNextStopLogAt.y = addr.byteFromSlot(memory.readbyte(addr.SELECTED_SLOT), addr.Y_OFFSET)
 end
 
 
@@ -53,31 +66,27 @@ local function nameFromSlot(slot)
 end
 
 local slotData = {}
+for slot = 0, 255 do
+	slotData[slot] = {}
+	slotData[slot].x = -1
+	slotData[slot].y = -1
+	slotData[slot].isStopped = false
+	slotData[slot].carrying = 0
+	slotData[slot].items = {0, 0, 0, 0, 0}
+	slotData[slot].uses = {0, 0, 0, 0, 0}
+end
 
---todo make a list, remove need to check addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 outside this
-local lastDeployedSlot = 1
-local function updateLastDeployedSlot()
-	for slot = 1, 255 do
-		if addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET) == 0 then
-			return
-		end
-		
-		if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
-			lastDeployedSlot = slot
-		end
-		
-		if not slotData[slot] then
-			slotData[slot] = {}
-			slotData[slot].x = -1
-			slotData[slot].y = -1
-			slotData[slot].isStopped = false
-			slotData[slot].carrying = 0
-			slotData[slot].items = {0, 0, 0, 0, 0}
-			slotData[slot].uses = {0, 0, 0, 0, 0}
-		end
+-- player slots begin with deployed units, then undeployed, then recruited this chapter
+local lastPlayerSlot = 1
+local function updateLastPlayerSlot()
+	while addr.wordFromSlot(lastPlayerSlot + 1, addr.NAME_CODE_OFFSET) ~= 0 do
+		lastPlayerSlot = lastPlayerSlot + 1
+	end
+	while addr.wordFromSlot(lastPlayerSlot, addr.NAME_CODE_OFFSET) == 0 do
+		lastPlayerSlot = lastPlayerSlot - 1
 	end
 end
-updateLastDeployedSlot()
+updateLastPlayerSlot()
 
 local function updateLoc(slot)
 	slotData[slot].x = addr.byteFromSlot(slot, addr.X_OFFSET)
@@ -85,53 +94,60 @@ local function updateLoc(slot)
 end
 
 local function relativeMoveStr(slot)
-	local str = ""
+	slot = slot or memory.readbyte(addr.SELECTED_SLOT)
+
 	local xChange = addr.byteFromSlot(slot, addr.X_OFFSET) - slotData[slot].x
 	local yChange = addr.byteFromSlot(slot, addr.Y_OFFSET) - slotData[slot].y
 	
-	local xStr = ""
-	if xChange > 0 then xStr = ">" end
-	if xChange < 0 then xStr = "<" end
-	xChange = math.abs(xChange)
-	if xChange == 1 then
-		str = str .. xStr
-	elseif xChange == 2 then
-		str = str .. xStr .. xStr
-	elseif xChange >= 3 then
-		str = str .. xStr .. xChange
+	local function changeStr(change, A, B)
+		if change < 0 then 
+			A = B
+			change = -change
+		end
+		if change > 3 then
+			return A .. change
+		end
+		return string.rep(A, change)
 	end
 	
-	local yStr = ""
-	if yChange > 0 then yStr = "v" end
-	if yChange < 0 then yStr = "^" end
-	yChange = math.abs(yChange)
-	if yChange == 1 then
-		str = str .. yStr
-	elseif yChange == 2 then
-		str = str .. yStr .. yStr
-	elseif yChange >= 3 then
-		str = str .. yStr .. yChange
+	if xChange == 0 and yChange == 0 then
+		return "" -- don't return what will be an extra space
+	else
+		return " " .. changeStr(xChange, ">", "<") .. changeStr(yChange, "v", "^")
 	end
-	
-	return str
+end
+
+local function slotLocString(slot)
+	return string.format("at %2d,%2d %s",
+		addr.byteFromSlot(slot, addr.X_OFFSET),
+		addr.byteFromSlot(slot, addr.Y_OFFSET),
+		nameFromSlot(slot))
 end
 
 
-
-
 function P.passiveUpdate()
+	updateLastPlayerSlot()
+	
 	-- erase subsequent logs if jumped back via savestate
 	-- script should be started at or before first savestate,
 	-- so that first turn logs are not overwritten when jumping back
-	
+	-- this may desync volatiles like inventory and skipNextStopLogAt
+	-- since they are deferred and don't create logs
+	-- if between state A and B, inventory changed but is not logged, 
+	-- jumping back to A and continuing will produce different logs than 
+	-- jumping back to B (from B may be incomplete record of inventory)
+	-- similarly skipNextStopLogAt must be lost (or potentially invalid from 
+	-- deleted future)
 	if logs[logCount] and logs[logCount].frame > vba.framecount() then
 		while logs[logCount] and logs[logCount].frame > vba.framecount() do
 			logCount = logCount - 1
 		end
 		
-		updateLastDeployedSlot()
+		currTurn = memory.readbyte(addr.TURN)
+		currPhase = getPhase()
+		currMoney = addr.getMoney()
 		
-		for slot = 1, lastDeployedSlot do
+		for slot = 1, lastPlayerSlot do
 			updateLoc(slot)
 			slotData[slot].isStopped = addr.unitIsStopped(slot)
 			slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
@@ -142,12 +158,11 @@ function P.passiveUpdate()
 				slotData[slot].uses[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset + 1)
 			end
 		end
+		
+		skipNextStopLogAt.x = -1
+		skipNextStopLogAt.y = -1
 	end
-
-	if vba.framecount() % 30 == 0 then -- check twice per second for deployed/new units
-		updateLastDeployedSlot()
-	end
-
+	
 	
 	
 	if (lastAttackerID ~= memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)) or 
@@ -160,12 +175,7 @@ function P.passiveUpdate()
 	end
 	
 	if nextUpdateFrame == vba.framecount() then
-		lastEvent = rnEvent.rnEventObj:new()
-		lastEvent.startRN_i = rns.rng1.pos
-		lastEvent.postBurnsRN_i = rns.rng1.pos
-		lastEvent:updateFull()
-		
-		newEvent = true
+		updateLastEvent()
 	end
 
 
@@ -174,7 +184,7 @@ function P.passiveUpdate()
 	-- since items may be swapped around while trying different combats.
 	-- log only when a turn, phase, or unit's movement status changes
 	local function updateInventories()
-		for slot = 1, lastDeployedSlot do -- until empty player slots
+		for slot = 1, lastPlayerSlot do -- until empty player slots
 			if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
 				for i = 1, 5 do
 					local offset = 2 * i - 2
@@ -205,12 +215,13 @@ function P.passiveUpdate()
 		currTurn = memory.readbyte(addr.TURN)
 		currPhase = getPhase()
 		
-		autolog.addLog("\n\nTurn " .. currTurn .. " " .. currPhase .. " phase")
-		
-		updateLastDeployedSlot()
-		
+		autolog.addLog(string.format("\n\nTurn %d %s phase, RN# %d",
+			currTurn,
+			currPhase,
+			rns.rng1.pos))
+				
 		-- don't want to log each "refresh" at the start of turn
-		for slot = 1, lastDeployedSlot do -- until empty player slots
+		for slot = 1, lastPlayerSlot do -- until empty player slots
 			updateLoc(slot)
 			slotData[slot].isStopped = addr.unitIsStopped(slot)
 			slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
@@ -224,21 +235,12 @@ function P.passiveUpdate()
 	
 	
 	local selSlot = memory.readbyte(addr.SELECTED_SLOT)
-	
-	local function slotLocString(slot)
-		return string.format("at %2d,%2d %s",
-			addr.byteFromSlot(slot, addr.X_OFFSET),
-			addr.byteFromSlot(slot, addr.Y_OFFSET),
-			nameFromSlot(slot))
-	end
-	
+		
 	local function logAtLoc(str)
-		P.addLog(slotLocString(selSlot) .. str)
+		P.addLog(slotLocString(selSlot) .. relativeMoveStr() .. str)
 	end
 	
-	
-	
-	if getPhase() == "player" then -- check movements
+	if getPhase() == "player" and selSlot <= lastPlayerSlot then -- check movements
 	
 		-- only selected unit should check for stopping
 		-- after stopping, check for refresh, inventory
@@ -246,42 +248,38 @@ function P.passiveUpdate()
 		-- if was 0 and is now not, log carry
 		-- if wasn't 0 and now is, log drop
 		
-		local partnerSlot = addr.byteFromSlot(selSlot, addr.CARRYING_SLOT_OFFSET)
-		if slotData[selSlot].carrying ~= partnerSlot then
+		local newCarry = addr.byteFromSlot(selSlot, addr.CARRYING_SLOT_OFFSET)
+		if slotData[selSlot].carrying ~= newCarry then
 			updateInventories()
 			
-			if partnerSlot ~= 0 then
-				logAtLoc(" carries " .. nameFromSlot(partnerSlot) .. " " .. relativeMoveStr(selSlot))
-
-				updateNextStopSkip()
-			else
-				local direction = "? "
-				
+			local logStr = " carry " .. nameFromSlot(newCarry)
+			
+			if newCarry == 0 then
 				local xDiff = addr.byteFromSlot(slotData[selSlot].carrying, addr.X_OFFSET) - 
 					addr.byteFromSlot(selSlot, addr.X_OFFSET)
 				
 				if xDiff > 0 then
-					direction = "> "
+					logStr = " drop >"
 				elseif xDiff < 0 then
-					direction = "< "
+					logStr = " drop <"
 				else
 					local yDiff = addr.byteFromSlot(slotData[selSlot].carrying, addr.Y_OFFSET) - 
 						addr.byteFromSlot(selSlot, addr.Y_OFFSET)
 				
 					if yDiff > 0 then
-						direction = "v "
+						logStr = " drop v"
 					elseif yDiff < 0 then
-						direction = "^ "
+						logStr = " drop ^"
 					end
 				end
-			
-				logAtLoc(" drops " .. direction .. slotLocString(slotData[selSlot].carrying))
-					
-				updateNextStopSkip()
+				updateLoc(slotData[selSlot].carrying)
 			end
 			
+			logAtLoc(logStr)
 			updateLoc(selSlot)
-			slotData[selSlot].carrying = partnerSlot
+			skipNextStopLog()
+			
+			slotData[selSlot].carrying = newCarry
 		end
 		
 		
@@ -292,30 +290,26 @@ function P.passiveUpdate()
 			updateInventories()
 			
 			if slotData[selSlot].isStopped then
-				if skipNextStopAt.x == addr.byteFromSlot(selSlot, addr.X_OFFSET) and
-				   skipNextStopAt.y == addr.byteFromSlot(selSlot, addr.Y_OFFSET) then
+				if skipNextStopLogAt.x == addr.byteFromSlot(selSlot, addr.X_OFFSET) and
+				   skipNextStopLogAt.y == addr.byteFromSlot(selSlot, addr.Y_OFFSET) then
 				   
 					-- if unit is moved from this spot, may not want to skip stop log at this tile next time
-					skipNextStopAt.x = -1
-					skipNextStopAt.y = -1
-				   
-					print("skipped stop")
-					logs[skipNextStopAt.logNumber].str = logs[skipNextStopAt.logNumber].str .. 
-						" " .. relativeMoveStr(selSlot)
+					skipNextStopLogAt.x = -1
+					skipNextStopLogAt.y = -1
 				else
-					logAtLoc(" stops " .. relativeMoveStr(selSlot))
+					logAtLoc(" stop")
 				end
 			end
 			
 			updateLoc(selSlot)
 			
-			for slot = 1, lastDeployedSlot do
+			for slot = 1, lastPlayerSlot do
 				if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
 					if slotData[slot].isStopped ~= addr.unitIsStopped(slot) then
 						slotData[slot].isStopped = addr.unitIsStopped(slot)
 						
 						if not slotData[slot].isStopped then
-							P.addLog(slotLocString(slot) .. " refreshes")
+							P.addLog(slotLocString(slot) .. " refresh")
 						end
 					end
 					
@@ -323,7 +317,7 @@ function P.passiveUpdate()
 						slotData[slot].y ~= addr.byteFromSlot(slot, addr.Y_OFFSET)) and
 					   not addr.unitIsRescued(slot) then
 						
-						P.addLog(slotLocString(slot) .. " was warped")
+						P.addLog(slotLocString(slot) .. " warp")
 					end
 					
 					updateLoc(slot)
@@ -337,11 +331,10 @@ function P.passiveUpdate()
 	if currMoney ~= addr.getMoney() then
 		updateInventories()
 		
-		logAtLoc(string.format(" changes money: %6d %+7d -> %6d",
-			currMoney, 
-			addr.getMoney() - currMoney, 
-			addr.getMoney()))
-			
+		logAtLoc(string.format(" shop %6d %+6d", currMoney, addr.getMoney() - currMoney))
+		updateLoc(selSlot)
+		skipNextStopLog()
+		
 		currMoney = addr.getMoney()
 	end
 end
@@ -351,33 +344,41 @@ end
 function P.addLog_RNconsumed()	
 	local rnsUsed = rns.rng1.pos - rns.rng1.prevPos
 	
-	local function line(combatant)
-		return string.format("at %2d,%2d %s with %d use %s",
-			combatant.x,
-			combatant.y,
-			combatant.name,
-			combatant.weaponUses,
-			combatant.weapon)
-	end
+	local a = lastEvent.combatants.attacker
+	local d = lastEvent.combatants.defender
+	
+	-- slot may be erased by now, use combatant data
+	local aLoc = string.format("at %2d,%2d %s", a.x, a.y, a.name)
+	local dLoc = string.format("at %2d,%2d %s", d.x, d.y, d.name)
+	
+	local aWep = string.format(" %s %d", a.weapon, a.weaponUses)
+	local dWep = string.format(" %s %d", d.weapon, d.weaponUses)
 	
 	if currPhase == "player" then
 		if lastEvent.length == rnsUsed then
-			P.addLog(line(lastEvent.combatants.attacker))
-			updateNextStopSkip()
+			skipNextStopLog()
 			
-			local resultStr = ""
 			if lastEvent.hasCombat then
-				P.addLog(line(lastEvent.combatants.defender))
-				-- item durability not yet updated, manually update
-				slotData[memory.readbyte(addr.SELECTED_SLOT)].uses[1] = lastEvent.mHitSeq.attacker.endUses
+				P.addLog(aLoc .. relativeMoveStr() .. aWep)
 				
-				resultStr = resultStr .. combat.hitSeq_string(lastEvent.mHitSeq)
-			end
-			if lastEvent:levelDetected() then
-				resultStr = resultStr .. " " .. lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i)
-			end
+				P.addLog(dLoc .. dWep)
+				
+				-- item durability not yet updated in RAM, manually update
+				slotData[a.slot].uses[1] = lastEvent.mHitSeq.attacker.endUses
+				
+				if lastEvent:levelDetected() then
+					P.addLog(combat.hitSeq_string(lastEvent.mHitSeq) .. " " .. 
+						lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i))
+				else
+					P.addLog(combat.hitSeq_string(lastEvent.mHitSeq))
+				end
+				
+			elseif lastEvent:levelDetected() then
 			
-			P.addLog(resultStr)
+				P.addLog(aLoc .. relativeMoveStr() .. " " .. 
+					lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i))
+				
+			end
 		else
 			P.addLog("Event does not match rns")
 			print()
@@ -385,12 +386,12 @@ function P.addLog_RNconsumed()
 		end
 	elseif rnsUsed > 1 and newEvent then -- neglects enemy staff, but slots update even for some burns
 		P.addLog("Enemy event?")
-		P.addLog(line(lastEvent.combatants.attacker))
-		P.addLog(line(lastEvent.combatants.defender))
+		P.addLog(aLoc .. aWep)
+		P.addLog(dLoc .. dWep)
 		newEvent = false
 	end
 	
-	P.addLog(string.format("RN %5d->%5d (%d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
+	P.addLog(string.format("RN# %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
 end
 
 function P.addLog(str)

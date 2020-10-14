@@ -1,4 +1,4 @@
-require("fe_rnEvent")
+require("feAutolog")
 
 local P = {}
 feGUI = P
@@ -10,14 +10,17 @@ P.rects = {}
 P.RN_EVENT_I 	= 1
 P.RN_STREAM_I	= 2
 P.STAT_DATA_I	= 3
-P.COMBAT_I 	    = 4
-P.COMPACT_BPS_I	= 5
-P.COORD_I		= 6
+P.AUTOLOG_I		= 4
+P.COMBAT_I 	    = 5
+P.COMPACT_BPS_I	= 6
+P.COORD_I		= 7
+
 
 local RECT_COLORS = {
 	"blue",
 	"white",
 	"green",
+	"grey",
 	"red",
 	"yellow",
 	"white",
@@ -26,6 +29,7 @@ local RECT_STRINGS = {
 	"rnEvents",
 	"rn stream",
 	"stat data",
+	"autolog",
 	"battle parameters",
 	"compact btl params",
 	"cursor coordinates",
@@ -44,20 +48,12 @@ local CHAR_PIXELS = 4
 local RNS_PER_LINE = 15
 local NUM_RN_LINES = 15
 
-
-
-
 P.rects.sel_i = P.RN_EVENT_I
 
-P.rectShiftMode = false
 
-function P.lookingAt(rect_i)
-	return (P.rects.sel_i == rect_i) and (P.rects[rect_i].opacity > 0)
-end
 
-function P.canAlter_rnEvent()
-	return (not P.rectShiftMode) and P.lookingAt(P.RN_EVENT_I)
-end
+
+
 
 -- syncs with fire emblem animation cycle
 -- units animate on a 48 == 8 * 6 frame cycle when highlighted
@@ -159,7 +155,7 @@ function rectObj:drawBackgroundBox()
 	local y1 = self:top()
 	
 	-- if shiftMode and visible, flash outline
-	if (self.ID == P.rects.sel_i) and P.rectShiftMode then
+	if (self.ID == P.rects.sel_i) and self.shiftMode then
 		gui.box(x1, y1, x1+self:width(), y1+self:height(), 
 			pulseColor(self.backgroundColor), pulseColor(self.outlineColor))
 		return
@@ -312,23 +308,25 @@ end
 
 function P.drawRects()
 	local function getStrings(i)
-		if i == P.RN_STREAM_I then
+		if i == P.RN_EVENT_I then
+			return rnEvent.toStrings("isColored")
+		elseif i == P.RN_STREAM_I then
 			return rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
 		elseif i == P.STAT_DATA_I then
-			return unitData.currUnit():statData_strings(isPulsePhase(480) and P.lookingAt(P.STAT_DATA_I))
+			return unitData.currUnit():statData_strings(isPulsePhase(480) and (P.rects.sel_i == P.STAT_DATA_I))
+		elseif i == P.AUTOLOG_I then
+			return {"autolog test"}
 		elseif i == P.COMBAT_I then
 			return combat.combatObj:new():toStrings()
 		elseif i == P.COMPACT_BPS_I then
 			return combat.combatObj:new():toCompactStrings()
-		elseif i == P.RN_EVENT_I then
-			return rnEvent.toStrings("isColored")
 		elseif i == P.COORD_I then
 			return {string.format("%02d,%02d", memory.readbyte(addr.CURSOR_X), memory.readbyte(addr.CURSOR_Y))}
 		end
 	end
 	
 	for i, rect in ipairs(P.rects) do
-		if P.lookingAt(i) then
+		if rect.opacity > 0 then
 			rect.strings = getStrings(i)
 			rect:draw()
 		end
@@ -362,6 +360,7 @@ function rectObj:new(ID_p, color_p)
 	o.Xratio = 0 -- 0 to 1, determine position within the gba window
 	o.Yratio = 0
 	o.opacity = 0
+	o.shiftMode = false
 	o.name = RECT_STRINGS[ID_p]
 	o.strings = {}
 	

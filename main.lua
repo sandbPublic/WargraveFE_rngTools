@@ -1,8 +1,8 @@
 -- package dependencies
 -- main
 -- test
---   autolog
---     gui
+--   gui
+--     autolog
 --       event
 --         combat
 --           unit
@@ -11,7 +11,7 @@
 --                 misc
 --                   address
 
-require("feAutolog")
+require("feGUI")
 
 
 
@@ -100,6 +100,16 @@ local function held(key, ctrl)
 	return ctrl.thisFrame[key]
 end
 
+local function released(key, ctrl)
+	ctrl = ctrl or keybCtrl
+	
+	if type(key) == "number" then
+		key = hotkeys[key].key
+	end
+	
+	return not ctrl.thisFrame[key] and ctrl.lastFrame[key]
+end
+
 local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
 
@@ -130,18 +140,9 @@ while true do
 	updateCtrl(keybCtrl, input.get())
 	updateCtrl(gameCtrl, joypad.get(0))
 	
-	if feGUI.rectShiftMode then -- move rects or change opacity
-		if gameCtrl.thisFrame.left 	then selected(feGUI.rects):adjust(-0.02, 0, 0) end
-		if gameCtrl.thisFrame.right then selected(feGUI.rects):adjust( 0.02, 0, 0) end
-		if gameCtrl.thisFrame.up 	then selected(feGUI.rects):adjust(0, -0.02, 0) end
-		if gameCtrl.thisFrame.down 	then selected(feGUI.rects):adjust(0,  0.02, 0) end
-		if gameCtrl.thisFrame.L 	then selected(feGUI.rects):adjust(0, 0, -0.04) end
-		if gameCtrl.thisFrame.R 	then selected(feGUI.rects):adjust(0, 0,  0.04) end
-	end
-	
 	-- alter burns, selected, swap, toggle swapping
-	-- disable if using a keyboard hotkey which may combine with game controls 
-	if feGUI.canAlter_rnEvent() and not keybCtrl.anythingHeld then
+	-- disable if using a keyboard hotkey which may combine with game controls or modify displays
+	if feGUI.rects.sel_i == feGUI.RN_EVENT_I and not keybCtrl.anythingHeld then
 		-- change burns
 		if pressed("left", gameCtrl) then
 			rnEvent.change("burns", -rnStepSize)
@@ -207,13 +208,16 @@ while true do
 				print("selecting display: " .. selected(feGUI.rects).name)
 			end
 		end
-		
-		if pressed(9) then -- quick toggle visibility
+		if released(8) then
 			if selected(feGUI.rects).opacity == 0 then
 				selected(feGUI.rects).opacity = 0.75
 			else
 				selected(feGUI.rects).opacity = 0
 			end
+		end
+		
+		if pressed(9) then 
+		
 		end
 		
 		if pressed(10) then autolog.writeLogs() end
@@ -307,7 +311,30 @@ while true do
 	
 		if pressed(6) then rnEvent.searchFutureOutcomes() end
 	
-		if held(8) then -- hold down, then press <^v>
+		if pressed(8) then
+			selected(feGUI.rects).shiftMode = true
+			print("display shift mode: ON")
+			print("change display opacity with L and R")
+			print("change display position with D-pad")
+			
+			if selected(feGUI.rects).opacity <= 0.1 then
+				selected(feGUI.rects).opacity = 0.5
+			end
+		end
+		if held(8) then -- move rects or change opacity
+			if gameCtrl.thisFrame.left 	then selected(feGUI.rects):adjust(-0.02, 0, 0) end
+			if gameCtrl.thisFrame.right then selected(feGUI.rects):adjust( 0.02, 0, 0) end
+			if gameCtrl.thisFrame.up 	then selected(feGUI.rects):adjust(0, -0.02, 0) end
+			if gameCtrl.thisFrame.down 	then selected(feGUI.rects):adjust(0,  0.02, 0) end
+			if gameCtrl.thisFrame.L 	then selected(feGUI.rects):adjust(0, 0, -0.04) end
+			if gameCtrl.thisFrame.R 	then selected(feGUI.rects):adjust(0, 0,  0.04) end
+		end
+		if released(8) then
+			selected(feGUI.rects).shiftMode = false
+			print("display shift mode: OFF")
+		end
+		
+		if held(9) then -- hold down, then press <^v> change weights
 			if pressed("up", gameCtrl) then
 				rnEvent.change("pHPweight", 25)
 			end
@@ -319,22 +346,6 @@ while true do
 			end
 			if pressed("right", gameCtrl) then
 				rnEvent.change("eHPweight", 25)
-			end
-		end
-		
-		if pressed(9) then 
-			feGUI.rectShiftMode = not feGUI.rectShiftMode
-			
-			if feGUI.rectShiftMode then
-				print("display shift mode: ON")
-				print("change display opacity with L and R")
-				print("change display position with D-pad")
-				
-				if selected(feGUI.rects).opacity == 0 then
-					selected(feGUI.rects).opacity = 0.5
-				end
-			else
-				print("display shift mode: OFF")
 			end
 		end	
 		

@@ -1,4 +1,4 @@
-require("feAutolog")
+require("feGUI")
 -- emu.frameadvance() does not work from within requires
 -- "attempt to yield across metamethod/C-call boundary"
 
@@ -280,19 +280,20 @@ end
 
 if testAll then -- GUI
 	print("---GUI...---")
-	feGUI.lookingAt(0)
-	feGUI.canAlter_rnEvent()
-	feGUI.drawRects()	
 	
-	selected(feGUI.rects):adjust(0.02, 0, 0)
-	selected(feGUI.rects):adjust(-0.02, 0, 0)
-	selected(feGUI.rects):adjust(0, .02, 0)
-	selected(feGUI.rects):adjust(0, -.02, 0)
-	selected(feGUI.rects):adjust(0, 0, 0.04)
-	selected(feGUI.rects):adjust(0, 0, -0.04)
-	
-	changeSelection(feGUI.rects, -1)
-	changeSelection(feGUI.rects, 1)
+	for i = 1, 7 do
+		selected(feGUI.rects):adjust(0.02*i, 0, 0)
+		selected(feGUI.rects):adjust(0, .02*i, 0)
+		selected(feGUI.rects):adjust(0, 0, 0.04*i)
+		changeSelection(feGUI.rects, 1)
+	end
+	feGUI.drawRects()
+	for i = 1, 8 do
+		selected(feGUI.rects):adjust(-0.02*i, 0, 0)
+		selected(feGUI.rects):adjust(0, -.02*i, 0)
+		selected(feGUI.rects):adjust(0, 0, -0.04*i)
+		changeSelection(feGUI.rects, -1)
+	end
 	
 	print("---GUI passed---")
 end

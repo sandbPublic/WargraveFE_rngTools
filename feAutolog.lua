@@ -1,4 +1,4 @@
-require("feGUI")
+require("fe_rnEvent")
 
 local P = {}
 autolog = P

@@ -24,6 +24,8 @@ if testAll then -- Misc
 	assert(selected(miscTest) == "b")
 	
 	print("---Misc passed---")
+else
+	print("---Misc skipped---")
 end
 
 if testAll then -- Class
@@ -39,6 +41,8 @@ if testAll then -- Class
 	assert(classes.hasGreatShield(classes.GENERAL_F) == (GAME_VERSION == 8))
 	assert(classes.hasGreatShield(classes.OTHER) == false)
 	print("---Class passed---")
+else
+	print("---Class skipped---")
 end
 
 if testAll then -- Random Numbers
@@ -54,35 +58,121 @@ if testAll then -- Random Numbers
 	assert(rns.rng2:generator(2) ~= nil)
 	
 	print("---Random numbers passed---")
+else
+	print("---Random numbers skipped---")
 end
 
 if testAll then -- Unit Data
 	print("---Unit data...---")
 	
+	rns.rng1[0] = 89
+	rns.rng1[1] = 89
+	rns.rng1[2] = 89
+	rns.rng1[3] = 89
+	rns.rng1[4] = 89
+	rns.rng1[5] = 89
+	rns.rng1[6] = 89
+	
 	local u = unitData.currUnit()
 	
-	u:willLevelStats(0)
-	print(u:levelUpProcs_string(0))
-	u:levelScoreInExp(0)
+	u.index = 0
+	u.name = "Test name"
+	u.growths = {90, 50, 0, 0, 0, 0, 90}
+	u.freeStats = {0, 0, 1, 0, 0, 0, 0}
+	u.growthWeights = {20, 45, 15, 60, 30, 10, 10}
+	u.bases = {20, 0, 0, 0, 0, 0, 0, 1}
+
+	u.promotion = classes.OTHER_PROMOTED
+	u.willPromoteAt = 11 -- gain 10 levels before promotion
+	u.willEndAt = 20
+	
+	u:loadRAMvalues({20, 1, 2, 3, 4, 5, 6, 11, 0})
+	u.class = classes.OTHER
+	u.canPromote = true
+	assert(u.avgLevelValue == 6450) -- 20*90 + 45*50 + 15*100 + 10*90
+	u.hasAfas = false
+	
+	local willLevelStats = {1, 0, 0, 0, 0, 0, 1}
+	for i = 1, 7 do
+		assert(u.growthWeights[i] == u.dynamicWeights[i], "assertion failed! " .. i)
+		assert(u:willLevelStats(0)[i] == willLevelStats[i], "assertion failed! " .. i)
+		assert(u:statsGained(i) == u.stats[i] - u.bases[i], "assertion failed! " .. i)
+		u:statAverage(i)
+		u:statDeviation(i)
+		u:statStdDev(i)
+		assert(u:effectiveGrowthRate(i) == u:statsGained(i)*10, "assertion failed! " .. i)
+	end
+	assert(u:statsGained(8) == u.stats[8] - u.bases[8])
+	assert(u:levelUpProcs_string(0) == "+.....+")
+	-- 20*100 + 15*100 + 10*100 = 4500
+	assert(math.abs(u:levelScoreInExp(0) - 100*(4500/u.avgLevelValue-1)) < 0.00000001, 
+		u:levelScoreInExp(0) .. " " ..  100*(4500/u.avgLevelValue-1))
 	u:expValueFactor()
 	
-	for stat_i = 1, 7 do
-		u:statsGained(stat_i)
-		u:statAverage(stat_i)
-		u:statDeviation(stat_i)
-		u:statStdDev(stat_i)
-		u:effectiveGrowthRate(stat_i)
+	
+	
+	
+	-- level strength
+	rns.rng1[1] = 49
+	assert(u:willLevelStats(0)[2] == 1, u:willLevelStats(0)[2])
+	assert(u:levelUpProcs_string(0) == "++....+", u:levelUpProcs_string(0))
+	-- (20 + 45 + 15 + 10)*100 = 9000
+	assert(math.abs(u:levelScoreInExp(0) - 100*(9000/u.avgLevelValue-1)) < 0.00000001, 
+		u:levelScoreInExp(0) .. " " ..  100*(9000/u.avgLevelValue-1))
+	
+	
+	
+	
+	-- test afas
+	rns.rng1[1] = 54
+	assert(u:willLevelStats(0)[2] == -2, u:willLevelStats(0)[2])
+	if unitData.CAN_ADD_AFAS then
+		assert(u:levelUpProcs_string(0) == "+?....+", u:levelUpProcs_string(0))
+	else
+		assert(u:levelUpProcs_string(0) == "+.....+", u:levelUpProcs_string(0))
+	end
+	assert(math.abs(u:levelScoreInExp(0) - 100*(4500/u.avgLevelValue-1)) < 0.00000001, 
+		u:levelScoreInExp(0) .. " " ..  100*(4500/u.avgLevelValue-1))
+	
+	u:toggleAfas()
+	assert(u:willLevelStats(0)[2] == 2, u:willLevelStats(0)[2])
+	assert(u:levelUpProcs_string(0) == "+!....+")
+	assert(math.abs(u:levelScoreInExp(0) - 100*(9000/u.avgLevelValue-1)) < 0.00000001, 
+		u:levelScoreInExp(0) .. " " ..  100*(9000/u.avgLevelValue-1))
+	u:toggleAfas()
+	rns.rng1[1] = 89
+	
+	
+		
+	-- promote
+	u.class = classes.OTHER_PROMOTED
+	u.canPromote = true
+	u.bases[8] = 1 + u.bases[8] - u.willPromoteAt
+	
+	for i = 1, 7 do
+		assert(u.growthWeights[i] == u.dynamicWeights[i], "assertion failed! " .. i)
+		assert(u:willLevelStats(0)[i] == willLevelStats[i], "assertion failed! " .. i)
+		assert(u:statsGained(i) == u.stats[i] - u.bases[i], "assertion failed! " .. i)
+		u:statAverage(i)
+		u:statDeviation(i)
+		u:statStdDev(i)
+		assert(u:effectiveGrowthRate(i) == u:statsGained(i)*5, "assertion failed! " .. i)
+	end
+	assert(u:statsGained(8) == u.stats[8] - u.bases[8])
+	
+	for _,v in ipairs(u:statData_strings()) do
+		print(v)
 	end
 	
-	print(u:statData_strings())
-	u:toggleAfas()
-	u:setDynamicWeights()
-	u:loadRAMvalues()
+	
+	
 	
 	unitData.printRanks()
 	unitData.printSupports()
 	
 	print("---Unit data passed...---")
+else
+	print("---Unit data skipped---")
 end
 
 if testAll then -- Combat
@@ -208,6 +298,8 @@ if testAll then -- Combat
 	-- todo test rn and game version dependent factors
 	
 	print("---Combat passed---")
+else
+	print("---Combat skipped---")
 end
 
 if testAll then -- Event
@@ -276,6 +368,8 @@ if testAll then -- Event
 	rnEvent.deleteLastEvent()
 	
 	print("---Event passed---")
+else
+	print("---Event skipped---")
 end
 
 if testAll then -- GUI
@@ -296,6 +390,8 @@ if testAll then -- GUI
 	end
 	
 	print("---GUI passed---")
+else
+	print("---GUI skipped---")
 end
 
 if testAll then -- Autolog
@@ -308,6 +404,10 @@ if testAll then -- Autolog
 	autolog.writeLogs()
 	
 	print("---Autolog passed---")
+else
+	print("---Autolog skipped---")
 end
 
-print("---All tests passed---")
+if testAll then
+	print("---All tests passed---")
+end

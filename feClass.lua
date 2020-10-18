@@ -115,7 +115,6 @@ P.NECROMANCER 		= nextInd()
 
 P.ENTOMBED          = nextInd()
 P.OTHER_PROMOTED    = nextInd()
-
 end
 
 -- todo inanimate classes eg wall, snag
@@ -303,6 +302,8 @@ P.PROMO_GAINS[P.SWORDMASTER_M] 		= {5, 2, 0, 0, 2, 1, 0}
 P.PROMO_GAINS[P.ASSASSIN_F] 		= {2, 1, 1, 1, 2, 1, 0}
 P.PROMO_GAINS[P.ASSASSIN_M] 		= {3, 1, 0, 0, 2, 2, 0}
 P.PROMO_GAINS[P.ROGUE] 				= {2, 1, 1, 0, 2, 2, 0}
+
+P.PROMO_GAINS[P.TRANSPO_PROMO]      = {0, 0, 0, 0, 0, 0, 0} -- untested
 
 P.PROMO_GAINS[P.ENTOMBED]           = {0, 0, 0, 0, 0, 0, 0} -- untested
 

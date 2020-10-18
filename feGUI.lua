@@ -203,14 +203,14 @@ function rectObj:drawEventBoxes(event, rnEvent_i)
 	if event:levelDetected() then
 		local procs = event.unit:willLevelStats(event.postCombatRN_i, event.stats)
 		
-		for stat_i = 1, 7 do
-			local char_start = INIT_CHARS + (event.postCombatRN_i-event.startRN_i + stat_i-1) * 3
+		for i = 1, 7 do
+			local char_start = INIT_CHARS + (event.postCombatRN_i-event.startRN_i + i-1) * 3
 			
-			if procs[stat_i] == 1 then
-				self:drawBox(line_i, char_start, 3, LEVEL_UP_COLORS[stat_i]) 
-			elseif procs[stat_i] == 2 then -- Afa's provided stat
-				self:drawBox(line_i, char_start, 3, pulseColor(LEVEL_UP_COLORS[stat_i], "white")) 
-			elseif procs[stat_i] == -1 then -- capped stat
+			if procs[i] == 1 then
+				self:drawBox(line_i, char_start, 3, LEVEL_UP_COLORS[i]) 
+			elseif procs[i] == 2 then -- Afa's provided stat
+				self:drawBox(line_i, char_start, 3, pulseColor(LEVEL_UP_COLORS[i], "white")) 
+			elseif procs[i] == -1 then -- capped stat
 				self:drawBox(line_i, char_start, 3, pulseColor(0x662222FF, "black"))
 			end
 		end
@@ -272,6 +272,22 @@ end
 function rectObj:draw()
 	if self.opacity <= 0 then return end
 	
+	if self.ID == P.RN_EVENT_I then
+		self.strings = rnEvent.toStrings("isColored")
+	elseif self.ID == P.RN_STREAM_I then
+		self.strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
+	elseif self.ID == P.STAT_DATA_I then
+		self.strings = unitData.currUnit():statData_strings(isPulsePhase(480) and (P.rects.sel_i == P.STAT_DATA_I))
+	elseif self.ID == P.AUTOLOG_I then
+		self.strings = {"autolog test"}
+	elseif self.ID == P.COMBAT_I then
+		self.strings = combat.combatObj:new():toStrings()
+	elseif self.ID == P.COMPACT_BPS_I then
+		self.strings = combat.combatObj:new():toCompactStrings()
+	elseif self.ID == P.COORD_I then
+		self.strings = {string.format("%02d,%02d", memory.readbyte(addr.CURSOR_X), memory.readbyte(addr.CURSOR_Y))}
+	end
+	
 	gui.opacity(self.opacity)
 	self:drawBackgroundBox()
 	
@@ -307,29 +323,8 @@ function rectObj:draw()
 end
 
 function P.drawRects()
-	local function getStrings(i)
-		if i == P.RN_EVENT_I then
-			return rnEvent.toStrings("isColored")
-		elseif i == P.RN_STREAM_I then
-			return rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
-		elseif i == P.STAT_DATA_I then
-			return unitData.currUnit():statData_strings(isPulsePhase(480) and (P.rects.sel_i == P.STAT_DATA_I))
-		elseif i == P.AUTOLOG_I then
-			return {"autolog test"}
-		elseif i == P.COMBAT_I then
-			return combat.combatObj:new():toStrings()
-		elseif i == P.COMPACT_BPS_I then
-			return combat.combatObj:new():toCompactStrings()
-		elseif i == P.COORD_I then
-			return {string.format("%02d,%02d", memory.readbyte(addr.CURSOR_X), memory.readbyte(addr.CURSOR_Y))}
-		end
-	end
-	
-	for i, rect in ipairs(P.rects) do
-		if rect.opacity > 0 then
-			rect.strings = getStrings(i)
-			rect:draw()
-		end
+	for _, rect in ipairs(P.rects) do
+		rect:draw()
 	end
 end
 

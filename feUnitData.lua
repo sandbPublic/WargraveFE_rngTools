@@ -27,27 +27,29 @@ local HEX_CODES = {}
 
 local DEFAULT_GROWTH_WEIGHTS = {20, 45, 15, 60, 30, 10, 10} 
 -- speed>str>def>hp>skl>res=luck
--- these values are not normalized: weights of {2, 4, 2, 5, 3, 1, 1} 
--- make a unit's levels considered 10% as important
--- this set of values are used to scale avgLevelValue for expValueFactor()
+-- these values are not normalized: weights of {5, 9, 3, 15, 6, 2, 2} 
+-- make a unit's levels considered 20% as important
+-- this set of values are also used to scale avgLevelValue for expValueFactor()
 local EXP_VALUE_FACTOR_SCALE = 0 -- value of perfect level using default weights
 for _, v in ipairs(DEFAULT_GROWTH_WEIGHTS) do
 	EXP_VALUE_FACTOR_SCALE = EXP_VALUE_FACTOR_SCALE + 100 * v
 end
 
 local function initializeCommonValues()
-	for index,name in pairs(NAMES) do INDEX_OF_NAME[name] = index end
-	for unit_i = 1, #NAMES do
-		GROWTH_WEIGHTS[unit_i] = DEFAULT_GROWTH_WEIGHTS
-		BOOSTERS[unit_i] = {0, 0, 0, 0, 0, 0, 0}
-		PROMOTED_AT[unit_i] = 0
-		WILL_PROMOTE_AT[unit_i] = 10
-		WILL_END_AT[unit_i] = 20
+	for i, name in pairs(NAMES) do 
+		INDEX_OF_NAME[name] = i
+		
+		GROWTH_WEIGHTS[i] = DEFAULT_GROWTH_WEIGHTS
+		BOOSTERS[i] = {0, 0, 0, 0, 0, 0, 0}
+		PROMOTED_AT[i] = 20 -- if unit promoted at is unknown, 
+		-- setting PROMOTED_AT too low can make promoted units appear to have impossible stat gains, 
+		-- even before unmarked boosters
+		WILL_PROMOTE_AT[i] = 10
+		WILL_END_AT[i] = 20
 	end
 end
 
 if GAME_VERSION == 6 then
-	-- todo is this needed? disambiguate Marcus, Merlinus, Bartre, and Karel from FE7
 	NAMES = {
 	"Roy", "Marcus", "Allen", "Lance", "Wolt", 
 	"Bors", "Merlinus", "Ellen", "Dieck", "Wade",
@@ -72,7 +74,7 @@ if GAME_VERSION == 6 then
 	{80, 40, 45, 50, 20, 15, 35}, -- Lance
 	{80, 40, 50, 40, 20, 10, 40}, -- Wolt
 	{90, 30, 30, 40, 35, 10, 50}, -- Bors
-	{00, 00, 50, 50, 20, 05, 00}, -- Merlinus
+   {100, 00, 50, 50, 20, 05,100}, -- Merlinus
 	{45, 50, 30, 20, 05, 60, 70}, -- Ellen
 	{90, 40, 40, 30, 20, 15, 35}, -- Dieck
 	{75, 50, 45, 20, 30, 05, 45}, -- Wade 
@@ -91,7 +93,7 @@ if GAME_VERSION == 6 then
 	{90, 35, 40, 50, 20, 20, 15}, -- Astohl
 	{45, 75, 20, 35, 10, 35, 50}, -- Lilina
 	{85, 40, 40, 40, 30, 10, 45}, -- Wendy
-	{00, 60, 25, 20, 40, 02, 20}, -- Barth
+   {100, 60, 25, 20, 40, 02, 20}, -- Barth
 	{85, 40, 30, 45, 20, 15, 55}, -- Oujay
 	{75, 25, 50, 55, 15, 20, 50}, -- Fir
 	{75, 45, 50, 50, 10, 15, 25}, -- Shin
@@ -111,7 +113,7 @@ if GAME_VERSION == 6 then
 	{60, 55, 40, 30, 20, 55, 20}, -- Sofiya
 	{70, 35, 25, 35, 10, 05, 20}, -- Igrene
 	{70, 45, 25, 25, 15, 05, 15}, -- Garret
-	{30, 90, 85, 65, 30, 50, 50}, -- Fa
+   {130, 90, 85, 65, 30, 50,150}, -- Fa
 	{75, 30, 30, 45, 20, 15, 25}, -- Hugh
 	{80, 60, 50, 35, 25, 05, 20}, -- Zeis
 	{60, 30, 30, 30, 30, 05, 20}, -- Douglas
@@ -119,7 +121,7 @@ if GAME_VERSION == 6 then
 	{55, 20, 20, 15, 10, 10, 20}, -- Dayan
 	{50, 20, 35, 30, 10, 10, 45}, -- Juno
 	{20, 30, 15, 10, 10, 20, 20}, -- Yodel
-	{10, 30, 40, 40, 10, 00, 20}  -- Karel
+   {210,130,140,140,110,100,120}  -- Karel
 	}
 	BASE_STATS = {
 	{18, 05, 05, 07, 05, 00, 07, 01}, -- Roy
@@ -411,7 +413,7 @@ if GAME_VERSION == 7 then
 	{50, 50, 30, 40, 15, 55, 60}, -- Serra
 	{75, 30, 40, 70, 25, 20, 50}, -- Matthew
 	{75, 30, 50, 70, 15, 25, 45}, -- Guy
-	{20, 00, 90, 90, 30, 15, 00}, -- Merlinus +hp, lck
+   {120, 00, 90, 90, 30, 15,100}, -- Merlinus +hp, lck
 	{65, 40, 40, 50, 20, 40, 30}, -- Erk
 	{45, 40, 50, 40, 15, 50, 65}, -- Priscilla
 	{70, 40, 60, 60, 20, 30, 55}, -- Lyn
@@ -549,7 +551,7 @@ if GAME_VERSION == 7 then
 	classes.BISHOP_F,		-- Serra
 	classes.ASSASSIN_M,		-- Matthew
 	classes.SWORDMASTER_M,	-- Guy
-	classes.TRANSPORTER,	-- Merlinus
+	classes.TRANSPO_PROMO,	-- Merlinus
 	classes.SAGE_M,			-- Erk
 	classes.VALKYRIE,		-- Priscilla
 	classes.BLADE_LORD,		-- Lyn
@@ -844,6 +846,8 @@ HEX_CODES[0xFFDC] = "Linus" --  (morph)
 		BASE_STATS[INDEX_OF_NAME["Vaida"]]   = {43, 20, 19, 13, 21, 06, 11, 09}
 	end
 
+	PROMOTED_AT[INDEX_OF_NAME["Merlinus"]] = 20
+	
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian"]] = {30, 00, 00, 19, 30, 10, 10}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Nils"]]   = {30, 00, 00, 19, 30, 10, 10}	
 end
@@ -895,7 +899,7 @@ if GAME_VERSION == 8 then
 	{65, 25, 45, 60, 25, 30, 25}, --Rennac
 	{85, 55, 40, 30, 45, 30, 20}, --Duessel
 	{70, 50, 40, 35, 10, 45, 20}, --Knoll
-	{30, 90, 85, 65, 50, 30, 30}, --Myrrh, HP and def +100
+   {130, 90, 85, 65,150, 30, 30}, --Myrrh
 	{70, 40, 50, 60, 20, 50, 30}, --Syrene
 	{85, 50, 45, 45, 30, 20, 20}, --Caellach
 	{80, 55, 45, 40, 45, 30, 25}, --Orson
@@ -1123,12 +1127,12 @@ HEX_CODES[0x0000] = "empty slot"
 -- determine if healer is present manually todo
 P.HEALER_DEPLOYED = false
  
-local CAN_ADD_AFAS = (GAME_VERSION == 7 and memory.readbyte(addr.CHAPTER) >= 31) or -- ch 31 == hector chapter 24
+P.CAN_ADD_AFAS = (GAME_VERSION == 7 and memory.readbyte(addr.CHAPTER) >= 31) or -- ch 31 == hector chapter 24
                      (GAME_VERSION == 8) -- todo confirm chapter code for metis tome
 
 for slot = 1, 255 do
 	if addr.unitHasAfas(addr.addrFromSlot(slot, 0)) then
-		CAN_ADD_AFAS = false -- use this to determine if stat up display should show ? for gains possible with Afa
+		P.CAN_ADD_AFAS = false -- use this to determine if stat up display should show ? for gains possible with Afa
 		break
 	end
 end
@@ -1139,8 +1143,8 @@ local function statsInRAM()
 	local stats = {}
 	
 	stats[1] = memory.readbyte(addr.ATTACKER_START + addr.MAX_HP_OFFSET)
-	for stat_i = 2, 7 do
-		stats[stat_i] = memory.readbyte(addr.ATTACKER_START + addr.MAX_HP_OFFSET + stat_i)  -- at +1 is current hp
+	for i = 2, 7 do
+		stats[i] = memory.readbyte(addr.ATTACKER_START + addr.MAX_HP_OFFSET + i)  -- at +1 is current hp
 	end
 	stats[LEVEL_I] = memory.readbyte(addr.ATTACKER_START + addr.LEVEL_OFFSET)
 	stats[EXP_I] = memory.readbyte(addr.ATTACKER_START + addr.EXP_OFFSET)
@@ -1219,17 +1223,21 @@ local unitObj = {}
 
 function unitObj:willLevelStats(HP_RN_i)
 	ret = {}
-	for stat_i, growth in ipairs(self.growths) do
-		if self.stats[stat_i] >= classes.CAPS[self.class][stat_i] then
-			ret[stat_i] = -1 -- stat capped
-		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth then
-			ret[stat_i] = 1 -- stat grows without afa's
-		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and self.hasAfas then
-			ret[stat_i] = 2 -- stat grows because of afa's
-		elseif rns.rng1:getRN(HP_RN_i+stat_i-1) < growth + 5 and GAME_VERSION > 6 then
-			ret[stat_i] = -2 -- stat would grow with afa's
+	for i, growth in ipairs(self.growths) do
+		local nextRN = rns.rng1:getRN(HP_RN_i+i-1)
+	
+		if self.stats[i] >= classes.CAPS[self.class][i] + self.freeStats[i] then
+			ret[i] = -1 -- stat capped
+		elseif nextRN < growth then
+			ret[i] = 1 -- stat grows without afa's
+		elseif nextRN < growth + 5  and self.hasAfas then 
+			-- if growth == 95 and rn = 95, want to report 2, not 0
+			-- (however no canonical unit has a growth of 95)
+			ret[i] = 2 -- stat grows because of afa's
+		elseif nextRN < growth + 5 then
+			ret[i] = -2 -- stat would grow with afa's
 		else
-			ret[stat_i] = 0 -- stat doesn't grow
+			ret[i] = 0 -- stat doesn't grow
 		end
 	end
 	return ret
@@ -1247,7 +1255,7 @@ function unitObj:levelUpProcs_string(HP_RN_i)
 		elseif proc == 2 then
 			seq = seq .. "!" -- grows this stat because of Afa's
 			noStatWillRise = false
-		elseif proc == -2 and addr.CAN_ADD_AFAS then
+		elseif proc == -2 and P.CAN_ADD_AFAS then
 			seq = seq .. "?" -- stat would grow with afa's
 		elseif proc == -1 then
 			seq = seq .. "_" -- can't grow stat
@@ -1273,10 +1281,12 @@ function unitObj:levelScoreInExp(HP_RN_i)
 	local procs = self:willLevelStats(HP_RN_i)
 	
 	local score = 0
-	for stat_i = 1, 7 do
-		if procs[stat_i] > 0 then
-			score = score + self.dynamicWeights[stat_i]
+	for i = 1, 7 do
+		local statsGained = self.freeStats[i]
+		if procs[i] > 0 then
+			statsGained = statsGained + 1
 		end
+		score = score + statsGained*self.dynamicWeights[i]
 	end
 	score = score * 100
 	
@@ -1290,33 +1300,35 @@ function unitObj:expValueFactor()
 end
 
 -- works for levels too
-function unitObj:statsGained(stat_i)
-	return self.stats[stat_i] - self.bases[stat_i]
+function unitObj:statsGained(i)
+	return self.stats[i] - self.bases[i]
 end
 
-function unitObj:statAverage(stat_i)
-	return self.bases[stat_i] + self:statsGained(LEVEL_I)*self.growths[stat_i]/100
+function unitObj:statAverage(i)
+	-- use GROWTHS rather than add back freeStats
+	-- doesn't account for Afas
+	return self.bases[i] + self:statsGained(LEVEL_I)*(GROWTHS[self.index][i]/100)
 end
 
-function unitObj:statDeviation(stat_i)
-	return self.stats[stat_i] - self:statAverage(stat_i)
+function unitObj:statDeviation(i)
+	return self.stats[i] - self:statAverage(i)
 end
 
 -- how many sigma's off from average
-function unitObj:statStdDev(stat_i)
-	local growthProb = self.growths[stat_i]/100
+function unitObj:statStdDev(i)
+	local growthProb = self.growths[i]/100
 	
 	local stdDev = (self:statsGained(LEVEL_I)*growthProb*(1-growthProb))^0.5
 	
 	if stdDev == 0 then return 0 end
 	
-	return self:statDeviation(stat_i)/stdDev
+	return self:statDeviation(i)/stdDev
 end
 
-function unitObj:effectiveGrowthRate(stat_i)
+function unitObj:effectiveGrowthRate(i)
 	if self:statsGained(LEVEL_I) == 0 then return 0 end
 	
-	return 100*self:statsGained(stat_i)/self:statsGained(LEVEL_I)
+	return 100*self:statsGained(i)/self:statsGained(LEVEL_I)
 end
 
 function unitObj:statData_strings(showPromo)
@@ -1344,38 +1356,44 @@ function unitObj:statData_strings(showPromo)
 	local percentileStr = "Percentile     "
 	local stndDevStr    = "Standard Dev   "
 	
-	local twoDigits = " %02d"
-	for stat_i = 1, 7 do
-		baseStr = baseStr .. twoDigits:format(self.bases[stat_i])
+	local function twoDigits(x)
+		if x >= 100 then
+			return string.format("%03d", x)
+		end
+		return string.format(" %02d", x)	
+	end
+	
+	for i = 1, 7 do
+		baseStr = baseStr .. twoDigits(self.bases[i])
 		
 		if showPromo then
-			statStr = statStr .. twoDigits:format(self.stats[stat_i] 
-					+ classes.PROMO_GAINS[self.promotion][stat_i])
-			capStr = capStr .. twoDigits:format(classes.CAPS[self.promotion][stat_i])
+			statStr = statStr .. twoDigits(self.stats[i] 
+					+ classes.PROMO_GAINS[self.promotion][i])
+			capStr = capStr .. twoDigits(classes.CAPS[self.promotion][i])
 		else
-			statStr = statStr .. twoDigits:format(self.stats[stat_i])
-			capStr = capStr .. twoDigits:format(classes.CAPS[self.class][stat_i])
+			statStr = statStr .. twoDigits(self.stats[i])
+			capStr = capStr .. twoDigits(classes.CAPS[self.class][i])
 		end
 		
-		weightStr = weightStr .. twoDigits:format(self.dynamicWeights[stat_i])
+		weightStr = weightStr .. twoDigits(self.dynamicWeights[i])
 		
-		if self:effectiveGrowthRate(stat_i) < 100 then
-			trueGrowthStr = trueGrowthStr .. twoDigits:format(self:effectiveGrowthRate(stat_i))
-		else
-			trueGrowthStr = trueGrowthStr .. " A0"
-		end
+		trueGrowthStr = trueGrowthStr .. twoDigits(self:effectiveGrowthRate(i))
 		
-		local growth = self.growths[stat_i]
+		local growth = GROWTHS[self.index][i] -- easier than adding freeStats
 		if self.hasAfas then
 			growth = growth + 5
 		end
 		
-		growthStr = growthStr .. twoDigits:format(growth)
+		growthStr = growthStr .. twoDigits(growth)
 		
-		percentileStr = percentileStr .. twoDigits:format(
-			100*percentile(self:statsGained(stat_i), self:statsGained(LEVEL_I), growth/100))
+		-- for stats with >= 100 growths, subtract as needed from statsGained
+		percentileStr = percentileStr .. twoDigits(
+			100*percentile(
+				self:statsGained(i)-self.freeStats[i]*self:statsGained(LEVEL_I), 
+				self:statsGained(LEVEL_I), 
+				self.growths[i]/100))
 		
-		local stdDv = self:statStdDev(stat_i)
+		local stdDv = self:statStdDev(i)
 		stndDevStr = stndDevStr .. string.format("%+03d", 10*stdDv)
 	end
 	
@@ -1414,8 +1432,12 @@ function unitObj:setDynamicWeights()
 		levelsTilEnd = self.willPromoteAt - self.stats[LEVEL_I]
 	end
 	
-	for stat_i = 1, 7 do
-		local gainsTilStatCap = classes.CAPS[self.class][stat_i] - self.stats[stat_i]
+	for i = 1, 7 do
+		local gainsTilStatCap = classes.CAPS[self.class][i] - self.stats[i] - levelsTilEnd*self.freeStats[i]
+		
+		local growthRate = self.growths[i]
+		if self.hasAfas then growthRate = growthRate + 5 end
+		growthRate = growthRate/100
 		
 		-- multiply by 1 - P(reaching/exceeding cap even if not gaining stat this level)
 		-- if no chance to reach cap if not leveling, full weight
@@ -1426,48 +1448,56 @@ function unitObj:setDynamicWeights()
 		-- P(less than cap | gained levelsTilEnd - 1 levels)
 		
 		local probWontReachCapIfNotGaining = 
-			cumulativeBinDistrib(gainsTilStatCap-1, levelsTilEnd-1, self.growths[stat_i]/100)
+			cumulativeBinDistrib(gainsTilStatCap-1, levelsTilEnd-1, growthRate)
 		
 		-- if more likely to hit promoted class cap than unpromoted, use that probability
 		if self.canPromote then
-			local gainsTilStatCap_P = classes.CAPS[self.promotion][stat_i] 
-				- self.stats[stat_i] - classes.PROMO_GAINS[self.promotion][stat_i]
-			
 			-- may need levels to even reach promotion
 			local levelsTilEnd_P = self.willEndAt - 1 + math.max(self.willPromoteAt - self.stats[LEVEL_I], 0)
 			
+			local gainsTilStatCap_P = classes.CAPS[self.promotion][i] 
+				- self.stats[i] - classes.PROMO_GAINS[self.promotion][i] - levelsTilEnd_P*self.freeStats[i]
+			
 			local probWontReachCapIfNotGaining_P = 
-				cumulativeBinDistrib(gainsTilStatCap_P-1, levelsTilEnd_P-1, self.growths[stat_i]/100)
+				cumulativeBinDistrib(gainsTilStatCap_P-1, levelsTilEnd_P-1, growthRate)
 				
 			if probWontReachCapIfNotGaining > probWontReachCapIfNotGaining_P then
 				probWontReachCapIfNotGaining = probWontReachCapIfNotGaining_P
 			end
 		end
 		
-		self.dynamicWeights[stat_i] = self.growthWeights[stat_i] * probWontReachCapIfNotGaining
+		self.dynamicWeights[i] = self.growthWeights[i] * probWontReachCapIfNotGaining
 	end
 end
 
-function unitObj:loadRAMvalues()
+function unitObj:loadRAMvalues(testStats)
+	self.stats = testStats or statsInRAM()
+
 	self.class = classes.HEX_CODES[memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)] or classes.OTHER
-	self.canPromote = self.class == BASE_CLASSES[unit_i] and self.class ~= self.promotion
-	if self.canPromote then
-		for i, gain in ipairs(classes.PROMO_GAINS[self.class]) do
-			self.bases[i] = self.bases[i] + gain
-		end
-		self.bases[LEVEL_I] = 1 + BASE_STATS[unit_i][LEVEL_I] - PROMOTED_AT[unit_i]
-	end
+	self.canPromote = self.class == BASE_CLASSES[self.index] and self.class ~= self.promotion
 	
-	self.stats = statsInRAM()
+	-- has promoted, if not promoted these values are already assigned
+	if self.class ~= BASE_CLASSES[self.index] and self.class == self.promotion then
+		for i = 1, 7 do
+			self.bases[i] = BASE_STATS[self.index][i] + BOOSTERS[self.index][i] + classes.PROMO_GAINS[self.class][i]
+		end
+		
+		-- "base" level is <= 1 after promotion since it is used to calculate levels gained
+		self.bases[LEVEL_I] = 1 + BASE_STATS[self.index][LEVEL_I] - PROMOTED_AT[self.index]
+	end
 	
 	self:setDynamicWeights()
 	
 	self.avgLevelValue = 0
 	for i = 1, 7 do
-		self.avgLevelValue = self.avgLevelValue + self.growths[i]*self.dynamicWeights[i]
+		-- easier than adding 100*freeStats back to self.growths
+		self.avgLevelValue = self.avgLevelValue + GROWTHS[self.index][i]*self.dynamicWeights[i]
 	end
 	
-	self.hasAfas = addr.unitHasAfas(addr.ATTACKER_START) -- todo incorporate phase
+	self.hasAfas = addr.unitHasAfas(addr.ATTACKER_START)
+	if getPhase() == "enemy" then
+		self.hasAfas = addr.unitHasAfas(addr.DEFENDER_START)
+	end
 end
 
 function unitObj:new(unit_i)
@@ -1475,14 +1505,19 @@ function unitObj:new(unit_i)
 	setmetatable(o, self)
 	self.__index = self
 	
+	o.index = unit_i
 	o.name = NAMES[unit_i]
-	o.growths = GROWTHS[unit_i]
+	o.growths = {}
+	o.freeStats = {} -- for stats with growth rate >= 100
 	o.growthWeights = GROWTH_WEIGHTS[unit_i]
+	o.bases = {}
 	
-	o.bases = BASE_STATS[unit_i]
-	for i, boost in ipairs(BOOSTERS[unit_i]) do
-		o.bases[i] = o.bases[i] + boost
+	for i = 1, 7 do
+		o.growths[i] = GROWTHS[unit_i][i] % 100
+		o.freeStats[i] = math.floor(GROWTHS[unit_i][i]/100)
+		o.bases[i] = BASE_STATS[o.index][i] + BOOSTERS[o.index][i]
 	end
+	o.bases[LEVEL_I] = BASE_STATS[o.index][LEVEL_I]
 
 	o.promotion = PROMOTIONS[unit_i]
 	o.willPromoteAt = WILL_PROMOTE_AT[unit_i]

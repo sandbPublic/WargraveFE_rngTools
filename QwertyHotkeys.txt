@@ -1,21 +1,15 @@
-T
-delete last rnEvent
-undo rnEvent deletion
 Y
 register new rnEvent
 print rnEvent diagnostic
 U
 toggle rnEvent.hasCombat
-hold, <> change fog
+hold, <^v> change hp weight
 I
 toggle rnEvent.lvlUp
-hold+<> change money, +^v change step
+toggle rnEvent.dig (FE8 only)
 O
 toggle bonus exp
-toggle rnEvent.dig (FE8 only)
-P
-suggest rnEvent permutation
-search future event outcomes
+hold, <> change fog
 H
 switch to 2ndary functions
 switch to primary functions
@@ -23,17 +17,17 @@ J
 hold+<> change display, release toggle
 move window (<^v>LR)
 K
--- todo unused
-hold, <^v> change hp weight
+suggest rnEvent permutation
+search future event outcomes
 L
 generate log file
--- todo unused
+--
 B
 change afa/metis
 switch RNG to 2ndary
 N
-save,print combat,stats,ranks&supports
+print combat,stats,ranks,supports,hex,slot
 hold, <>^v change last selected unit data
 M
 hold, <> move rn, ^v change step
-print class&unit code info
+hold+<> change money, +^v change step

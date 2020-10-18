@@ -324,7 +324,7 @@ if testAll then -- Event
 		
 		rnEvent.totalEvaluation()
 		rnEvent.searchFutureOutcomes()
-		rnEvent.suggestedPermutation()
+		rnEvent.suggestPermutation()
 		
 		rnEvent.printDiagnostic()
 		rnEvent.toStrings()

@@ -140,7 +140,7 @@ while true do
 	updateCtrl(keybCtrl, input.get())
 	updateCtrl(gameCtrl, joypad.get(0))
 	
-	-- alter burns, selected, swap, toggle swapping
+	-- alter burns, select, delete/undo, swap, toggle swapping
 	-- disable if using a keyboard hotkey which may combine with game controls or modify displays
 	if feGUI.rects.sel_i == feGUI.RN_EVENT_I and not keybCtrl.anythingHeld then
 		-- change burns
@@ -159,6 +159,14 @@ while true do
 			changeSelection(rnEvent.events, 1)
 		end
 		
+		-- delete/undo
+		if pressed("L", gameCtrl) then
+			rnEvent.deleteLastEvent()
+		end
+		if pressed("R", gameCtrl) then
+			rnEvent.undoDelete()
+		end
+		
 		-- swap with next
 		if pressed("select", gameCtrl) then
 			rnEvent.swap() -- updates self
@@ -170,35 +178,31 @@ while true do
 		end
 	end
 	
-	if pressed(7) then -- print help, switch functions
+	if pressed("H") then -- print help, switch functions
 		usingPrimaryFunctions = not usingPrimaryFunctions
 		printHelp()
 	end
 	
 	if usingPrimaryFunctions then
-		if pressed(1) then rnEvent.deleteLastEvent() end
-		
-		if pressed(2) then -- add event
+		if pressed("Y") then -- add event
 			rnEvent.addEvent()
 			rnEvent.update_rnEvents()
 			
 			printStringArray(selected(rnEvent.events).combatants:toStrings())
 		end
 		
-		if pressed(3) then rnEvent.toggle("hasCombat") end
+		if pressed("U") then rnEvent.toggle("hasCombat") end
 		
-		if pressed(4) then rnEvent.toggle("lvlUp") end	
+		if pressed("I") then rnEvent.toggle("lvlUp") end	
 		
-		if pressed(5) then 
+		if pressed("O") then 
 			if #rnEvent.events > 0 then
 				selected(rnEvent.events).combatants:toggleBonusExp() 
 			end
 		end
-
-		if pressed(6) then rnEvent.suggestedPermutation() end
 		
-		if pressed(8) then print("selecting display: " .. selected(feGUI.rects).name) end
-		if held(8) then -- hold down, then press left/right
+		if pressed("J") then print("selecting display: " .. selected(feGUI.rects).name) end
+		if held("J") then -- hold down, then press left/right
 			if pressed("left", gameCtrl) then
 				changeSelection(feGUI.rects, -1)
 				print("selecting display: " .. selected(feGUI.rects).name)
@@ -208,7 +212,7 @@ while true do
 				print("selecting display: " .. selected(feGUI.rects).name)
 			end
 		end
-		if released(8) then
+		if released("J") then
 			if selected(feGUI.rects).opacity == 0 then
 				selected(feGUI.rects).opacity = 0.75
 			else
@@ -216,30 +220,35 @@ while true do
 			end
 		end
 		
-		if pressed(9) then 
+		if pressed("K") then rnEvent.suggestPermutation() end
 		
-		end
-		
-		if pressed(10) then autolog.writeLogs() end
+		if pressed("L") then autolog.writeLogs() end
 				
-		if pressed(11) then
+		if pressed("B") then
 			if #rnEvent.events > 0 then
 				selected(rnEvent.events).unit:toggleAfas()
 			end
 		end
 		
-		if pressed(12) then
+		if pressed("N") then
 			printStringArray(combat.combatObj:new():toStrings())
 			
 			printStringArray(unitData.currUnit():statData_strings())
-			rnEvent.updateStats()
 			
 			unitData.printRanks()
 			unitData.printSupports()
+			
+			print()
+			local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
+			print(string.format("unit %s 0x%04X", unitData.hexCodeToName(nameCode), nameCode))
+			local classCode = memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)
+			local class = classes.HEX_CODES[classCode] or classes.OTHER
+			print(string.format("class %d 0x%04X", class, classCode))
+			print(string.format("slot %d", memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)))
 		end
 		
-		if pressed(13) then print("moving rn position...") end
-		if held(13) then -- move rn position
+		if pressed("M") then print("moving rn position...") end
+		if held("M") then -- move rn position
 			if pressed("left", gameCtrl) then
 				currentRNG:moveRNpos(-rnStepSize)
 				rnEvent.update_rnEvents(1)
@@ -261,80 +270,10 @@ while true do
 			end
 		end
 	else
-		if pressed(1) then rnEvent.undoDelete() end
+		if pressed("Y") then rnEvent.printDiagnostic() end
 		
-		if pressed(2) then rnEvent.printDiagnostic() end
-		
-		if pressed(3) then print("changing fog...") end
-		if held(3) then
-			local fog = memory.readbyte(addr.FOG)
-			
-			if pressed("left", gameCtrl) then
-				fog = (fog - 1) % 256
-				memory.writebyte(addr.FOG, fog)
-				print("fog set to " .. fog)
-			end
-			
-			if pressed("right", gameCtrl) then
-				fog = (fog + 1) % 256
-				memory.writebyte(addr.FOG, fog)
-				print("fog set to " .. fog)
-			end
-		end
-		
-		if pressed(4) then print("changing money by " .. moneyStepSize .. "...") end
-		if held(4) then -- move rn position
-			local currMoney = addr.getMoney()
-		
-			if pressed("left", gameCtrl) then
-				addr.setMoney(math.max(currMoney - moneyStepSize, 0))
-				print("money now " .. math.max(currMoney - moneyStepSize, 0))
-			end
-			if pressed("right", gameCtrl) then
-				addr.setMoney(math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
-				print("money now " .. math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
-			end
-			if pressed("up", gameCtrl) then
-				moneyStepSize = moneyStepSize * 10
-				print("moneyStepSize now " .. moneyStepSize)
-			end
-			if pressed("down", gameCtrl) then
-				moneyStepSize = moneyStepSize / 10
-				if moneyStepSize < 1 then
-					moneyStepSize = 1
-				end
-				print("moneyStepSize now " .. moneyStepSize)
-			end
-		end
-		
-		if pressed(5) then rnEvent.toggle("dig") end
-	
-		if pressed(6) then rnEvent.searchFutureOutcomes() end
-	
-		if pressed(8) then
-			selected(feGUI.rects).shiftMode = true
-			print("display shift mode: ON")
-			print("change display opacity with L and R")
-			print("change display position with D-pad")
-			
-			if selected(feGUI.rects).opacity <= 0.1 then
-				selected(feGUI.rects).opacity = 0.5
-			end
-		end
-		if held(8) then -- move rects or change opacity
-			if gameCtrl.thisFrame.left 	then selected(feGUI.rects):adjust(-0.02, 0, 0) end
-			if gameCtrl.thisFrame.right then selected(feGUI.rects):adjust( 0.02, 0, 0) end
-			if gameCtrl.thisFrame.up 	then selected(feGUI.rects):adjust(0, -0.02, 0) end
-			if gameCtrl.thisFrame.down 	then selected(feGUI.rects):adjust(0,  0.02, 0) end
-			if gameCtrl.thisFrame.L 	then selected(feGUI.rects):adjust(0, 0, -0.04) end
-			if gameCtrl.thisFrame.R 	then selected(feGUI.rects):adjust(0, 0,  0.04) end
-		end
-		if released(8) then
-			selected(feGUI.rects).shiftMode = false
-			print("display shift mode: OFF")
-		end
-		
-		if held(9) then -- hold down, then press <^v> change weights
+		if pressed("U") then print("change hp weights: ^v player, <> enemy") end
+		if held("U") then -- hold down, then press <^v> change weights
 			if pressed("up", gameCtrl) then
 				rnEvent.change("pHPweight", 25)
 			end
@@ -349,15 +288,55 @@ while true do
 			end
 		end	
 		
-		if pressed(10) then
-			print("hoverSlot")
-			print(addr.hoverSlot())
-			-- todo reimplement
-			-- print(combat.paramInRAM(true)) 
-			-- print all stats rather than selecting?
+		if pressed("I") then rnEvent.toggle("dig") end
+	
+		if pressed("O") then print("changing fog...") end
+		if held("O") then
+			local fog = memory.readbyte(addr.FOG)
+			
+			if pressed("left", gameCtrl) then
+				fog = (fog - 1) % 256
+				memory.writebyte(addr.FOG, fog)
+				print("fog set to " .. fog)
+			end
+			
+			if pressed("right", gameCtrl) then
+				fog = (fog + 1) % 256
+				memory.writebyte(addr.FOG, fog)
+				print("fog set to " .. fog)
+			end
+		end
+	
+		if pressed("J") then
+			selected(feGUI.rects).shiftMode = true
+			print("display shift mode: ON")
+			print("change display opacity with L and R")
+			print("change display position with D-pad")
+			
+			if selected(feGUI.rects).opacity <= 0.1 then
+				selected(feGUI.rects).opacity = 0.5
+			end
+		end
+		if held("J") then -- move rects or change opacity
+			if gameCtrl.thisFrame.left 	then selected(feGUI.rects):adjust(-0.02, 0, 0) end
+			if gameCtrl.thisFrame.right then selected(feGUI.rects):adjust( 0.02, 0, 0) end
+			if gameCtrl.thisFrame.up 	then selected(feGUI.rects):adjust(0, -0.02, 0) end
+			if gameCtrl.thisFrame.down 	then selected(feGUI.rects):adjust(0,  0.02, 0) end
+			if gameCtrl.thisFrame.L 	then selected(feGUI.rects):adjust(0, 0, -0.04) end
+			if gameCtrl.thisFrame.R 	then selected(feGUI.rects):adjust(0, 0,  0.04) end
+		end
+		if released("J") then
+			selected(feGUI.rects).shiftMode = false
+			print("display shift mode: OFF")
+		end
+		
+		if pressed("K") then rnEvent.searchFutureOutcomes() end
+		
+		if pressed("L") then
+			
 		end
 			
-		if pressed(11) then
+		if pressed("B") then
 			if currentRNG.isPrimary then
 				currentRNG = rns.rng2
 			else
@@ -384,11 +363,11 @@ while true do
 			end
 		end
 		
-		if pressed(12) then
+		if pressed("N") then
 			printRAMhelp()
 			print("<> to change value, ^v change offset")
 		end
-		if held(12) then 
+		if held("N") then 
 			if pressed("up", gameCtrl) then
 				RAMoffset = RAMoffset - 1
 				if RAMoffset < 0 then
@@ -435,14 +414,29 @@ while true do
 			end
 		end
 		
-		if pressed(13) then
-			print()
-			local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
-			print(string.format("unit %s 0x%04X", unitData.hexCodeToName(nameCode), nameCode))
-			local classCode = memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)
-			local class = classes.HEX_CODES[classCode] or classes.OTHER
-			print(string.format("class %d 0x%04X", class, classCode))
-			print(string.format("slot %d", memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)))
+		if pressed("M") then print("changing money by " .. moneyStepSize .. "...") end
+		if held("M") then
+			local currMoney = addr.getMoney()
+		
+			if pressed("left", gameCtrl) then
+				addr.setMoney(math.max(currMoney - moneyStepSize, 0))
+				print("money now " .. math.max(currMoney - moneyStepSize, 0))
+			end
+			if pressed("right", gameCtrl) then
+				addr.setMoney(math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
+				print("money now " .. math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
+			end
+			if pressed("up", gameCtrl) then
+				moneyStepSize = moneyStepSize * 10
+				print("moneyStepSize now " .. moneyStepSize)
+			end
+			if pressed("down", gameCtrl) then
+				moneyStepSize = moneyStepSize / 10
+				if moneyStepSize < 1 then
+					moneyStepSize = 1
+				end
+				print("moneyStepSize now " .. moneyStepSize)
+			end
 		end
 	end
 	

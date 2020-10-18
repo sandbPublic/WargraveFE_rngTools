@@ -1047,9 +1047,14 @@ function P.combatObj:setNonRAM()
 		self.specialWeaponStr = eWeapon .. pWeapon
 	end
 	
-	self.bonusExp = 0 
-	-- todo set to 20 if enemy class = thief, 40 if slot = 129?? 
-	-- or class = entombed? how to auto detect boss?
+	
+	if self.enemy.class == classes.THIEF then
+		self.bonusExp = 20
+	elseif self.enemy.slot == 129 then -- boss, todo Entombed?
+		self.bonusExp = 40
+	else
+		self.bonusExp = 0
+	end
 end
 
 -- depends on bonus exp (thief or boss) and assassinates

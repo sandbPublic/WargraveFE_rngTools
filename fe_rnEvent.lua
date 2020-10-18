@@ -455,7 +455,10 @@ function P.rnEventObj:setEnemyHPstart(rnEvent_i)
 	for prevCombat_i = rnEvent_i-1, 1, -1 do
 		local prev_rnEvent = P.events[prevCombat_i]
 	
-		if prev_rnEvent.combatants.enemy.slot == self.combatants.enemy.slot and prev_rnEvent.hasCombat then
+		if prev_rnEvent.combatants.enemy.slot == self.combatants.enemy.slot 
+			and prev_rnEvent.hasCombat 
+			and self.hasCombat then
+			
 			self.enemyHPstart = prev_rnEvent.enemyHPend
 			self.enemyHPwasCarried = true
 			return
@@ -760,7 +763,7 @@ end
 -- attempt every valid arrangement and score it
 -- return top three options, first is auto-set
 local TOP_N = 3
-function P.suggestedPermutation()
+function P.suggestPermutation()
 	local timeStarted = os.clock()
 
 	if permsNeedUpdate then

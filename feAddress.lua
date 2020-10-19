@@ -26,10 +26,10 @@ function P.setMoney(money)
 	memory.writeword(P.MONEY+2, upperWord)
 end
 
-P.FOG      = P.MONEY + 5 -- {0x2AA55, 0x2BC05, 0x2BCFD}
-P.CHAPTER  = P.MONEY + 6 -- FE6x chapters count from 32
-P.PHASE    = P.MONEY + 7
-P.TURN     = P.MONEY + 8
+P.FOG   = P.MONEY + 5 -- {0x2AA55, 0x2BC05, 0x2BCFD}
+P.MAP   = P.MONEY + 6 -- FE6x chapters count from 32
+P.PHASE = P.MONEY + 7
+P.TURN  = P.MONEY + 8
 
 
 

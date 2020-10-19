@@ -3,12 +3,20 @@ require("fe_rnEvent")
 local P = {}
 autolog = P
 
--- todo use tree structure, not array
-local logs = {}
-local logCount = 0
 local filesWritten = 0
 
 
+local root = {}
+root.depth = 0
+root.frame = -1
+root.text = "Root"
+
+local currNode = root
+P.GUInode = root
+
+local function equalNodes(a, b)
+	return a.depth == b.depth and a.frame == b.frame and a.text == b.text
+end
 
 
 -- combat RAM may not all be updated within one frame
@@ -125,6 +133,8 @@ local function slotLocString(slot)
 end
 
 
+
+
 function P.passiveUpdate()
 	updateLastPlayerSlot()
 	
@@ -138,10 +148,11 @@ function P.passiveUpdate()
 	-- jumping back to B (from B may be incomplete record of inventory)
 	-- similarly skipNextStopLogAt must be lost (or potentially invalid from 
 	-- deleted future)
-	if logs[logCount] and logs[logCount].frame > vba.framecount() then
-		while logs[logCount] and logs[logCount].frame > vba.framecount() do
-			logCount = logCount - 1
+	if currNode.frame > vba.framecount() then
+		while currNode.frame > vba.framecount() do
+			currNode = currNode.parent
 		end
+		P.GUInode = currNode
 		
 		currTurn = memory.readbyte(addr.TURN)
 		currPhase = getPhase()
@@ -197,7 +208,7 @@ function P.passiveUpdate()
 						slotData[slot].items[i] = item
 						slotData[slot].uses[i] = uses
 						
-						autolog.addLog(string.format("%s's item %d: %2d use %s",
+						P.addLog(string.format("%s's item %d: %2d use %s",
 							nameFromSlot(slot),
 							i,
 							uses,
@@ -215,7 +226,9 @@ function P.passiveUpdate()
 		currTurn = memory.readbyte(addr.TURN)
 		currPhase = getPhase()
 		
-		autolog.addLog(string.format("\n\nTurn %d %s phase, RN# %d",
+		P.addLog("")
+		P.addLog("")
+		P.addLog(string.format("Turn %d %s phase, RN %d",
 			currTurn,
 			currPhase,
 			rns.rng1.pos))
@@ -229,7 +242,7 @@ function P.passiveUpdate()
 		
 		updateInventories()
 		
-		autolog.addLog("") -- add space after initial inventory list
+		P.addLog("") -- add space after initial inventory list
 	end
 	
 	
@@ -341,8 +354,57 @@ end
 
 
 
+-- up to 16 strings, first use children, then parents
+-- string up to 60 chars
+function P.GUIstrings()
+	local strs = {}
+	
+	local function strFn(node)
+		local childCount = 0
+		if node.children then childCount = #node.children end
+		
+		local str = string.format("%4d ", node.depth % 10000)
+		if node.depth == P.GUInode.depth then
+			str = string.format("->%2d ", node.depth % 100)
+		elseif equalNodes(node, currNode) then
+			str = string.format("-<%2d ", node.depth % 100)
+		end
+	
+		if childCount > 1 then
+			-- indicate branchs with +
+			str = string.format("+%3d ", node.depth % 1000)
+			if node.depth == P.GUInode.depth then
+				str = string.format("+>%2d ", node.depth % 100)
+			elseif equalNodes(node, currNode) then
+				str = string.format("+<%2d ", node.depth % 100)
+			end
+			
+			return str .. node.text .. string.format(" %d/%d", node.children.sel_i, childCount)
+		end
+
+		return str .. node.text
+	end
+	
+	local nodeToRead = P.GUInode
+	table.insert(strs, strFn(nodeToRead))
+	
+	while nodeToRead.children and #strs < 16 do
+		nodeToRead = selected(nodeToRead.children)
+		table.insert(strs, strFn(nodeToRead))
+	end
+	nodeToRead = P.GUInode
+	while nodeToRead.parent and #strs < 16 do
+		nodeToRead = nodeToRead.parent
+		table.insert(strs, 1, strFn(nodeToRead)) -- insert at start
+	end
+	
+	return strs
+end
+
 function P.addLog_RNconsumed()	
 	local rnsUsed = rns.rng1.pos - rns.rng1.prevPos
+	
+	if rnsUsed < 0 then return end -- don't create a log for the user reverting to savestate
 	
 	local a = lastEvent.combatants.attacker
 	local d = lastEvent.combatants.defender
@@ -384,37 +446,67 @@ function P.addLog_RNconsumed()
 			print()
 			print("Event does not match rns", lastEvent.length, rnsUsed, lastEvent:headerString())
 		end
+		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
 	elseif rnsUsed > 1 and newEvent then -- neglects enemy staff, but slots update even for some burns
 		P.addLog("Enemy event?")
 		P.addLog(aLoc .. aWep)
 		P.addLog(dLoc .. dWep)
 		newEvent = false
+		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
 	end
-	
-	P.addLog(string.format("RN# %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
 end
 
 function P.addLog(str)
-	local newLog = {}
-	newLog.frame = emu.framecount()
-	newLog.str = str
-
-	logCount = logCount + 1
-	logs[logCount] = newLog
+	if currNode.children then
+		for i, child in ipairs(currNode.children) do
+			if child.text == str then
+				-- forward-track instead of creating a redundant node/branch
+			
+				currNode.children.sel_i = i
+				currNode = child
+				P.GUInode = currNode
+				
+				-- move frames back if needed, for example
+				-- node A at frame 1000, before savestate 1 at frame 1001
+				-- node B at frame 2000
+				-- jump to savestate 1, then complete B by frame 1500, then savestate 2 at 1501
+				-- then jumping back to savestate 2 would unwind past B even though the state is later
+				-- unless the frame for B is updated during the faster completion/forward-track
+				if currNode.frame > emu.framecount() then
+					currNode.frame = emu.framecount()
+				end
+				return
+			end
+		end
+	else
+		currNode.children = {}
+	end
+	
+	local child = {}
+	child.frame = emu.framecount()
+	child.text = str
+	child.parent = currNode
+	child.depth = currNode.depth + 1
+	table.insert(currNode.children, child)
+	currNode.children.sel_i = #currNode.children
+	currNode = child
+	P.GUInode = currNode
 end
 
 -- note this saves under vba movie directory when running movie
 function P.writeLogs()
-	local fileName = string.format("fe%dch%d-%d-%d.autolog.txt",
+	local fileName = string.format("fe%dmap%d-%d-%d.autolog.txt",
 		GAME_VERSION,
-		memory.readbyte(addr.CHAPTER),
+		memory.readbyte(addr.MAP),
 		os.time(),
 		filesWritten)
 		
 	local f = io.open(fileName, "w")
 	
-	for i = 1, logCount do
-		f:write(logs[i].str, "\n")
+	local nodeToWrite = root
+	while nodeToWrite.children do
+		nodeToWrite = selected(nodeToWrite.children)
+		f:write(string.format("%4d  %s\n", nodeToWrite.depth, nodeToWrite.text))
 	end
 	
 	f:close()

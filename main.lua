@@ -120,6 +120,12 @@ local currPhase = "player"
 
 local RAMoffset = 0
 
+	-- disable if using a keyboard hotkey which may combine with game controls or modify displays
+local function canModifyWindow(window)
+	return feGUI.rects.sel_i == window and selected(feGUI.rects).opacity > 0 and not keybCtrl.anythingHeld
+end
+
+
 while true do
 	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
 		currTurn = memory.readbyte(addr.TURN)
@@ -141,8 +147,8 @@ while true do
 	updateCtrl(gameCtrl, joypad.get(0))
 	
 	-- alter burns, select, delete/undo, swap, toggle swapping
-	-- disable if using a keyboard hotkey which may combine with game controls or modify displays
-	if feGUI.rects.sel_i == feGUI.RN_EVENT_I and not keybCtrl.anythingHeld then
+
+	if canModifyWindow(feGUI.RN_EVENT_I) then
 		-- change burns
 		if pressed("left", gameCtrl) then
 			rnEvent.change("burns", -rnStepSize)
@@ -177,6 +183,32 @@ while true do
 			rnEvent.toggleDependency()
 		end
 	end
+	
+	-- move within autolog display
+	if canModifyWindow(feGUI.AUTOLOG_I) then
+		-- change selection
+		if pressed("up", gameCtrl) then
+			if autolog.GUInode.parent then
+				autolog.GUInode = autolog.GUInode.parent
+			end
+		end
+		if pressed("down", gameCtrl) then
+			if autolog.GUInode.children then
+				autolog.GUInode = selected(autolog.GUInode.children)
+			end
+		end
+		if pressed("left", gameCtrl) then
+			if autolog.GUInode.children then
+				changeSelection(autolog.GUInode.children, -1)
+			end
+		end
+		if pressed("right", gameCtrl) then
+			if autolog.GUInode.children then
+				changeSelection(autolog.GUInode.children, 1)
+			end
+		end
+	end
+	
 	
 	if pressed("H") then -- print help, switch functions
 		usingPrimaryFunctions = not usingPrimaryFunctions

@@ -5,12 +5,12 @@ feGUI = P
 
 
 
--- todo window for autologs?
+
 P.rects = {}
 P.RN_EVENT_I 	= 1
-P.RN_STREAM_I	= 2
-P.STAT_DATA_I	= 3
-P.AUTOLOG_I		= 4
+P.AUTOLOG_I		= 2
+P.RN_STREAM_I	= 3
+P.STAT_DATA_I	= 4
 P.COMBAT_I 	    = 5
 P.COMPACT_BPS_I	= 6
 P.COORD_I		= 7
@@ -18,18 +18,18 @@ P.COORD_I		= 7
 
 local RECT_COLORS = {
 	"blue",
+	"grey",
 	"white",
 	"green",
-	"grey",
 	"red",
 	"yellow",
 	"white",
 }
 local RECT_STRINGS = {
 	"rnEvents",
+	"autolog",
 	"rn stream",
 	"stat data",
-	"autolog",
 	"battle parameters",
 	"compact btl params",
 	"cursor coordinates",
@@ -43,7 +43,7 @@ local LEVEL_UP_COLORS = {
 	0x0000FFFF, -- hue 240 blue
 	0xFF00FFFF  -- hue 300 magenta
 }
-local CHAR_PIXELS = 4
+local CHAR_PIXELS = 4 -- can fit ~60 chars within 240 pixel window
 -- for the rnStream rect's colorized rns
 local RNS_PER_LINE = 15
 local NUM_RN_LINES = 15
@@ -93,7 +93,7 @@ local rectObj = {}
 
 -- non modifying functions
 
--- height of a line
+-- height of a line, 10 if <= 16
 function rectObj:linePixels()
 	if #self.strings > 16 then
 		return math.floor(162/#self.strings)
@@ -279,7 +279,7 @@ function rectObj:draw()
 	elseif self.ID == P.STAT_DATA_I then
 		self.strings = unitData.currUnit():statData_strings(isPulsePhase(480) and (P.rects.sel_i == P.STAT_DATA_I))
 	elseif self.ID == P.AUTOLOG_I then
-		self.strings = {"autolog test"}
+		self.strings = autolog.GUIstrings()
 	elseif self.ID == P.COMBAT_I then
 		self.strings = combat.combatObj:new():toStrings()
 	elseif self.ID == P.COMPACT_BPS_I then

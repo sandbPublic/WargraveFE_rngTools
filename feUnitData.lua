@@ -1127,8 +1127,8 @@ HEX_CODES[0x0000] = "empty slot"
 -- determine if healer is present manually todo
 P.HEALER_DEPLOYED = false
  
-P.CAN_ADD_AFAS = (GAME_VERSION == 7 and memory.readbyte(addr.CHAPTER) >= 31) or -- ch 31 == hector chapter 24
-                     (GAME_VERSION == 8) -- todo confirm chapter code for metis tome
+P.CAN_ADD_AFAS = (GAME_VERSION == 7 and memory.readbyte(addr.MAP) >= 31) or -- ch 31 == hector chapter 24
+                 (GAME_VERSION == 8) -- todo confirm chapter code for metis tome
 
 for slot = 1, 255 do
 	if addr.unitHasAfas(addr.addrFromSlot(slot, 0)) then

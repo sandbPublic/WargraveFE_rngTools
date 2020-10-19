@@ -139,7 +139,7 @@ end
 
 
 
--- post 72 bytes, only exist after attacker/defender
+-- post 72 bytes, 56 more bytes, only exist after attacker/defender
 
 P.ATK_OFFSET           = P.SUPPORTS_OFFSET + 0x28 -- {0x3926C, 0x3A44A, 0x3A546} includes weapon triangle
 P.DEF_OFFSET           = P.ATK_OFFSET +  2        -- {0x3926E, 0x3A44C, 0x3A548} includes terrain bonus

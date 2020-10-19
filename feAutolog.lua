@@ -30,8 +30,8 @@ end
 -- for now only update and log on player phase
 -- todo figure out how to do ep
 local lastEvent
-local lastAttackerID = 0
-local lastDefenderID = 0
+local lastAttackerID = -1 -- slot 0 may be snag/wall
+local lastDefenderID = -1
 local nextUpdateFrame = -1
 -- helps distinguish enemy rn burns from events,
 -- since we don't reverse construct EP events after combats
@@ -170,17 +170,28 @@ function P.passiveUpdate()
 			end
 		end
 		
+		lastAttackerID = -1
+		lastDefenderID = -1
+		
 		skipNextStopLogAt.x = -1
 		skipNextStopLogAt.y = -1
 	end
 	
+
 	
-	
-	if (lastAttackerID ~= memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)) or 
-       (lastDefenderID ~= memory.readbyte(addr.DEFENDER_START + addr.SLOT_ID_OFFSET)) then
+	-- attacker slot is updated when unit selects "attack"
+	-- defender slot is updated when unit selects weapon
+	-- problem when attacking a snag/wall if initially defender slot == 0,
+	-- since snags/walls have slot == 0, so the hp will not update from initial 0
+	-- when the player selects a weapon since the slot didn't change
+	-- in that case currHP == 0, update as well
+    if (lastAttackerID ~= memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)) or 
+	   (lastDefenderID ~= memory.readbyte(addr.DEFENDER_START + addr.SLOT_ID_OFFSET)) or 
+	   (lastDefenderID == 0 and memory.readbyte(addr.DEFENDER_START + addr.CURR_HP_OFFSET) == 0) then
 	   
 		lastAttackerID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
 		lastDefenderID = memory.readbyte(addr.DEFENDER_START + addr.SLOT_ID_OFFSET)
+		
 		nextUpdateFrame = vba.framecount() + 1
 		-- hit and crit may not be updated yet
 	end
@@ -446,6 +457,7 @@ function P.addLog_RNconsumed()
 			print()
 			print("Event does not match rns", lastEvent.length, rnsUsed, lastEvent:headerString())
 		end
+		
 		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
 	elseif rnsUsed > 1 and newEvent then -- neglects enemy staff, but slots update even for some burns
 		P.addLog("Enemy event?")

@@ -929,7 +929,7 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 		if terminateCombat then return rHitSeq end
 	end
 	
-	local defenderCounters = (self.defender.hit ~= 255)
+	local defenderCounters = (self.defender.hit ~= 255 and rHitSeq.defender.endUses > 0) -- walls may have hit = 0
 	if defenderCounters then
 		processNextAttack("defender")
 		if terminateCombat then return rHitSeq end
@@ -983,7 +983,7 @@ function P.combatObj:toggleBonusExp()
 end
 
 local function createCombatant(startAddr)
-	c = {}
+	local c = {}
 	
 	c.name         = unitData.hexCodeToName(memory.readword(startAddr + addr.NAME_CODE_OFFSET))
 	c.class        = classes.HEX_CODES[memory.readword(startAddr + addr.CLASS_CODE_OFFSET)] or classes.OTHER
@@ -1069,6 +1069,12 @@ function P.combatObj:setExpGain()
 	if self.enemy.class == classes.EGG then
 		self.expFromDmg = 0
 		self.expFromKill = 50
+		return
+	end
+	
+	if self.enemy.slot == 0 then -- snag,wall etc
+		self.expFromDmg = 0
+		self.expFromKill = 0
 		return
 	end
 	

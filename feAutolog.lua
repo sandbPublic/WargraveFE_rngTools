@@ -5,7 +5,6 @@ autolog = P
 
 local filesWritten = 0
 
-
 local root = {}
 root.depth = 0
 root.frame = -1
@@ -19,31 +18,12 @@ local function equalNodes(a, b)
 end
 
 
+
+
 -- combat RAM may not all be updated within one frame
--- upon selecing the weapon for the combat, slots and most fields seem to be updated first
--- hit and crit set to 0, then correct value next frame
--- enemy rn burns happen after slots etc are updated
--- but defender data may be loaded same frame as rns are used?
--- data to construct event may only be known after rns used...
--- defender data MAY be the same or partially updated by AI calculations
--- data AFTER rn is used will have post event exp/lvl?
--- for now only update and log on player phase
--- todo figure out how to do ep
-local lastEvent
-local lastAttackerID = -1 -- slot 0 may be snag/wall
-local lastDefenderID = -1
-local nextUpdateFrame = -1
--- helps distinguish enemy rn burns from events,
--- since we don't reverse construct EP events after combats
-local newEvent = false 
-local function updateLastEvent()
-	lastEvent = rnEvent.rnEventObj:new()
-	lastEvent.startRN_i = rns.rng1.pos
-	lastEvent.postBurnsRN_i = rns.rng1.pos
-	lastEvent:updateFull()	
-	newEvent = true
-end
-updateLastEvent()
+-- attacker slot is updated when unit selects "attack"
+-- defender slot is updated when unit selects weapon
+-- hit and crit set to 0, then correct value next frame?
 
 
 
@@ -62,6 +42,8 @@ end
 
 
 
+local currFrame = -1
+local lastRN = 0
 local currTurn = -1
 local currPhase = "player"
 local currMoney = 0
@@ -148,10 +130,17 @@ function P.passiveUpdate()
 	-- jumping back to B (from B may be incomplete record of inventory)
 	-- similarly skipNextStopLogAt must be lost (or potentially invalid from 
 	-- deleted future)
-	if currNode.frame > vba.framecount() then
-		while currNode.frame > vba.framecount() do
+	if currFrame ~= vba.framecount() - 1 then
+		print("autolog jump detected")
+		
+		currFrame = vba.framecount()
+		while currNode.frame > currFrame do
 			currNode = currNode.parent
 		end
+		while currNode.children and selected(currNode.children).frame <= currFrame do
+			currNode = selected(currNode.children)
+		end
+		
 		P.GUInode = currNode
 		
 		currTurn = memory.readbyte(addr.TURN)
@@ -170,37 +159,14 @@ function P.passiveUpdate()
 			end
 		end
 		
-		lastAttackerID = -1
-		lastDefenderID = -1
-		
 		skipNextStopLogAt.x = -1
 		skipNextStopLogAt.y = -1
-	end
-	
-
-	
-	-- attacker slot is updated when unit selects "attack"
-	-- defender slot is updated when unit selects weapon
-	-- problem when attacking a snag/wall if initially defender slot == 0,
-	-- since snags/walls have slot == 0, so the hp will not update from initial 0
-	-- when the player selects a weapon since the slot didn't change
-	-- in that case currHP == 0, update as well
-    if (lastAttackerID ~= memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)) or 
-	   (lastDefenderID ~= memory.readbyte(addr.DEFENDER_START + addr.SLOT_ID_OFFSET)) or 
-	   (lastDefenderID == 0 and memory.readbyte(addr.DEFENDER_START + addr.CURR_HP_OFFSET) == 0) then
-	   
-		lastAttackerID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
-		lastDefenderID = memory.readbyte(addr.DEFENDER_START + addr.SLOT_ID_OFFSET)
 		
-		nextUpdateFrame = vba.framecount() + 1
-		-- hit and crit may not be updated yet
+		lastRN = rns.rng1.pos
 	end
+	currFrame = vba.framecount()
+
 	
-	if nextUpdateFrame == vba.framecount() then
-		updateLastEvent()
-	end
-
-
 	
 	-- we don't want to log inventories each frame,
 	-- since items may be swapped around while trying different combats.
@@ -361,61 +327,23 @@ function P.passiveUpdate()
 		
 		currMoney = addr.getMoney()
 	end
+
+	
+	
+	if lastRN ~= rns.rng1.pos then
+		P.addLog_RNconsumed()
+		lastRN = rns.rng1.pos
+	end
 end
 
-
-
--- up to 16 strings, first use children, then parents
--- string up to 60 chars
-function P.GUIstrings()
-	local strs = {}
-	
-	local function strFn(node)
-		local childCount = 0
-		if node.children then childCount = #node.children end
-		
-		local str = string.format("%4d ", node.depth % 10000)
-		if node.depth == P.GUInode.depth then
-			str = string.format("->%2d ", node.depth % 100)
-		elseif equalNodes(node, currNode) then
-			str = string.format("-<%2d ", node.depth % 100)
-		end
-	
-		if childCount > 1 then
-			-- indicate branchs with +
-			str = string.format("+%3d ", node.depth % 1000)
-			if node.depth == P.GUInode.depth then
-				str = string.format("+>%2d ", node.depth % 100)
-			elseif equalNodes(node, currNode) then
-				str = string.format("+<%2d ", node.depth % 100)
-			end
-			
-			return str .. node.text .. string.format(" %d/%d", node.children.sel_i, childCount)
-		end
-
-		return str .. node.text
-	end
-	
-	local nodeToRead = P.GUInode
-	table.insert(strs, strFn(nodeToRead))
-	
-	while nodeToRead.children and #strs < 16 do
-		nodeToRead = selected(nodeToRead.children)
-		table.insert(strs, strFn(nodeToRead))
-	end
-	nodeToRead = P.GUInode
-	while nodeToRead.parent and #strs < 16 do
-		nodeToRead = nodeToRead.parent
-		table.insert(strs, 1, strFn(nodeToRead)) -- insert at start
-	end
-	
-	return strs
-end
-
-function P.addLog_RNconsumed()	
-	local rnsUsed = rns.rng1.pos - rns.rng1.prevPos
-	
+function P.addLog_RNconsumed()
+	local rnsUsed = rns.rng1.pos - lastRN
 	if rnsUsed < 0 then return end -- don't create a log for the user reverting to savestate
+	
+	local lastEvent = rnEvent.rnEventObj:new()
+	lastEvent.startRN_i = lastRN
+	lastEvent.postBurnsRN_i = lastRN
+	lastEvent:updateFull()
 	
 	local a = lastEvent.combatants.attacker
 	local d = lastEvent.combatants.defender
@@ -453,19 +381,77 @@ function P.addLog_RNconsumed()
 				
 			end
 		else
-			P.addLog("Event does not match rns")
 			print()
 			print("Event does not match rns", lastEvent.length, rnsUsed, lastEvent:headerString())
 		end
 		
 		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
-	elseif rnsUsed > 1 and newEvent then -- neglects enemy staff, but slots update even for some burns
-		P.addLog("Enemy event?")
-		P.addLog(aLoc .. aWep)
-		P.addLog(dLoc .. dWep)
-		newEvent = false
+	elseif rnsUsed > 1 then -- neglects enemy staff, but slots update even for some burns
+		P.addLog(aLoc .. aWep .. " enemy event?")
+		
+		if lastEvent:levelDetected() then
+			P.addLog(dLoc .. dWep .. " " .. lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i))
+		else
+			P.addLog(dLoc .. dWep)
+		end
+		
 		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
 	end
+end
+
+
+
+
+-- up to 16 strings, first use children, then parents
+-- string up to 60 chars
+function P.GUIstrings()
+	local strs = {}
+	
+	local function strFn(node)
+		local childCount = 0
+		if node.children then childCount = #node.children end
+		
+		local str = " "
+		if equalNodes(node, currNode) then
+			str = "<"
+		end
+		if childCount > 1 then
+			str = str .. "+"
+		else
+			str = str .. " "
+		end
+		if node.depth == P.GUInode.depth then
+			str = str .. ">"
+		else
+			str = str .. " "
+		end
+		if str == "   " then
+			str = string.format("%5d ", node.depth % 10000)
+		else
+			str = str .. string.format("%02d ", node.depth % 100)
+		end
+	
+		if childCount > 1 then
+			return str .. node.text .. string.format(" %d/%d", node.children.sel_i, childCount)
+		end
+
+		return str .. node.text
+	end
+	
+	local nodeToRead = P.GUInode
+	table.insert(strs, strFn(nodeToRead))
+	
+	while nodeToRead.children and #strs < 16 do
+		nodeToRead = selected(nodeToRead.children)
+		table.insert(strs, strFn(nodeToRead))
+	end
+	nodeToRead = P.GUInode
+	while nodeToRead.parent and #strs < 16 do
+		nodeToRead = nodeToRead.parent
+		table.insert(strs, 1, strFn(nodeToRead)) -- insert at start
+	end
+	
+	return strs
 end
 
 function P.addLog(str)
@@ -501,6 +487,9 @@ function P.addLog(str)
 	child.depth = currNode.depth + 1
 	table.insert(currNode.children, child)
 	currNode.children.sel_i = #currNode.children
+	if #currNode.children > 1 then
+		print("Added autolog branch")
+	end
 	currNode = child
 	P.GUInode = currNode
 end

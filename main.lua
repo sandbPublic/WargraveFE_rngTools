@@ -125,7 +125,6 @@ local function canModifyWindow(window)
 	return feGUI.rects.sel_i == window and selected(feGUI.rects).opacity > 0 and not keybCtrl.anythingHeld
 end
 
-
 while true do
 	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
 		currTurn = memory.readbyte(addr.TURN)
@@ -135,14 +134,12 @@ while true do
 		print("Turn " .. currTurn .. " " .. currPhase .. " phase")
 	end
 	
-	autolog.passiveUpdate() -- do this first or rn change will prevent log erasure
-	
 	if currentRNG:update() and currentRNG.isPrimary then
 		rnEvent.update_rnEvents(1)
-		
-		autolog.addLog_RNconsumed()
 	end
 
+	autolog.passiveUpdate()
+	
 	updateCtrl(keybCtrl, input.get())
 	updateCtrl(gameCtrl, joypad.get(0))
 	

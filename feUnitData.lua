@@ -1157,6 +1157,7 @@ function P.hexCodeToName(hexCode)
 		return HEX_CODES[hexCode]
 	else
 		print(string.format("\n\nunrecognized unit name, code %04X\n\n", hexCode))
+		HEX_CODES[hexCode] = string.format("%04X", hexCode)
 		
 		return string.format("%04X", hexCode)
 	end

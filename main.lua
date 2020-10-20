@@ -1,5 +1,6 @@
 -- package dependencies
 -- main
+--   ctrl
 -- test
 --   gui
 --     autolog
@@ -12,6 +13,7 @@
 --                   address
 
 require("feGUI")
+require("feControl")
 
 
 
@@ -28,24 +30,10 @@ end
 print(windowWidthString)
 print("Game version " .. GAME_VERSION)
 
-local hotkeys = {}
-local f = assert(io.open("QwertyHotkeys.txt", "r"))
-local c = f:read("*line")
-while c do
-	hotkey = {}
-	hotkey.key = c
-	hotkey.message1 = c .. ": " .. f:read("*line")
-	hotkey.message2 = c:lower() .. ": " ..f:read("*line")
-	
-	table.insert(hotkeys, hotkey)
-	c = f:read("*line")
-end
-f:close()
-
 local function printHelp()
 	print("")
 
-	for _, hotkey in ipairs(hotkeys) do
+	for _, hotkey in ipairs(ctrl.hotkeys) do
 		if usingPrimaryFunctions then
 			print(hotkey.message1)
 		else
@@ -54,61 +42,9 @@ local function printHelp()
 	end
 end
 
--- START
--- TODO levels in vicinity functionality
--- for level ups/battles on EP?
 printHelp()
 
--- struct style so pressed needs one fewer param in more common keybCtrl case
-local keybCtrl = {}
-keybCtrl.thisFrame = {}
-keybCtrl.lastFrame = {}
-local gameCtrl = {}
-gameCtrl.thisFrame = {}
-gameCtrl.lastFrame = {}
 
-local function updateCtrl(ctrl, currFrame)
-	ctrl.lastFrame = ctrl.thisFrame
-	ctrl.thisFrame = currFrame
-	
-	ctrl.anythingHeld = false
-	for _, hotkey in ipairs(hotkeys) do
-		if ctrl.thisFrame[hotkey.key] then
-			ctrl.anythingHeld = true
-			return
-		end
-	end
-end
-
-local function pressed(key, ctrl)
-	ctrl = ctrl or keybCtrl
-	
-	if type(key) == "number" then
-		key = hotkeys[key].key
-	end
-	
-	return ctrl.thisFrame[key] and not ctrl.lastFrame[key]
-end
-
-local function held(key, ctrl)
-	ctrl = ctrl or keybCtrl
-	
-	if type(key) == "number" then
-		key = hotkeys[key].key
-	end
-	
-	return ctrl.thisFrame[key]
-end
-
-local function released(key, ctrl)
-	ctrl = ctrl or keybCtrl
-	
-	if type(key) == "number" then
-		key = hotkeys[key].key
-	end
-	
-	return not ctrl.thisFrame[key] and ctrl.lastFrame[key]
-end
 
 local currentRNG = rns.rng1
 local rnStepSize = 1 -- distance to move rng position or how many burns to add to an event
@@ -122,7 +58,7 @@ local RAMoffset = 0
 
 	-- disable if using a keyboard hotkey which may combine with game controls or modify displays
 local function canModifyWindow(window)
-	return feGUI.rects.sel_i == window and selected(feGUI.rects).opacity > 0 and not keybCtrl.anythingHeld
+	return feGUI.rects.sel_i == window and selected(feGUI.rects).opacity > 0 and not ctrl.keyboard.anythingHeld
 end
 
 while true do
@@ -140,43 +76,43 @@ while true do
 
 	autolog.passiveUpdate()
 	
-	updateCtrl(keybCtrl, input.get())
-	updateCtrl(gameCtrl, joypad.get(0))
+	ctrl.keyboard:update(input.get())
+	ctrl.gamepad:update(joypad.get(0))
 	
 	-- alter burns, select, delete/undo, swap, toggle swapping
 
 	if canModifyWindow(feGUI.RN_EVENT_I) then
 		-- change burns
-		if pressed("left", gameCtrl) then
+		if ctrl.gamepad:pressed("left") then
 			rnEvent.change("burns", -rnStepSize)
 		end
-		if pressed("right", gameCtrl) then
+		if ctrl.gamepad:pressed("right") then
 			rnEvent.change("burns", rnStepSize)
 		end
 		
 		-- change selection
-		if pressed("up", gameCtrl) then
+		if ctrl.gamepad:pressed("up") then
 			changeSelection(rnEvent.events, -1)
 		end
-		if pressed("down", gameCtrl) then
+		if ctrl.gamepad:pressed("down") then
 			changeSelection(rnEvent.events, 1)
 		end
 		
 		-- delete/undo
-		if pressed("L", gameCtrl) then
+		if ctrl.gamepad:pressed("L") then
 			rnEvent.deleteLastEvent()
 		end
-		if pressed("R", gameCtrl) then
+		if ctrl.gamepad:pressed("R") then
 			rnEvent.undoDelete()
 		end
 		
 		-- swap with next
-		if pressed("select", gameCtrl) then
+		if ctrl.gamepad:pressed("select") then
 			rnEvent.swap() -- updates self
 		end
 		
 		-- create/remove dependency
-		if pressed("start", gameCtrl) then
+		if ctrl.gamepad:pressed("start") then
 			rnEvent.toggleDependency()
 		end
 	end
@@ -184,22 +120,22 @@ while true do
 	-- move within autolog display
 	if canModifyWindow(feGUI.AUTOLOG_I) then
 		-- change selection
-		if pressed("up", gameCtrl) then
+		if ctrl.gamepad:pressed("up") then
 			if autolog.GUInode.parent then
 				autolog.GUInode = autolog.GUInode.parent
 			end
 		end
-		if pressed("down", gameCtrl) then
+		if ctrl.gamepad:pressed("down") then
 			if autolog.GUInode.children then
 				autolog.GUInode = selected(autolog.GUInode.children)
 			end
 		end
-		if pressed("left", gameCtrl) then
+		if ctrl.gamepad:pressed("left") then
 			if autolog.GUInode.children then
 				changeSelection(autolog.GUInode.children, -1)
 			end
 		end
-		if pressed("right", gameCtrl) then
+		if ctrl.gamepad:pressed("right") then
 			if autolog.GUInode.children then
 				changeSelection(autolog.GUInode.children, 1)
 			end
@@ -207,41 +143,41 @@ while true do
 	end
 	
 	
-	if pressed("H") then -- print help, switch functions
+	if ctrl.keyboard:pressed("H") then -- print help, switch functions
 		usingPrimaryFunctions = not usingPrimaryFunctions
 		printHelp()
 	end
 	
 	if usingPrimaryFunctions then
-		if pressed("Y") then -- add event
+		if ctrl.keyboard:pressed("Y") then -- add event
 			rnEvent.addEvent()
 			rnEvent.update_rnEvents()
 			
 			printStringArray(selected(rnEvent.events).combatants:toStrings())
 		end
 		
-		if pressed("U") then rnEvent.toggle("hasCombat") end
+		if ctrl.keyboard:pressed("U") then rnEvent.toggle("hasCombat") end
 		
-		if pressed("I") then rnEvent.toggle("lvlUp") end	
+		if ctrl.keyboard:pressed("I") then rnEvent.toggle("lvlUp") end	
 		
-		if pressed("O") then 
+		if ctrl.keyboard:pressed("O") then 
 			if #rnEvent.events > 0 then
 				selected(rnEvent.events).combatants:toggleBonusExp() 
 			end
 		end
 		
-		if pressed("J") then print("selecting display: " .. selected(feGUI.rects).name) end
-		if held("J") then -- hold down, then press left/right
-			if pressed("left", gameCtrl) then
+		if ctrl.keyboard:pressed("J") then print("selecting display: " .. selected(feGUI.rects).name) end
+		if ctrl.keyboard:held("J") then -- hold down, then press left/right
+			if ctrl.gamepad:pressed("left") then
 				changeSelection(feGUI.rects, -1)
 				print("selecting display: " .. selected(feGUI.rects).name)
 			end
-			if pressed("right", gameCtrl) then
+			if ctrl.gamepad:pressed("right") then
 				changeSelection(feGUI.rects, 1)
 				print("selecting display: " .. selected(feGUI.rects).name)
 			end
 		end
-		if released("J") then
+		if ctrl.keyboard:released("J") then
 			if selected(feGUI.rects).opacity == 0 then
 				selected(feGUI.rects).opacity = 0.75
 			else
@@ -249,17 +185,17 @@ while true do
 			end
 		end
 		
-		if pressed("K") then rnEvent.suggestPermutation() end
+		if ctrl.keyboard:pressed("K") then rnEvent.suggestPermutation() end
 		
-		if pressed("L") then autolog.writeLogs() end
+		if ctrl.keyboard:pressed("L") then autolog.writeLogs() end
 				
-		if pressed("B") then
+		if ctrl.keyboard:pressed("B") then
 			if #rnEvent.events > 0 then
 				selected(rnEvent.events).unit:toggleAfas()
 			end
 		end
 		
-		if pressed("N") then
+		if ctrl.keyboard:pressed("N") then
 			printStringArray(combat.combatObj:new():toStrings())
 			
 			printStringArray(unitData.currUnit():statData_strings())
@@ -276,21 +212,21 @@ while true do
 			print(string.format("slot %d", memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)))
 		end
 		
-		if pressed("M") then print("moving rn position...") end
-		if held("M") then -- move rn position
-			if pressed("left", gameCtrl) then
+		if ctrl.keyboard:pressed("M") then print("moving rn position...") end
+		if ctrl.keyboard:held("M") then -- move rn position
+			if ctrl.gamepad:pressed("left") then
 				currentRNG:moveRNpos(-rnStepSize)
 				rnEvent.update_rnEvents(1)
 			end
-			if pressed("right", gameCtrl) then
+			if ctrl.gamepad:pressed("right") then
 				currentRNG:moveRNpos(rnStepSize)
 				rnEvent.update_rnEvents(1)
 			end
-			if pressed("up", gameCtrl) then
+			if ctrl.gamepad:pressed("up") then
 				rnStepSize = rnStepSize * 10
 				print("rnStepSize now " .. rnStepSize)
 			end
-			if pressed("down", gameCtrl) then
+			if ctrl.gamepad:pressed("down") then
 				rnStepSize = rnStepSize / 10
 				if rnStepSize < 1 then
 					rnStepSize = 1
@@ -298,45 +234,45 @@ while true do
 				print("rnStepSize now " .. rnStepSize)
 			end
 		end
-	else
-		if pressed("Y") then rnEvent.printDiagnostic() end
+	else -- 2ndary functions
+		if ctrl.keyboard:pressed("Y") then rnEvent.printDiagnostic() end
 		
-		if pressed("U") then print("change hp weights: ^v player, <> enemy") end
-		if held("U") then -- hold down, then press <^v> change weights
-			if pressed("up", gameCtrl) then
+		if ctrl.keyboard:pressed("U") then print("change hp weights: ^v player, <> enemy") end
+		if ctrl.keyboard:held("U") then -- hold down, then press <^v> change weights
+			if ctrl.gamepad:pressed("up") then
 				rnEvent.change("pHPweight", 25)
 			end
-			if pressed("down", gameCtrl) then
+			if ctrl.gamepad:pressed("down") then
 				rnEvent.change("pHPweight", -25)
 			end
-			if pressed("left", gameCtrl) then
+			if ctrl.gamepad:pressed("left") then
 				rnEvent.change("eHPweight", -25)
 			end
-			if pressed("right", gameCtrl) then
+			if ctrl.gamepad:pressed("right") then
 				rnEvent.change("eHPweight", 25)
 			end
 		end	
 		
-		if pressed("I") then rnEvent.toggle("dig") end
+		if ctrl.keyboard:pressed("I") then rnEvent.toggle("dig") end
 	
-		if pressed("O") then print("changing fog...") end
-		if held("O") then
+		if ctrl.keyboard:pressed("O") then print("changing fog...") end
+		if ctrl.keyboard:held("O") then
 			local fog = memory.readbyte(addr.FOG)
 			
-			if pressed("left", gameCtrl) then
+			if ctrl.gamepad:pressed("left") then
 				fog = (fog - 1) % 256
 				memory.writebyte(addr.FOG, fog)
 				print("fog set to " .. fog)
 			end
 			
-			if pressed("right", gameCtrl) then
+			if ctrl.gamepad:pressed("right") then
 				fog = (fog + 1) % 256
 				memory.writebyte(addr.FOG, fog)
 				print("fog set to " .. fog)
 			end
 		end
 	
-		if pressed("J") then
+		if ctrl.keyboard:pressed("J") then
 			selected(feGUI.rects).shiftMode = true
 			print("display shift mode: ON")
 			print("change display opacity with L and R")
@@ -346,26 +282,24 @@ while true do
 				selected(feGUI.rects).opacity = 0.5
 			end
 		end
-		if held("J") then -- move rects or change opacity
-			if gameCtrl.thisFrame.left 	then selected(feGUI.rects):adjust(-0.02, 0, 0) end
-			if gameCtrl.thisFrame.right then selected(feGUI.rects):adjust( 0.02, 0, 0) end
-			if gameCtrl.thisFrame.up 	then selected(feGUI.rects):adjust(0, -0.02, 0) end
-			if gameCtrl.thisFrame.down 	then selected(feGUI.rects):adjust(0,  0.02, 0) end
-			if gameCtrl.thisFrame.L 	then selected(feGUI.rects):adjust(0, 0, -0.04) end
-			if gameCtrl.thisFrame.R 	then selected(feGUI.rects):adjust(0, 0,  0.04) end
+		if ctrl.keyboard:held("J") then -- move rects or change opacity
+			if ctrl.gamepad:held("left")  then selected(feGUI.rects):adjust(-0.02, 0, 0) end
+			if ctrl.gamepad:held("right") then selected(feGUI.rects):adjust( 0.02, 0, 0) end
+			if ctrl.gamepad:held("up")    then selected(feGUI.rects):adjust(0, -0.02, 0) end
+			if ctrl.gamepad:held("down")  then selected(feGUI.rects):adjust(0,  0.02, 0) end
+			if ctrl.gamepad:held("L")     then selected(feGUI.rects):adjust(0, 0, -0.04) end
+			if ctrl.gamepad:held("R")     then selected(feGUI.rects):adjust(0, 0,  0.04) end
 		end
-		if released("J") then
+		if ctrl.keyboard:released("J") then
 			selected(feGUI.rects).shiftMode = false
 			print("display shift mode: OFF")
 		end
 		
-		if pressed("K") then rnEvent.searchFutureOutcomes() end
+		if ctrl.keyboard:pressed("K") then rnEvent.searchFutureOutcomes() end
 		
-		if pressed("L") then
+		if ctrl.keyboard:pressed("L") then end
 			
-		end
-			
-		if pressed("B") then
+		if ctrl.keyboard:pressed("B") then
 			if currentRNG.isPrimary then
 				currentRNG = rns.rng2
 			else
@@ -392,12 +326,12 @@ while true do
 			end
 		end
 		
-		if pressed("N") then
+		if ctrl.keyboard:pressed("N") then
 			printRAMhelp()
 			print("<> to change value, ^v change offset")
 		end
-		if held("N") then 
-			if pressed("up", gameCtrl) then
+		if ctrl.keyboard:held("N") then 
+			if ctrl.gamepad:pressed("up") then
 				RAMoffset = RAMoffset - 1
 				if RAMoffset < 0 then
 					RAMoffset = 0
@@ -407,7 +341,7 @@ while true do
 					printRAMhelp()
 				end
 			end
-			if pressed("down", gameCtrl) then
+			if ctrl.gamepad:pressed("down") then
 				RAMoffset = RAMoffset + 1
 				if RAMoffset > 71 then
 					RAMoffset = 71
@@ -417,7 +351,7 @@ while true do
 					printRAMhelp()
 				end
 			end
-			if pressed("left", gameCtrl) then
+			if ctrl.gamepad:pressed("left") then
 				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
 				local data = addr.byteFromSlot(slotID, RAMoffset)
 				data = data - 1
@@ -429,7 +363,7 @@ while true do
 					printRAMhelp()
 				end
 			end
-			if pressed("right", gameCtrl) then
+			if ctrl.gamepad:pressed("right") then
 				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
 				local data = addr.byteFromSlot(slotID, RAMoffset)
 				data = data + 1
@@ -443,23 +377,23 @@ while true do
 			end
 		end
 		
-		if pressed("M") then print("changing money by " .. moneyStepSize .. "...") end
-		if held("M") then
+		if ctrl.keyboard:pressed("M") then print("changing money by " .. moneyStepSize .. "...") end
+		if ctrl.keyboard:held("M") then
 			local currMoney = addr.getMoney()
 		
-			if pressed("left", gameCtrl) then
+			if ctrl.gamepad:pressed("left") then
 				addr.setMoney(math.max(currMoney - moneyStepSize, 0))
 				print("money now " .. math.max(currMoney - moneyStepSize, 0))
 			end
-			if pressed("right", gameCtrl) then
+			if ctrl.gamepad:pressed("right") then
 				addr.setMoney(math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
 				print("money now " .. math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
 			end
-			if pressed("up", gameCtrl) then
+			if ctrl.gamepad:pressed("up") then
 				moneyStepSize = moneyStepSize * 10
 				print("moneyStepSize now " .. moneyStepSize)
 			end
-			if pressed("down", gameCtrl) then
+			if ctrl.gamepad:pressed("down") then
 				moneyStepSize = moneyStepSize / 10
 				if moneyStepSize < 1 then
 					moneyStepSize = 1

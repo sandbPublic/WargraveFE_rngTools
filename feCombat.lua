@@ -849,6 +849,14 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	rHitSeq.defender.endHP = carriedDefHP or self.defender.currHP
 	rHitSeq.defender.endUses = self.defender.weaponUses
 	
+	local isEnemyPhase = (self.phase == "enemy") -- "other" phase treated as player
+	rHitSeq.player = rHitSeq.attacker
+	rHitSeq.enemy = rHitSeq.defender
+	if isEnemyPhase then
+		rHitSeq.enemy = rHitSeq.attacker
+		rHitSeq.player = rHitSeq.defender
+	end
+	
 	if rHitSeq.defender.endHP == 0 then
 		rHitSeq.expGained = 0
 		return rHitSeq
@@ -861,7 +869,7 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 	end
 	
 	local nextIsAttacker = true
-	local isEnemyPhase = (self.phase == "enemy") -- other phase treated as player
+	
 	local terminateCombat = false
 	
 	local function processNextAttack(actor)
@@ -898,26 +906,26 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 			hE.action = hE.action:lower()
 		end
 		
-		if rHitSeq.attacker.endHP <= 0 then rHitSeq.attacker.endHP = 0 end
-		if rHitSeq.defender.endHP <= 0 then rHitSeq.defender.endHP = 0 end
+		if rHitSeq.attacker.endHP < 0 then rHitSeq.attacker.endHP = 0 end
+		if rHitSeq.defender.endHP < 0 then rHitSeq.defender.endHP = 0 end
 		
-		if (rHitSeq.defender.endHP == 0 and not isEnemyPhase) or 
-		   (rHitSeq.attacker.endHP == 0 and isEnemyPhase) then  -- enemy died, combat over
+		if rHitSeq.enemy.endHP == 0 then
 			
 			rHitSeq.expGained = self:expFrom(true, hE.didAssassinate)
 			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
 			terminateCombat = true
 			
-		elseif (rHitSeq.attacker.endHP == 0 and not isEnemyPhase) or 
-		   (rHitSeq.defender.endHP == 0 and isEnemyPhase) then  -- player died, combat over
+		elseif rHitSeq.player.endHP == 0 then
 		   
 			rHitSeq.expGained = 0
 			rHitSeq.lvlUp = false
 			terminateCombat = true
 		
-		elseif hE.expWasGained then -- no kill
+		elseif hE.expWasGained then
+		
 			rHitSeq.expGained = self:expFrom()
 			rHitSeq.lvlUp = self:willLevel(rHitSeq.expGained)
+			
 		end	
 	end
 	

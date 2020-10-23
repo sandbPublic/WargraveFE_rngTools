@@ -58,8 +58,10 @@ local RAMoffset = 0
 
 	-- disable if using a keyboard hotkey which may combine with game controls or modify displays
 local function canModifyWindow(window)
-	return feGUI.rects.sel_i == window and selected(feGUI.rects).opacity > 0 and not ctrl.keyboard.anythingHeld
+	return feGUI.rects.sel_i == window and selected(feGUI.rects).opacity > 0 and not ctrl.keyboard.hotkeyHeld
 end
+
+local REPEAT_RATE = 10
 
 while true do
 	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
@@ -77,24 +79,28 @@ while true do
 	autolog.passiveUpdate()
 	
 	ctrl.keyboard:update(input.get())
+	-- Returns a table of all buttons. Does not read movie input. 
+	-- Key values are 1 for pressed, nil for not pressed. Keys for joypad table: 
+	-- (A, B, select, start, right, left, up, down, R, L). Keys are case-sensitive. 
+	-- When passed 0, the default joypad is read
 	ctrl.gamepad:update(joypad.get(0))
 	
 	-- alter burns, select, delete/undo, swap, toggle swapping
 
 	if canModifyWindow(feGUI.RN_EVENT_I) then
 		-- change burns
-		if ctrl.gamepad:pressed("left") then
+		if ctrl.gamepad:pressed("left", REPEAT_RATE) then
 			rnEvent.change("burns", -rnStepSize)
 		end
-		if ctrl.gamepad:pressed("right") then
+		if ctrl.gamepad:pressed("right", REPEAT_RATE) then
 			rnEvent.change("burns", rnStepSize)
 		end
 		
 		-- change selection
-		if ctrl.gamepad:pressed("up") then
+		if ctrl.gamepad:pressed("up", REPEAT_RATE) then
 			changeSelection(rnEvent.events, -1)
 		end
-		if ctrl.gamepad:pressed("down") then
+		if ctrl.gamepad:pressed("down", REPEAT_RATE) then
 			changeSelection(rnEvent.events, 1)
 		end
 		
@@ -119,17 +125,19 @@ while true do
 	
 	-- move within autolog display
 	if canModifyWindow(feGUI.AUTOLOG_I) then
-		-- change selection
-		if ctrl.gamepad:pressed("up") then
+		-- change depth
+		if ctrl.gamepad:pressed("up", REPEAT_RATE) then
 			if autolog.GUInode.parent then
 				autolog.GUInode = autolog.GUInode.parent
 			end
 		end
-		if ctrl.gamepad:pressed("down") then
+		if ctrl.gamepad:pressed("down", REPEAT_RATE) then
 			if autolog.GUInode.children then
 				autolog.GUInode = selected(autolog.GUInode.children)
 			end
 		end
+		
+		-- change branch
 		if ctrl.gamepad:pressed("left") then
 			if autolog.GUInode.children then
 				changeSelection(autolog.GUInode.children, -1)
@@ -168,11 +176,11 @@ while true do
 		
 		if ctrl.keyboard:pressed("J") then print("selecting display: " .. selected(feGUI.rects).name) end
 		if ctrl.keyboard:held("J") then -- hold down, then press left/right
-			if ctrl.gamepad:pressed("left") then
+			if ctrl.gamepad:pressed("left", 10) then
 				changeSelection(feGUI.rects, -1)
 				print("selecting display: " .. selected(feGUI.rects).name)
 			end
-			if ctrl.gamepad:pressed("right") then
+			if ctrl.gamepad:pressed("right", 10) then
 				changeSelection(feGUI.rects, 1)
 				print("selecting display: " .. selected(feGUI.rects).name)
 			end
@@ -214,19 +222,19 @@ while true do
 		
 		if ctrl.keyboard:pressed("M") then print("moving rn position...") end
 		if ctrl.keyboard:held("M") then -- move rn position
-			if ctrl.gamepad:pressed("left") then
+			if ctrl.gamepad:pressed("left", REPEAT_RATE) then
 				currentRNG:moveRNpos(-rnStepSize)
 				rnEvent.update_rnEvents(1)
 			end
-			if ctrl.gamepad:pressed("right") then
+			if ctrl.gamepad:pressed("right", REPEAT_RATE) then
 				currentRNG:moveRNpos(rnStepSize)
 				rnEvent.update_rnEvents(1)
 			end
-			if ctrl.gamepad:pressed("up") then
+			if ctrl.gamepad:pressed("up", REPEAT_RATE) then
 				rnStepSize = rnStepSize * 10
 				print("rnStepSize now " .. rnStepSize)
 			end
-			if ctrl.gamepad:pressed("down") then
+			if ctrl.gamepad:pressed("down", REPEAT_RATE) then
 				rnStepSize = rnStepSize / 10
 				if rnStepSize < 1 then
 					rnStepSize = 1
@@ -239,16 +247,16 @@ while true do
 		
 		if ctrl.keyboard:pressed("U") then print("change hp weights: ^v player, <> enemy") end
 		if ctrl.keyboard:held("U") then -- hold down, then press <^v> change weights
-			if ctrl.gamepad:pressed("up") then
+			if ctrl.gamepad:pressed("up", REPEAT_RATE) then
 				rnEvent.change("pHPweight", 25)
 			end
-			if ctrl.gamepad:pressed("down") then
+			if ctrl.gamepad:pressed("down", REPEAT_RATE) then
 				rnEvent.change("pHPweight", -25)
 			end
-			if ctrl.gamepad:pressed("left") then
+			if ctrl.gamepad:pressed("left", REPEAT_RATE) then
 				rnEvent.change("eHPweight", -25)
 			end
-			if ctrl.gamepad:pressed("right") then
+			if ctrl.gamepad:pressed("right", REPEAT_RATE) then
 				rnEvent.change("eHPweight", 25)
 			end
 		end	
@@ -259,13 +267,13 @@ while true do
 		if ctrl.keyboard:held("O") then
 			local fog = memory.readbyte(addr.FOG)
 			
-			if ctrl.gamepad:pressed("left") then
+			if ctrl.gamepad:pressed("left", REPEAT_RATE) then
 				fog = (fog - 1) % 256
 				memory.writebyte(addr.FOG, fog)
 				print("fog set to " .. fog)
 			end
 			
-			if ctrl.gamepad:pressed("right") then
+			if ctrl.gamepad:pressed("right", REPEAT_RATE) then
 				fog = (fog + 1) % 256
 				memory.writebyte(addr.FOG, fog)
 				print("fog set to " .. fog)
@@ -330,8 +338,9 @@ while true do
 			printRAMhelp()
 			print("<> to change value, ^v change offset")
 		end
-		if ctrl.keyboard:held("N") then 
-			if ctrl.gamepad:pressed("up") then
+		if ctrl.keyboard:held("N") then
+			-- change offset
+			if ctrl.gamepad:pressed("up", REPEAT_RATE) then
 				RAMoffset = RAMoffset - 1
 				if RAMoffset < 0 then
 					RAMoffset = 0
@@ -341,7 +350,7 @@ while true do
 					printRAMhelp()
 				end
 			end
-			if ctrl.gamepad:pressed("down") then
+			if ctrl.gamepad:pressed("down", REPEAT_RATE) then
 				RAMoffset = RAMoffset + 1
 				if RAMoffset > 71 then
 					RAMoffset = 71
@@ -351,7 +360,9 @@ while true do
 					printRAMhelp()
 				end
 			end
-			if ctrl.gamepad:pressed("left") then
+			
+			-- modify value
+			if ctrl.gamepad:pressed("left", REPEAT_RATE) then
 				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
 				local data = addr.byteFromSlot(slotID, RAMoffset)
 				data = data - 1
@@ -363,7 +374,7 @@ while true do
 					printRAMhelp()
 				end
 			end
-			if ctrl.gamepad:pressed("right") then
+			if ctrl.gamepad:pressed("right", REPEAT_RATE) then
 				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
 				local data = addr.byteFromSlot(slotID, RAMoffset)
 				data = data + 1
@@ -381,19 +392,19 @@ while true do
 		if ctrl.keyboard:held("M") then
 			local currMoney = addr.getMoney()
 		
-			if ctrl.gamepad:pressed("left") then
+			if ctrl.gamepad:pressed("left", REPEAT_RATE) then
 				addr.setMoney(math.max(currMoney - moneyStepSize, 0))
 				print("money now " .. math.max(currMoney - moneyStepSize, 0))
 			end
-			if ctrl.gamepad:pressed("right") then
+			if ctrl.gamepad:pressed("right", REPEAT_RATE) then
 				addr.setMoney(math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
 				print("money now " .. math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
 			end
-			if ctrl.gamepad:pressed("up") then
+			if ctrl.gamepad:pressed("up", REPEAT_RATE) then
 				moneyStepSize = moneyStepSize * 10
 				print("moneyStepSize now " .. moneyStepSize)
 			end
-			if ctrl.gamepad:pressed("down") then
+			if ctrl.gamepad:pressed("down", REPEAT_RATE) then
 				moneyStepSize = moneyStepSize / 10
 				if moneyStepSize < 1 then
 					moneyStepSize = 1

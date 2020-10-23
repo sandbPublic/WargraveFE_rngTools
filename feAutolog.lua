@@ -8,13 +8,129 @@ local filesWritten = 0
 local root = {}
 root.depth = 0
 root.frame = -1
-root.text = "Root"
+root.text = "Start"
 
 local currNode = root
 P.GUInode = root
 
 local function equalNodes(a, b)
 	return a.depth == b.depth and a.frame == b.frame and a.text == b.text
+end
+
+
+
+
+-- up to 16 strings, first use children, then parents
+-- string up to 60 chars
+function P.GUIstrings()
+	local strs = {}
+	
+	local function strFn(node)
+		local childCount = 0
+		if node.children then childCount = #node.children end
+		
+		local str = " "
+		if equalNodes(node, currNode) then
+			str = "<"
+		end
+		if childCount > 1 then
+			str = str .. "+"
+		else
+			str = str .. " "
+		end
+		if node.depth == P.GUInode.depth then
+			str = str .. ">"
+		else
+			str = str .. " "
+		end
+		if str == "   " then
+			str = string.format("%5d ", node.depth % 10000)
+		else
+			str = str .. string.format("%02d ", node.depth % 100)
+		end
+	
+		if childCount > 1 then
+			return str .. node.text .. string.format(" %d/%d", node.children.sel_i, childCount)
+		end
+
+		return str .. node.text
+	end
+	
+	local nodeToRead = P.GUInode
+	table.insert(strs, strFn(nodeToRead))
+	
+	while nodeToRead.children and #strs < 16 do
+		nodeToRead = selected(nodeToRead.children)
+		table.insert(strs, strFn(nodeToRead))
+	end
+	nodeToRead = P.GUInode
+	while nodeToRead.parent and #strs < 16 do
+		nodeToRead = nodeToRead.parent
+		table.insert(strs, 1, strFn(nodeToRead)) -- insert at start
+	end
+	
+	return strs
+end
+
+function P.addLog(str)
+	if currNode.children then
+		for i, child in ipairs(currNode.children) do
+			if child.text == str then
+				-- forward-track instead of creating a redundant node/branch
+			
+				currNode.children.sel_i = i
+				currNode = child
+				P.GUInode = currNode
+				
+				-- move frames back if needed, for example
+				-- node A at frame 1000, before savestate 1 at frame 1001
+				-- node B at frame 2000
+				-- jump to savestate 1, then complete B by frame 1500, then savestate 2 at 1501
+				-- then jumping back to savestate 2 would unwind past B even though the state is later
+				-- unless the frame for B is updated during the faster completion/forward-track
+				if currNode.frame > emu.framecount() then
+					currNode.frame = emu.framecount()
+				end
+				return
+			end
+		end
+	else
+		currNode.children = {}
+	end
+	
+	local child = {}
+	child.frame = emu.framecount()
+	child.text = str
+	child.parent = currNode
+	child.depth = currNode.depth + 1
+	table.insert(currNode.children, child)
+	currNode.children.sel_i = #currNode.children
+	if #currNode.children > 1 then
+		print("Added autolog branch")
+	end
+	currNode = child
+	P.GUInode = currNode
+end
+
+-- note this saves under vba movie directory when running movie
+function P.writeLogs()
+	local fileName = string.format("fe%dmap%d-%d-%d.autolog.txt",
+		GAME_VERSION,
+		memory.readbyte(addr.MAP),
+		os.time(),
+		filesWritten)
+		
+	local f = io.open(fileName, "w")
+	
+	local nodeToWrite = root
+	while nodeToWrite.children do
+		nodeToWrite = selected(nodeToWrite.children)
+		f:write(string.format("%4d  %s\n", nodeToWrite.depth, nodeToWrite.text))
+	end
+	
+	f:close()
+	filesWritten = filesWritten + 1
+	print("wrote " .. fileName)
 end
 
 
@@ -42,7 +158,7 @@ end
 
 
 
-local currFrame = -1
+local currFrame = vba.framecount() - 1
 local lastRN = 0
 local currTurn = -1
 local currPhase = "player"
@@ -72,7 +188,7 @@ local function updateLastPlayerSlot()
 	while addr.wordFromSlot(lastPlayerSlot + 1, addr.NAME_CODE_OFFSET) ~= 0 do
 		lastPlayerSlot = lastPlayerSlot + 1
 	end
-	while addr.wordFromSlot(lastPlayerSlot, addr.NAME_CODE_OFFSET) == 0 do
+	while addr.wordFromSlot(lastPlayerSlot, addr.NAME_CODE_OFFSET) == 0 and lastPlayerSlot > 1 do
 		lastPlayerSlot = lastPlayerSlot - 1
 	end
 end
@@ -112,6 +228,54 @@ local function slotLocString(slot)
 		addr.byteFromSlot(slot, addr.X_OFFSET),
 		addr.byteFromSlot(slot, addr.Y_OFFSET),
 		nameFromSlot(slot))
+end
+
+-- we don't want to log inventories each frame,
+-- since items may be swapped around while trying different combats.
+-- log only when a unit's movement status changes.
+-- don't log changes in inventory due only to combat since they are redundant clutter.
+local function updateInventories()
+	for slot = 1, lastPlayerSlot do -- until empty player slots
+		if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
+			local firstChangeLogged = false
+			
+			for i = 1, 5 do
+				local offset = 2 * i - 2
+				local item = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset)
+				local uses = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset + 1)
+				
+				if slotData[slot].items[i] ~= item or 
+				   slotData[slot].uses[i] ~= uses then
+				   
+					slotData[slot].items[i] = item
+					slotData[slot].uses[i] = uses
+					
+					if firstChangeLogged then
+						P.addLog(string.format("%s      %d: %s %2d",
+							string.rep(" ", nameFromSlot(slot):len() + 2),
+							i,
+							combat.ITEM_NAMES[item],
+							uses))
+					else
+						P.addLog(string.format("%s's item %d: %s %2d",
+							nameFromSlot(slot),
+							i,
+							combat.ITEM_NAMES[item],
+							uses))
+						
+						firstChangeLogged = true
+					end
+				end
+			end
+		end
+	end
+end
+
+updateInventories()
+P.addLog("") -- add space after initial inventory list
+
+local function othersExist()
+	return false -- todo
 end
 
 
@@ -168,58 +332,27 @@ function P.passiveUpdate()
 
 	
 	
-	-- we don't want to log inventories each frame,
-	-- since items may be swapped around while trying different combats.
-	-- log only when a turn, phase, or unit's movement status changes
-	local function updateInventories()
-		for slot = 1, lastPlayerSlot do -- until empty player slots
-			if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
-				for i = 1, 5 do
-					local offset = 2 * i - 2
-					local item = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset)
-					local uses = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset + 1)
-					
-					if slotData[slot].items[i] ~= item or 
-					   slotData[slot].uses[i] ~= uses then
-					   
-						slotData[slot].items[i] = item
-						slotData[slot].uses[i] = uses
-						
-						P.addLog(string.format("%s's item %d: %2d use %s",
-							nameFromSlot(slot),
-							i,
-							uses,
-							combat.ITEM_NAMES[item]))
-					end
-				end
-			end
-		end
-	end
-	
-	
-	
+	-- note turn 1 may begin with cutscene when units are not deployed if no preps
 	if (currTurn ~= memory.readbyte(addr.TURN)) or (currPhase ~= getPhase()) then
 		
 		currTurn = memory.readbyte(addr.TURN)
 		currPhase = getPhase()
 		
-		P.addLog("")
-		P.addLog("")
-		P.addLog(string.format("Turn %d %s phase, RN %d",
-			currTurn,
-			currPhase,
-			rns.rng1.pos))
-				
-		-- don't want to log each "refresh" at the start of turn
-		for slot = 1, lastPlayerSlot do -- until empty player slots
-			updateLoc(slot)
-			slotData[slot].isStopped = addr.unitIsStopped(slot)
-			slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
+		if currPhase ~= "other" or othersExist() then
+		
+			P.addLog("")
+			P.addLog(string.format("Turn %d %s phase, RN %d",
+				currTurn,
+				currPhase,
+				rns.rng1.pos))
+					
+			-- don't want to log each "refresh" at the start of turn
+			for slot = 1, lastPlayerSlot do -- until empty player slots
+				updateLoc(slot)
+				slotData[slot].isStopped = addr.unitIsStopped(slot)
+				slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
+			end
 		end
-		
-		updateInventories()
-		
-		P.addLog("") -- add space after initial inventory list
 	end
 	
 	
@@ -345,6 +478,9 @@ function P.addLog_RNconsumed()
 	lastEvent.postBurnsRN_i = lastRN
 	lastEvent:updateFull()
 	
+	if lastEvent.length ~= rnsUsed then return end
+
+	
 	local a = lastEvent.combatants.attacker
 	local d = lastEvent.combatants.defender
 	
@@ -352,167 +488,49 @@ function P.addLog_RNconsumed()
 	local aLoc = string.format("at %2d,%2d %s", a.x, a.y, a.name)
 	local dLoc = string.format("at %2d,%2d %s", d.x, d.y, d.name)
 	
-	local aWep = string.format(" %s %d", a.weapon, a.weaponUses)
-	local dWep = string.format(" %s %d", d.weapon, d.weaponUses)
+	local aWep = string.format(" %s %2d", a.weapon, a.weaponUses)
+	local dWep = string.format(" %s %2d", d.weapon, d.weaponUses)
+	
+	local resultStr = ""
+	if lastEvent.hasCombat then
+		resultStr = resultStr .. " " .. combat.hitSeq_string(lastEvent.mHitSeq)
+	end
+	if lastEvent:levelDetected() then
+		resultStr = resultStr .. " " .. lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i)
+	end
 	
 	if currPhase == "player" then
-		if lastEvent.length == rnsUsed then
-			skipNextStopLog()
-			
-			if lastEvent.hasCombat then
-				P.addLog(aLoc .. relativeMoveStr() .. aWep)
-				
-				P.addLog(dLoc .. dWep)
-				
-				-- item durability not yet updated in RAM, manually update
-				slotData[a.slot].uses[1] = lastEvent.mHitSeq.attacker.endUses
-				
-				if lastEvent:levelDetected() then
-					P.addLog(combat.hitSeq_string(lastEvent.mHitSeq) .. " " .. 
-						lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i))
-				else
-					P.addLog(combat.hitSeq_string(lastEvent.mHitSeq))
-				end
-				
-			elseif lastEvent:levelDetected() then
-			
-				P.addLog(aLoc .. relativeMoveStr() .. " " .. 
-					lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i))
-				
-			end
-		else
-			print()
-			print("Event does not match rns", lastEvent.length, rnsUsed, lastEvent:headerString())
-		end
+		skipNextStopLog()
 		
-		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
-	elseif rnsUsed > 1 then -- neglects enemy staff, but slots update even for some burns
-		P.addLog(aLoc .. aWep .. " enemy event?")
-		
-		if lastEvent:levelDetected() then
-			P.addLog(dLoc .. dWep .. " " .. lastEvent.unit:levelUpProcs_string(lastEvent.postCombatRN_i))
-		else
+		if lastEvent.hasCombat then
+			P.addLog(aLoc .. relativeMoveStr() .. aWep .. resultStr)
+			
 			P.addLog(dLoc .. dWep)
+			
+			-- moving items down in inventory to clear item#1 for equipped weapon is redundant, 
+			-- update here and don't log during next update inventory
+			for i = 1, 5 do
+				local offset = 2 * i - 2
+				slotData[a.slot].items[i] = addr.byteFromSlot(a.slot, addr.ITEMS_OFFSET + offset)
+				slotData[a.slot].uses[i] = addr.byteFromSlot(a.slot, addr.ITEMS_OFFSET + offset + 1)
+			end
+			
+			-- item durability not yet updated in RAM, manually update
+			slotData[a.slot].uses[1] = lastEvent.mHitSeq.attacker.endUses
+			
+		elseif lastEvent:levelDetected() then
+			P.addLog(aLoc .. relativeMoveStr() .. resultStr)
 		end
 		
 		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
+	
+	-- don't match with last event of player phase
+	elseif a.slot > lastPlayerSlot then
+		-- possible for AI movement burns to have a false match with length of last event
+		P.addLog(aLoc .. aWep .. " AI event?")
+		P.addLog(dLoc .. dWep .. resultStr)
+		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
 	end
-end
-
-
-
-
--- up to 16 strings, first use children, then parents
--- string up to 60 chars
-function P.GUIstrings()
-	local strs = {}
-	
-	local function strFn(node)
-		local childCount = 0
-		if node.children then childCount = #node.children end
-		
-		local str = " "
-		if equalNodes(node, currNode) then
-			str = "<"
-		end
-		if childCount > 1 then
-			str = str .. "+"
-		else
-			str = str .. " "
-		end
-		if node.depth == P.GUInode.depth then
-			str = str .. ">"
-		else
-			str = str .. " "
-		end
-		if str == "   " then
-			str = string.format("%5d ", node.depth % 10000)
-		else
-			str = str .. string.format("%02d ", node.depth % 100)
-		end
-	
-		if childCount > 1 then
-			return str .. node.text .. string.format(" %d/%d", node.children.sel_i, childCount)
-		end
-
-		return str .. node.text
-	end
-	
-	local nodeToRead = P.GUInode
-	table.insert(strs, strFn(nodeToRead))
-	
-	while nodeToRead.children and #strs < 16 do
-		nodeToRead = selected(nodeToRead.children)
-		table.insert(strs, strFn(nodeToRead))
-	end
-	nodeToRead = P.GUInode
-	while nodeToRead.parent and #strs < 16 do
-		nodeToRead = nodeToRead.parent
-		table.insert(strs, 1, strFn(nodeToRead)) -- insert at start
-	end
-	
-	return strs
-end
-
-function P.addLog(str)
-	if currNode.children then
-		for i, child in ipairs(currNode.children) do
-			if child.text == str then
-				-- forward-track instead of creating a redundant node/branch
-			
-				currNode.children.sel_i = i
-				currNode = child
-				P.GUInode = currNode
-				
-				-- move frames back if needed, for example
-				-- node A at frame 1000, before savestate 1 at frame 1001
-				-- node B at frame 2000
-				-- jump to savestate 1, then complete B by frame 1500, then savestate 2 at 1501
-				-- then jumping back to savestate 2 would unwind past B even though the state is later
-				-- unless the frame for B is updated during the faster completion/forward-track
-				if currNode.frame > emu.framecount() then
-					currNode.frame = emu.framecount()
-				end
-				return
-			end
-		end
-	else
-		currNode.children = {}
-	end
-	
-	local child = {}
-	child.frame = emu.framecount()
-	child.text = str
-	child.parent = currNode
-	child.depth = currNode.depth + 1
-	table.insert(currNode.children, child)
-	currNode.children.sel_i = #currNode.children
-	if #currNode.children > 1 then
-		print("Added autolog branch")
-	end
-	currNode = child
-	P.GUInode = currNode
-end
-
--- note this saves under vba movie directory when running movie
-function P.writeLogs()
-	local fileName = string.format("fe%dmap%d-%d-%d.autolog.txt",
-		GAME_VERSION,
-		memory.readbyte(addr.MAP),
-		os.time(),
-		filesWritten)
-		
-	local f = io.open(fileName, "w")
-	
-	local nodeToWrite = root
-	while nodeToWrite.children do
-		nodeToWrite = selected(nodeToWrite.children)
-		f:write(string.format("%4d  %s\n", nodeToWrite.depth, nodeToWrite.text))
-	end
-	
-	f:close()
-	filesWritten = filesWritten + 1
-	print("wrote " .. fileName)
 end
 
 return P

@@ -472,7 +472,11 @@ end
 -- this does not update startRN_i or postBurnsRN_i
 function P.rnEventObj:updateFull()
 	if self.hasCombat then
-		self.mHitSeq = self.combatants:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
+		if self.combatants.phase ~= "enemy" then
+			self.mHitSeq = self.combatants:hitSeq(self.postBurnsRN_i, self.enemyHPstart)
+		else -- enemy hp is not defender hp in this case
+			self.mHitSeq = self.combatants:hitSeq(self.postBurnsRN_i)
+		end
 		
 		self.postCombatRN_i = self.postBurnsRN_i + self.mHitSeq.totalRNsConsumed
 		

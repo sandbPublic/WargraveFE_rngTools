@@ -22,16 +22,20 @@ f:close()
 
 local ctrlObj = {}
 
-function ctrlObj:pressed(key)
-	return self.thisFrame[key] and not self.lastFrame[key]
+function ctrlObj:pressed(key, repeatRate)
+	if repeatRate then
+		return (self.inputs[key].framesHeldFor % repeatRate) == 0
+	end
+
+	return self.inputs[key].framesHeldFor == 0
 end
 
 function ctrlObj:held(key)
-	return self.thisFrame[key]
+	return self.inputs[key].framesHeldFor >= 0
 end
 
 function ctrlObj:released(key)
-	return not self.thisFrame[key] and self.lastFrame[key]
+	return self.inputs[key].framesNotHeldFor == 0
 end
 
 
@@ -40,16 +44,22 @@ end
 -- modifying functions
 
 function ctrlObj:update(currFrame)
-	self.lastFrame = self.thisFrame
-	self.thisFrame = currFrame
-	
 	self.anythingHeld = false
-	for _, hotkey in ipairs(P.hotkeys) do
-		if self.thisFrame[hotkey.key] then
-			self.anythingHeld = true
-			return
+	for key, _ in pairs(self.inputs) do
+		if currFrame[key] then
+			self.inputs[key].framesHeldFor = self.inputs[key].framesHeldFor + 1
+			self.inputs[key].framesNotHeldFor = -1
+		else
+			self.inputs[key].framesNotHeldFor = self.inputs[key].framesNotHeldFor + 1
+			self.inputs[key].framesHeldFor = -1
 		end
 	end
+end
+
+function ctrlObj:register(key)
+	self.inputs[key] = {}
+	self.inputs[key].framesHeldFor = -1
+	self.inputs[key].framesNotHeldFor = 1
 end
 
 function ctrlObj:new()
@@ -57,14 +67,24 @@ function ctrlObj:new()
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.thisFrame = {}
-	o.lastFrame = {}
+	o.inputs = {}
 	o.anythingHeld = false
 	
 	return o
 end
 
+
+
+
 P.keyboard = ctrlObj:new()
+for i, hotkey in ipairs(P.hotkeys) do
+	P.keyboard:register(hotkey.key)
+end
+
 P.gamepad = ctrlObj:new()
+local gbaButtons = {"A", "B", "select", "start", "right", "left", "up", "down", "R", "L"}
+for i, key in ipairs(gbaButtons) do
+	P.gamepad:register(key)
+end
 
 return P

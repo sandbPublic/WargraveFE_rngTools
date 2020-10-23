@@ -18,7 +18,7 @@ P.COORD_I		= 7
 
 local RECT_COLORS = {
 	"blue",
-	"grey",
+	"cyan",
 	"white",
 	"green",
 	"red",

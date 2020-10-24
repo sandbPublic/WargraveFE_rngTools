@@ -59,19 +59,26 @@ function P.GUIstrings()
 			str = str .. string.format(" %d/%d", nodeToRead.children.sel_i, childCount)
 		end
 
-		while str:len() > CHAR_PER_LINE and #strs < 16 do
-			if atStart then
-				table.insert(strs, 1, str:sub(1, CHAR_PER_LINE))
-			else
-				table.insert(strs, str:sub(1, CHAR_PER_LINE))
-			end
+		local multilines = {}
+		while str:len() > CHAR_PER_LINE do
+			table.insert(multilines, str:sub(1, CHAR_PER_LINE))
 			str = str:sub(CHAR_PER_LINE + 1)
 		end
-		if str:len() > 0 and #strs < 16 then
-			if atStart then
-				table.insert(strs, 1, str)
-			else
-				table.insert(strs, str)
+		if str:len() > 0 then
+			table.insert(multilines, str)
+		end
+		
+		if atStart then -- add in reverse order
+			local i = #multilines
+			while i > 0 and #strs < 16 do
+				table.insert(strs, 1, multilines[i])
+				i = i - 1
+			end
+		else
+			for _, line in ipairs(multilines) do
+				if #strs < 16 then
+					table.insert(strs, line)
+				end
 			end
 		end
 	end
@@ -289,9 +296,6 @@ local function updateInventories()
 	end
 end
 
-updateInventories()
-P.addLog("") -- add space after initial inventory list
-
 local function othersExist()
 	for slot = lastPlayerSlot+1, 128 do -- enemies begin at slot 129
 		if addr.wordFromSlot(slot + 1, addr.NAME_CODE_OFFSET) ~= 0 then
@@ -301,7 +305,28 @@ local function othersExist()
 	return false
 end
 
-
+local function reloadAll()
+	currFrame = vba.framecount()
+	lastRN = rns.rng1.pos
+	currTurn = memory.readbyte(addr.TURN)
+	currPhase = getPhase()
+	currMoney = addr.getMoney()
+	
+	for slot = 1, lastPlayerSlot do
+		updateLoc(slot)
+		slotData[slot].isStopped = addr.unitIsStopped(slot)
+		slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
+		
+		for i = 1, 5 do
+			local offset = 2 * i - 2
+			slotData[slot].items[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset)
+			slotData[slot].uses[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset + 1)
+		end
+	end
+	
+	skipNextStopLogAt.x = -1
+	skipNextStopLogAt.y = -1
+end
 
 
 function P.passiveUpdate()
@@ -320,7 +345,8 @@ function P.passiveUpdate()
 	if currFrame ~= vba.framecount() - 1 then
 		print("autolog jump detected")
 		
-		currFrame = vba.framecount()
+		reloadAll()
+		
 		while currNode.frame > currFrame do
 			currNode = currNode.parent
 		end
@@ -329,27 +355,6 @@ function P.passiveUpdate()
 		end
 		
 		P.GUInode = currNode
-		
-		currTurn = memory.readbyte(addr.TURN)
-		currPhase = getPhase()
-		currMoney = addr.getMoney()
-		
-		for slot = 1, lastPlayerSlot do
-			updateLoc(slot)
-			slotData[slot].isStopped = addr.unitIsStopped(slot)
-			slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
-			
-			for i = 1, 5 do
-				local offset = 2 * i - 2
-				slotData[slot].items[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset)
-				slotData[slot].uses[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset + 1)
-			end
-		end
-		
-		skipNextStopLogAt.x = -1
-		skipNextStopLogAt.y = -1
-		
-		lastRN = rns.rng1.pos
 	end
 	currFrame = vba.framecount()
 
@@ -358,8 +363,9 @@ function P.passiveUpdate()
 	-- note turn 1 may begin with cutscene when units are not deployed if no preps
 	if (currTurn ~= memory.readbyte(addr.TURN)) or (currPhase ~= getPhase()) then
 		
-		currTurn = memory.readbyte(addr.TURN)
-		currPhase = getPhase()
+		-- don't want to log each "refresh" at the start of turn, 
+		-- or items since these should be known from last player phase
+		reloadAll()
 		
 		if currPhase ~= "other" or othersExist() then
 		
@@ -368,13 +374,37 @@ function P.passiveUpdate()
 				currTurn,
 				currPhase,
 				rns.rng1.pos))
+		end
+		
+		if currTurn == 1 and currPhase == "player" then
+			for slot = 1, lastPlayerSlot do
+				if addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
+					P.addLog(slotLocString(slot) .. " start")
+					local firstChangeLogged = false
 					
-			-- don't want to log each "refresh" at the start of turn
-			for slot = 1, lastPlayerSlot do -- until empty player slots
-				updateLoc(slot)
-				slotData[slot].isStopped = addr.unitIsStopped(slot)
-				slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
+					for i = 1, 5 do
+						if slotData[slot].uses[i] == 0 then
+							break
+						end
+						if firstChangeLogged then
+							P.addLog(string.format("%s      %d: %s %2d",
+								string.rep(" ", nameFromSlot(slot):len() + 2),
+								i,
+								combat.ITEM_NAMES[slotData[slot].items[i]],
+								slotData[slot].uses[i]))
+						else
+							P.addLog(string.format("%s's item %d: %s %2d",
+								nameFromSlot(slot),
+								i,
+								combat.ITEM_NAMES[slotData[slot].items[i]],
+								slotData[slot].uses[i]))
+							
+							firstChangeLogged = true
+						end
+					end
+				end
 			end
+			P.addLog("")
 		end
 	end
 	
@@ -530,13 +560,8 @@ function P.addLog_RNconsumed()
 			
 			P.addLog(dLoc .. dWep)
 			
-			-- moving items down in inventory to clear item#1 for equipped weapon is redundant, 
-			-- update here and don't log during next update inventory
-			for i = 1, 5 do
-				local offset = 2 * i - 2
-				slotData[a.slot].items[i] = addr.byteFromSlot(a.slot, addr.ITEMS_OFFSET + offset)
-				slotData[a.slot].uses[i] = addr.byteFromSlot(a.slot, addr.ITEMS_OFFSET + offset + 1)
-			end
+			-- moving items down in inventory to clear 1st for equipped weapon is not necessarily redundant, 
+			-- since we might also swap 2nd or more weapons manually
 			
 			-- item durability not yet updated in RAM, manually update
 			slotData[a.slot].uses[1] = lastEvent.mHitSeq.attacker.endUses

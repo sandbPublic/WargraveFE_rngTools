@@ -589,6 +589,7 @@ if GAME_VERSION == 7 then
 	initializeCommonValues()
 	
 	do -- HEX_CODES
+HEX_CODES[0x017C] = "Snag"
 HEX_CODES[0xCE4C] = "Eliwood"
 HEX_CODES[0xCE80] = "Hector"
 HEX_CODES[0xCEB4] = "Lyn"

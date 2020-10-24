@@ -21,16 +21,20 @@ end
 
 
 -- up to 16 strings, first use children, then parents
--- string up to 60 chars
+-- string up to 59 chars
+local CHAR_PER_LINE = 59
 function P.GUIstrings()
 	local strs = {}
 	
-	local function strFn(node)
+	local nodeToRead = P.GUInode
+	
+	local function insert(atStart)
 		local childCount = 0
-		if node.children then childCount = #node.children end
+		if nodeToRead.children then childCount = #nodeToRead.children end
 		
+		-- construct GUI prefix
 		local str = " "
-		if equalNodes(node, currNode) then
+		if equalNodes(nodeToRead, currNode) then
 			str = "<"
 		end
 		if childCount > 1 then
@@ -38,35 +42,49 @@ function P.GUIstrings()
 		else
 			str = str .. " "
 		end
-		if node.depth == P.GUInode.depth then
+		if nodeToRead.depth == P.GUInode.depth then
 			str = str .. ">"
 		else
 			str = str .. " "
 		end
 		if str == "   " then
-			str = string.format("%5d ", node.depth % 10000)
+			str = string.format("%5d ", nodeToRead.depth % 10000)
 		else
-			str = str .. string.format("%02d ", node.depth % 100)
+			str = str .. string.format("%02d ", nodeToRead.depth % 100)
 		end
 	
+		str = str .. nodeToRead.text
+		
 		if childCount > 1 then
-			return str .. node.text .. string.format(" %d/%d", node.children.sel_i, childCount)
+			str = str .. string.format(" %d/%d", nodeToRead.children.sel_i, childCount)
 		end
 
-		return str .. node.text
+		while str:len() > CHAR_PER_LINE and #strs < 16 do
+			if atStart then
+				table.insert(strs, 1, str:sub(1, CHAR_PER_LINE))
+			else
+				table.insert(strs, str:sub(1, CHAR_PER_LINE))
+			end
+			str = str:sub(CHAR_PER_LINE + 1)
+		end
+		if str:len() > 0 and #strs < 16 then
+			if atStart then
+				table.insert(strs, 1, str)
+			else
+				table.insert(strs, str)
+			end
+		end
 	end
 	
-	local nodeToRead = P.GUInode
-	table.insert(strs, strFn(nodeToRead))
-	
+	insert()
 	while nodeToRead.children and #strs < 16 do
 		nodeToRead = selected(nodeToRead.children)
-		table.insert(strs, strFn(nodeToRead))
+		insert()
 	end
 	nodeToRead = P.GUInode
 	while nodeToRead.parent and #strs < 16 do
 		nodeToRead = nodeToRead.parent
-		table.insert(strs, 1, strFn(nodeToRead)) -- insert at start
+		insert(true) -- insert at start
 	end
 	
 	return strs
@@ -275,7 +293,12 @@ updateInventories()
 P.addLog("") -- add space after initial inventory list
 
 local function othersExist()
-	return false -- todo
+	for slot = lastPlayerSlot+1, 128 do -- enemies begin at slot 129
+		if addr.wordFromSlot(slot + 1, addr.NAME_CODE_OFFSET) ~= 0 then
+			return true
+		end
+	end
+	return false
 end
 
 

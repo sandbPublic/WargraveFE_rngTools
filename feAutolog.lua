@@ -162,7 +162,7 @@ local currFrame = vba.framecount() - 1
 local lastRN = 0
 local currTurn = -1
 local currPhase = "player"
-local currMoney = 0
+local currMoney = addr.getMoney()
 
 
 

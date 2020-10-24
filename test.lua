@@ -183,7 +183,6 @@ if testAll then -- Combat
 	
 	local c = combat.combatObj:new()
 	
-	c:isUsingStaff()
 	c:willLevel(0)
 	c:willLevel(100) -- don't assert, loaded attacker could be level 20
 	c:expFrom()

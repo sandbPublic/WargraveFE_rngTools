@@ -37,6 +37,9 @@ local POISON_B_ID  = {0,0,0,0,0, -1, 47, 48}
 local POISON_CLAW_ID  = 175 -- FE8 only
 local POISON_TALON_ID = 176 -- FE8 only
 local STONE_ID        = 181 -- FE8 only
+local SILENCE_ID    = {0,0,0,0,0, 75, 79, 81}
+local SLEEP_ID      = {0,0,0,0,0, 76, 80, 82}
+local BERSERK_ID    = {0,0,0,0,0, 80, 81, 83}
 
 local function weaponIdToType(id)
 	if (id == BRAVE_S_ID[GAME_VERSION] 
@@ -59,6 +62,8 @@ local function weaponIdToType(id)
 		return "poison"
 	elseif id == STONE_ID then
 		return "stone"
+	elseif id == SILENCE_ID or id == SLEEP_ID or id == BERSERK_ID then
+		return "staff"
 	end
 	
 	return "normal"
@@ -225,161 +230,182 @@ P.ITEM_NAMES = {
 		"Steel Sword",
 		"Silver Sword",
 		"Iron Blade",
+		
 		"Steel Blade",
 		"Silver Blade",
 		"Poison Sword",
 		"Rapier",
 		"Mani Katti",
+		
 		"Brave Sword",
 		"Wo Dao",
 		"Killing Edge",
 		"Armorslayer",
 		"Wyrmslayer",
-		-- 0x10
+
 		"Light Brand",
 		"Runesword",
 		"Lancereaver",
 		"Longsword",
 		"Iron Lance",
+		-- 20
 		"Slim Lance",
 		"Steel Lance",
 		"Silver Lance",
 		"Poison Lance",
 		"Brave Lance",
+		
 		"Killer Lance",
 		"Horseslayer",
 		"Javelin",
 		"Spear",
 		"Axereaver",
+		
 		"Iron Axe",
-		-- 0x20
 		"Steel Axe",
 		"Silver Axe",
 		"Poison Axe",
 		"Brave Axe",
+		
 		"Killer Axe",
 		"Halberd",
 		"Hammer",
 		"Devil Axe",
 		"Hand Axe",
+		-- 40
 		"Tomahawk",
 		"Swordreaver",
 		"Swordslayer",
 		"Iron Bow",
 		"Steel Bow",
+		
 		"Silver Bow",
 		"Poison Bow",
-		-- 0x30
 		"Killer Bow",
 		"Brave Bow",
 		"Short Bow",
+		
 		"Longbow",
 		"Ballista",
 		"Iron ballista",
 		"Killer ballista",
 		"Fire",
 		"Thunder",
+		
 		"Elfire",
 		"Bolting",
 		"Fimbulvetr",
 		"Forblaze",
 		"Excalibur",
+		-- 60
 		"Lightning",
 		"Shine",
-		-- 0x40
 		"Divine",
 		"Purge",
 		"Aura",
+		
 		"Luce",
 		"Flux",
 		"Luna",
 		"Nosferatu",
 		"Eclipse",
+		
 		"Fenrir",
 		"Gespenst",
 		"Heal",
 		"Mend",
 		"Recover",
+		
 		"Physic",
 		"Fortify",
 		"Restore",
-		-- 0x50
 		"Silence",
 		"Sleep",
+		-- 80
 		"Berserk",
 		"Warp",
 		"Rescue",
 		"Torch",
 		"Hammerne",
+		
 		"Unlock",
 		"Barrier",
 		"Dragon Axe",
 		"Angelic robe",
 		"Energy ring",
+		
 		"Secret book",
 		"Speedwings",
 		"Goddess icon",
 		"Dragonshield",
-		-- 0x60
 		"Talisman",
+		
 		"Boots",
 		"Body ring",
 		"Hero crest",
 		"Knight crest",
 		"Orion's bolt",
+		-- 100
 		"Elysian whip",
 		"Guiding ring",
 		"Chest key",
 		"Door key",
 		"Lockpick",
+		
 		"Vulnerary",
 		"Elixir",
 		"Pure water",
 		"Antitoxin",
 		"Torch",
-		-- 0x70
+		
 		"Delphi Shield",
 		"Member Card",
 		"Silver Card",
 		"White gem",
 		"Blue gem",
+		
 		"Red Gem",
 		"30 G",
 		"Vaida's Spear",
 		"Chest key",
 		"Mine",
+		-- 120
 		"Light rune",
 		"Iron rune",
 		"Filla's Might",
 		"Ninis's Grace",
 		"Thor's Ire",
+		
 		"Set's Litany",
-		-- 0x80
 		"Emblem blade",
 		"Emblem lance",
 		"Emblem axe",
 		"Emblem bow",
+		
 		"Durandal",
 		"Armads",
 		"Aureola",
 		"Earth seal",
 		"Afa's Drops",
+		
 		"Heaven seal",
 		"Emblem seal",
 		"Fell contract",
 		"Sol Katti",
 		"Wolf Beil",
+		-- 140
 		"Ereshkigal",
 		"Flametongue",
-		-- 0x90
 		"Regal blade",
 		"Rex Hasta",
 		"Basilikos",
+		
 		"Reinfleche",
 		"Heavy spear",
 		"Short spear",
 		"Ocean seal",
 		"3000 G",
+		
 		"5000 G",
 		"Wind Sword",
 		"Vulnerary 60",
@@ -393,197 +419,223 @@ P.ITEM_NAMES = {
 		"Steel Sword",
 		"Silver Sword",
 		"Iron Blade",
+		
 		"Steel Blade",
 		"Silver Blade",
 		"Poison Sword",
 		"Rapier",
-		"Dummy", -- was Mani Katti
+		"Dummy",
+		
 		"Brave Sword",
 		"Shamshir",
 		"Killing Edge",
 		"Armorslayer",
 		"Wyrmslayer",
-		-- 0x10
+
 		"Light Brand",
 		"Runesword",
 		"Lancereaver",
 		"Zanbato",
 		"Iron Lance",
+		-- 20
 		"Slim Lance",
 		"Steel Lance",
 		"Silver Lance",
 		"Toxin Lance",
 		"Brave Lance",
+		
 		"Killer Lance",
 		"Horseslayer",
 		"Javelin",
 		"Spear",
 		"Axereaver",
+		
 		"Iron Axe",
-		-- 0x20
 		"Steel Axe",
 		"Silver Axe",
 		"Poison Axe",
 		"Brave Axe",
+		
 		"Killer Axe",
 		"Halberd",
 		"Hammer",
 		"Devil Axe",
 		"Hand Axe",
+		-- 40
 		"Tomahawk",
 		"Swordreaver",
 		"Swordslayer",
 		"Hatchet", -- FE8 insert
 		"Iron Bow",
+		
 		"Steel Bow",
 		"Silver Bow",
-		-- 0x30
 		"Poison Bow",
 		"Killer Bow",
 		"Brave Bow",
+		
 		"Short Bow",
 		"Long Bow",
 		"Ballista",
 		"Iron ballista",
 		"Killer ballista",
+		
 		"Fire",
 		"Thunder",
 		"Elfire",
 		"Bolting",
 		"Fimbulvetr",
+		-- 60
 		"Dummy", -- was Forblaze
 		"Excalibur",
 		"Lightning",
-		-- 0x40
 		"Shine",
 		"Divine",
+		
 		"Purge",
 		"Aura",
 		"Dummy", -- was Luce
 		"Flux",
 		"Luna",
+		
 		"Nosferatu",
 		"Eclipse",
 		"Fenrir",
 		"Gleipnir", -- was Gespenst
 		"Heal",
+		
 		"Mend",
 		"Recover",
 		"Physic",
 		"Fortify",
-		-- 0x50
 		"Restore",
+		-- 80
 		"Silence",
 		"Sleep",
 		"Berserk",
 		"Warp",
 		"Rescue",
+		
 		"Torch",
 		"Hammerne",
 		"Unlock",
 		"Barrier",
 		"Dragon Axe",
+		
 		"Angelic robe",
 		"Energy ring",
 		"Secret book",
 		"Speedwings",
 		"Goddess icon",
-		-- 0x60
+		
 		"Dragonshield",
 		"Talisman",
 		"Swiftsole", -- was Boots
 		"Body ring",
 		"Hero crest",
+		-- 100
 		"Knight crest",
 		"Orion's bolt",
 		"Elysian whip",
 		"Guiding ring",
 		"Chest key",
+		
 		"Door key",
 		"Lockpick",
 		"Vulnerary",
 		"Elixir",
 		"Pure water",
+		
 		"Antitoxin",
-		-- 0x70
 		"Torch",
 		"Delphi Shield",
 		"Member Card",
 		"Silver Card",
+		
 		"White gem",
 		"Blue gem",
 		"Red gem",
 		"Gold", -- was Vaida's Spear
 		"Reginleif", -- was Chest key
+		-- 120
 		"Chest key",
 		"Dummy",
 		"Dummy",
 		"Hoplon Guard",
 		"Dummy",
+		
 		"Dummy",
 		"Dummy",
-		-- 0x80
 		"Dummy",
 		"Shadowkiller",
 		"Bright Lance",
+		
 		"Fiendcleaver",
 		"Beacon Bow",
 		"Seiglinde",
 		"Battle Axe",
 		"Ivaldi",
+		
 		"Master seal",
 		"Metis's Tome",
 		"Dummy",
 		"Sharp Claw",
 		"Latona",
+		-- 140
 		"Dragonspear",
 		"Vidofnir",
 		"Naglfar",
-		-- 0x90
 		"Wretched Air",
 		"Audhulma",
+		
 		"Siegmund",
 		"Garm",
 		"Nidhogg",
 		"Heavy spear",
 		"Short spear",
+		
 		"Ocean seal",
 		"Lunar Brace",
 		"Solar Brace",
 		"1 Gold",
 		"5 Gold",
+		
 		"10 Gold",
 		"50 Gold",
 		"100 Gold",
 		"3000 Gold",
-		-- 0xA0
 		"5000 Gold",
+		-- 160
 		"Wind Sword",
 		"Vulnerary 60",
 		"Vulnerary 60",
 		"Vulnerary 60",
 		"Dance",
+		
 		"Nightmare",
 		"Stone Shard",
 		"Demon Light",
 		"Ravager",
 		"Dragonstone",
+		
 		"Demon Surge",
 		"Shadowshot",
 		"Rotten Claw",
 		"Fetid Claw",
 		"Poison Claw",
-		-- 0xB0
+		
 		"Lethal Talon",
 		"Fiery Fang",
 		"Hellfang",
 		"Evil Eye",
 		"Crimson Eye",
+		-- 180
 		"Stone",
 		"Alacalibur",
 		"Juna Fruit",
 		"150 Gold",
 		"200 Gold",
+		
 		"Black Gem",
 		"Gold Gem"
 	}
@@ -602,10 +654,6 @@ P.combatObj = {}
 
 -- non modifying functions
 
-function P.combatObj:isUsingStaff()
-	return self.attacker.atk == 0xFF -- healing only?
-end
-
 local function hitToString(hit)
 	if hit <= 100 then return string.format("%3d", hit) end
 	return string.format("%02X", hit)
@@ -614,7 +662,7 @@ end
 function P.combatObj:toStrings()
 	local rStrings = {}
 	rStrings[1] = "          LV.XP Hit Crt HP Dmg"
-	if self:isUsingStaff() then 
+	if self.attacker.weaponType == "staff" then 
 		rStrings[1] = "STAFF     LV.XP Hit Crt HP Dmg" 
 	end
 	
@@ -862,7 +910,7 @@ function P.combatObj:hitSeq(rnOffset, carriedDefHP)
 		return rHitSeq
 	end
 	
-	if self:isUsingStaff() then
+	if self.attacker.weaponType == "staff" then
 		rHitSeq[1] = self:staffHitEvent(rnOffset)
 		rHitSeq.totalRNsConsumed = 1
 		return rHitSeq

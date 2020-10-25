@@ -13,8 +13,59 @@ root.text = "Start"
 local currNode = root
 P.GUInode = root
 
+local slotData = {}
+for slot = 0, 255 do
+	slotData[slot] = {}
+	slotData[slot].x = -1
+	slotData[slot].y = -1
+	slotData[slot].isStopped = false
+	slotData[slot].carrying = 0
+	slotData[slot].items = {0, 0, 0, 0, 0}
+	slotData[slot].uses = {0, 0, 0, 0, 0}
+end
+
+
+
+
+-- non-modifying functions
+
 local function equalNodes(a, b)
 	return a.depth == b.depth and a.frame == b.frame and a.text == b.text
+end
+
+local function nameFromSlot(slot)
+	return unitData.hexCodeToName(addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET))
+end
+
+local function relativeMoveStr(slot)
+	slot = slot or memory.readbyte(addr.SELECTED_SLOT)
+
+	local xChange = addr.byteFromSlot(slot, addr.X_OFFSET) - slotData[slot].x
+	local yChange = addr.byteFromSlot(slot, addr.Y_OFFSET) - slotData[slot].y
+	
+	local function changeStr(change, A, B)
+		if change < 0 then 
+			A = B
+			change = -change
+		end
+		if change > 3 then
+			return A .. change
+		end
+		return string.rep(A, change)
+	end
+	
+	if xChange == 0 and yChange == 0 then
+		return "" -- don't return what will be an extra space
+	else
+		return " " .. changeStr(xChange, ">", "<") .. changeStr(yChange, "v", "^")
+	end
+end
+
+local function slotLocString(slot)
+	return string.format("at %2d,%2d %s",
+		addr.byteFromSlot(slot, addr.X_OFFSET),
+		addr.byteFromSlot(slot, addr.Y_OFFSET),
+		nameFromSlot(slot))
 end
 
 
@@ -192,19 +243,23 @@ local currMoney = addr.getMoney()
 
 
 
-local function nameFromSlot(slot)
-	return unitData.hexCodeToName(addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET))
+
+
+local function updateLoc(slot)
+	slotData[slot].x = addr.byteFromSlot(slot, addr.X_OFFSET)
+	slotData[slot].y = addr.byteFromSlot(slot, addr.Y_OFFSET)
 end
 
-local slotData = {}
-for slot = 0, 255 do
-	slotData[slot] = {}
-	slotData[slot].x = -1
-	slotData[slot].y = -1
-	slotData[slot].isStopped = false
-	slotData[slot].carrying = 0
-	slotData[slot].items = {0, 0, 0, 0, 0}
-	slotData[slot].uses = {0, 0, 0, 0, 0}
+local function reloadSlot(slot)
+	updateLoc(slot)
+	slotData[slot].isStopped = addr.unitIsStopped(slot)
+	slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
+	
+	for i = 1, 5 do
+		local offset = 2 * i - 2
+		slotData[slot].items[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset)
+		slotData[slot].uses[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset + 1)
+	end
 end
 
 -- player slots begin with deployed units, then undeployed, then recruited this chapter
@@ -212,48 +267,35 @@ local lastPlayerSlot = 1
 local function updateLastPlayerSlot()
 	while addr.wordFromSlot(lastPlayerSlot + 1, addr.NAME_CODE_OFFSET) ~= 0 do
 		lastPlayerSlot = lastPlayerSlot + 1
+		
+		if addr.byteFromSlot(lastPlayerSlot, addr.RANKS_OFFSET + 4) > 0 then
+			rnEvent.IS_HEALER_DEPLOYED = true
+			print("healer is deployed")
+		end
 	end
+	
 	while addr.wordFromSlot(lastPlayerSlot, addr.NAME_CODE_OFFSET) == 0 and lastPlayerSlot > 1 do
 		lastPlayerSlot = lastPlayerSlot - 1
 	end
 end
 updateLastPlayerSlot()
 
-local function updateLoc(slot)
-	slotData[slot].x = addr.byteFromSlot(slot, addr.X_OFFSET)
-	slotData[slot].y = addr.byteFromSlot(slot, addr.Y_OFFSET)
-end
-
-local function relativeMoveStr(slot)
-	slot = slot or memory.readbyte(addr.SELECTED_SLOT)
-
-	local xChange = addr.byteFromSlot(slot, addr.X_OFFSET) - slotData[slot].x
-	local yChange = addr.byteFromSlot(slot, addr.Y_OFFSET) - slotData[slot].y
-	
-	local function changeStr(change, A, B)
-		if change < 0 then 
-			A = B
-			change = -change
+local function checkRecruitment()
+	while addr.wordFromSlot(lastPlayerSlot + 1, addr.NAME_CODE_OFFSET) ~= 0 do
+		lastPlayerSlot = lastPlayerSlot + 1
+		
+		if addr.byteFromSlot(lastPlayerSlot, addr.RANKS_OFFSET + 4) > 0 then
+			rnEvent.IS_HEALER_DEPLOYED = true
+			print("healer is deployed")
 		end
-		if change > 3 then
-			return A .. change
+		
+		if addr.byteFromSlot(lastPlayerSlot, addr.X_OFFSET) ~= 255 then
+			P.addLog(slotLocString(lastPlayerSlot) .. " joins")
+			reloadSlot(lastPlayerSlot)
 		end
-		return string.rep(A, change)
-	end
-	
-	if xChange == 0 and yChange == 0 then
-		return "" -- don't return what will be an extra space
-	else
-		return " " .. changeStr(xChange, ">", "<") .. changeStr(yChange, "v", "^")
 	end
 end
 
-local function slotLocString(slot)
-	return string.format("at %2d,%2d %s",
-		addr.byteFromSlot(slot, addr.X_OFFSET),
-		addr.byteFromSlot(slot, addr.Y_OFFSET),
-		nameFromSlot(slot))
-end
 
 -- we don't want to log inventories each frame,
 -- since items may be swapped around while trying different combats.
@@ -298,14 +340,20 @@ end
 
 local function othersExist()
 	for slot = lastPlayerSlot+1, 128 do -- enemies begin at slot 129
-		if addr.wordFromSlot(slot + 1, addr.NAME_CODE_OFFSET) ~= 0 then
+		if addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET) ~= 0 then
+			print("other at slot", slot)
 			return true
 		end
 	end
 	return false
 end
 
+
+
+
 local function reloadAll()
+	updateLastPlayerSlot()
+
 	currFrame = vba.framecount()
 	lastRN = rns.rng1.pos
 	currTurn = memory.readbyte(addr.TURN)
@@ -313,15 +361,7 @@ local function reloadAll()
 	currMoney = addr.getMoney()
 	
 	for slot = 1, lastPlayerSlot do
-		updateLoc(slot)
-		slotData[slot].isStopped = addr.unitIsStopped(slot)
-		slotData[slot].carrying = addr.byteFromSlot(slot, addr.CARRYING_SLOT_OFFSET)
-		
-		for i = 1, 5 do
-			local offset = 2 * i - 2
-			slotData[slot].items[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset)
-			slotData[slot].uses[i] = addr.byteFromSlot(slot, addr.ITEMS_OFFSET + offset + 1)
-		end
+		reloadSlot(slot)
 	end
 	
 	skipNextStopLogAt.x = -1
@@ -329,9 +369,9 @@ local function reloadAll()
 end
 
 
+
+
 function P.passiveUpdate()
-	updateLastPlayerSlot()
-	
 	-- erase subsequent logs if jumped back via savestate
 	-- script should be started at or before first savestate,
 	-- so that first turn logs are not overwritten when jumping back
@@ -463,6 +503,7 @@ function P.passiveUpdate()
 		if slotData[selSlot].isStopped ~= addr.unitIsStopped(selSlot) then
 			slotData[selSlot].isStopped = addr.unitIsStopped(selSlot)
 			
+			checkRecruitment()
 			updateInventories()
 			
 			if slotData[selSlot].isStopped then
@@ -563,6 +604,7 @@ function P.addLog_RNconsumed()
 			-- moving items down in inventory to clear 1st for equipped weapon is not necessarily redundant, 
 			-- since we might also swap 2nd or more weapons manually
 			
+			slotData[a.slot].items[1] = addr.byteFromSlot(a.slot, addr.ITEMS_OFFSET)
 			-- item durability not yet updated in RAM, manually update
 			slotData[a.slot].uses[1] = lastEvent.mHitSeq.attacker.endUses
 			

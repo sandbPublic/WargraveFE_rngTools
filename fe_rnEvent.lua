@@ -143,6 +143,9 @@ local function nonlinearhpValue(frac)
 	return frac*(8-3*frac)/5
 end
 
+-- determine if healer is present manually todo
+P.IS_HEALER_DEPLOYED = false
+
 -- measure in units of perfect levels (= 100)
 -- perfect combat value == 50
 -- can adjust combat weight
@@ -190,9 +193,9 @@ function P.rnEventObj:evaluation_fn(printV)
 		printStr = printStr .. string.format(", level %dx%.2f", self:levelScore(), self.mExpValueFactor)
 	end
 
-	if unitData.HEALER_DEPLOYED and self:healable() then
-		score = score + 5
-		printStr = printStr .. ", healable 5"
+	if P.IS_HEALER_DEPLOYED and self:healable() then
+		score = score + 12
+		printStr = printStr .. ", healable +12"
 	end
 	
 	if self.dig and self:digSucceed() then

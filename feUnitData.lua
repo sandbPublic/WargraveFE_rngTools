@@ -1124,9 +1124,6 @@ PROMOTED_AT[0] = 0
 WILL_PROMOTE_AT[0] = 0
 WILL_END_AT[0] = 0
 HEX_CODES[0x0000] = "empty slot"
-
--- determine if healer is present manually todo
-P.HEALER_DEPLOYED = false
  
 P.CAN_ADD_AFAS = (GAME_VERSION == 7 and memory.readbyte(addr.MAP) >= 31) or -- ch 31 == hector chapter 24
                  (GAME_VERSION == 8) -- todo confirm chapter code for metis tome

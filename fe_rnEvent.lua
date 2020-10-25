@@ -143,7 +143,7 @@ local function nonlinearhpValue(frac)
 	return frac*(8-3*frac)/5
 end
 
--- determine if healer is present manually todo
+-- determine if healer is present
 P.IS_HEALER_DEPLOYED = false
 
 -- measure in units of perfect levels (= 100)
@@ -189,8 +189,9 @@ function P.rnEventObj:evaluation_fn(printV)
 	end
 		
 	if self:levelDetected() then
-		score = score + self:levelScore()*self.mExpValueFactor
-		printStr = printStr .. string.format(", level %dx%.2f", self:levelScore(), self.mExpValueFactor)
+		local lvlScore = self:levelScore()
+		score = score + lvlScore*self.mExpValueFactor
+		printStr = printStr .. string.format(", level %dx%.2f", lvlScore, self.mExpValueFactor)
 	end
 
 	if P.IS_HEALER_DEPLOYED and self:healable() then
@@ -489,8 +490,11 @@ function P.rnEventObj:updateFull()
 	end
 	self.length = self.postCombatRN_i - self.startRN_i
 	
+	-- do this here, this will update rerolls through levelScore(), unit:levelScoreInExp(), unit:willLevelStats()
+	self.eval = self:evaluation_fn() 
+	
 	if self:levelDetected() then
-		self.length = self.length + 7 -- todo if empty level, rerolls, more than 7
+		self.length = self.length + 7 + self.unit.levelRerolls -- if empty level, rerolls, more than 7
 	end
 	
 	if self.dig then
@@ -498,8 +502,6 @@ function P.rnEventObj:updateFull()
 	end
 	
 	self.nextRN_i = self.startRN_i + self.length
-	
-	self.eval = self:evaluation_fn()
 end
 
 

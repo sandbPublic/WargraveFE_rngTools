@@ -270,7 +270,7 @@ local function updateLastPlayerSlot()
 		
 		if addr.byteFromSlot(lastPlayerSlot, addr.RANKS_OFFSET + 4) > 0 then
 			rnEvent.IS_HEALER_DEPLOYED = true
-			print("healer is deployed")
+			print("healer is deployed", nameFromSlot(lastPlayerSlot))
 		end
 	end
 	
@@ -286,7 +286,7 @@ local function checkRecruitment()
 		
 		if addr.byteFromSlot(lastPlayerSlot, addr.RANKS_OFFSET + 4) > 0 then
 			rnEvent.IS_HEALER_DEPLOYED = true
-			print("healer is deployed")
+			print("healer is deployed", nameFromSlot(lastPlayerSlot))
 		end
 		
 		if addr.byteFromSlot(lastPlayerSlot, addr.X_OFFSET) ~= 255 then
@@ -340,8 +340,9 @@ end
 
 local function othersExist()
 	for slot = lastPlayerSlot+1, 128 do -- enemies begin at slot 129
-		if addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET) ~= 0 then
-			print("other at slot", slot)
+		if addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET) ~= 0 and 
+			addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
+			print("other at slot", slot, nameFromSlot(slot))
 			return true
 		end
 	end
@@ -357,7 +358,7 @@ local function reloadAll()
 	currFrame = vba.framecount()
 	lastRN = rns.rng1.pos
 	currTurn = memory.readbyte(addr.TURN)
-	currPhase = getPhase()
+	currPhase = addr.getPhase()
 	currMoney = addr.getMoney()
 	
 	for slot = 1, lastPlayerSlot do
@@ -382,6 +383,12 @@ function P.passiveUpdate()
 	-- jumping back to B (from B may be incomplete record of inventory)
 	-- similarly skipNextStopLogAt must be lost (or potentially invalid from 
 	-- deleted future)
+	
+	-- if a savestate has a selected unit set to move but waiting for confirmation,
+	-- then the reload will have their location set to that point,
+	-- and will log a "warp" log to their original location if the move is cancelled
+	-- and will may not log a "stop" if that movement is confirmed?
+	-- don't savestate mid movement
 	if currFrame ~= vba.framecount() - 1 then
 		print("autolog jump detected")
 		
@@ -401,7 +408,7 @@ function P.passiveUpdate()
 	
 	
 	-- note turn 1 may begin with cutscene when units are not deployed if no preps
-	if (currTurn ~= memory.readbyte(addr.TURN)) or (currPhase ~= getPhase()) then
+	if (currTurn ~= memory.readbyte(addr.TURN)) or (currPhase ~= addr.getPhase()) then
 		
 		-- don't want to log each "refresh" at the start of turn, 
 		-- or items since these should be known from last player phase
@@ -456,7 +463,7 @@ function P.passiveUpdate()
 		P.addLog(slotLocString(selSlot) .. relativeMoveStr() .. str)
 	end
 	
-	if getPhase() == "player" and selSlot <= lastPlayerSlot then -- check movements
+	if addr.getPhase() == "player" and selSlot <= lastPlayerSlot then -- check movements
 	
 		-- only selected unit should check for stopping
 		-- after stopping, check for refresh, inventory
@@ -573,7 +580,6 @@ function P.addLog_RNconsumed()
 	lastEvent:updateFull()
 	
 	if lastEvent.length ~= rnsUsed then return end
-
 	
 	local a = lastEvent.combatants.attacker
 	local d = lastEvent.combatants.defender

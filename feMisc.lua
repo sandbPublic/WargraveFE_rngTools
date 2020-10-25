@@ -7,13 +7,26 @@ WINDOW_WIDTH = 45
 
 
 
-
-
--- 0 = player, 0x40 = other, 0x80 = enemy
-local PHASE_NAMES = {"player", "other", "enemy"}
-
-function getPhase()
-	return PHASE_NAMES[1 + memory.readbyte(addr.PHASE)/0x40]
+function recursivePrintTable(tbl_, prefix)
+	prefix = prefix or ""
+	for k, v in pairs(tbl_) do
+		if type(v) == "table" then
+			local vIsSimpleArray = true
+			for k2, v2 in pairs(v) do
+				if type(k2) ~= "number" or type(v2) ~= "number" then
+					vIsSimpleArray = false
+					recursivePrintTable(v, " " .. prefix .. "." .. k)
+					break
+				end
+			end
+		
+			if vIsSimpleArray then
+				print(prefix .. "." .. k .. "=", v)
+			end
+		else
+			print(prefix .. "." .. k .. "=" .. tostring(v))
+		end
+	end
 end
 
 function printStringArray(array)

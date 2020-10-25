@@ -64,9 +64,9 @@ end
 local REPEAT_RATE = 10
 
 while true do
-	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= getPhase() then
+	if currTurn ~= memory.readbyte(addr.TURN) or currPhase ~= addr.getPhase() then
 		currTurn = memory.readbyte(addr.TURN)
-		currPhase = getPhase()
+		currPhase = addr.getPhase()
 
 		print()
 		print("Turn " .. currTurn .. " " .. currPhase .. " phase")

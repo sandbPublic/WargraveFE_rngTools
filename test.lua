@@ -89,7 +89,7 @@ if testAll then -- Unit Data
 	u:loadRAMvalues({20, 1, 2, 3, 4, 5, 6, 11, 0})
 	u.class = classes.OTHER
 	u.canPromote = true
-	assert(u.avgLevelValue == 6450) -- 20*90 + 45*50 + 15*100 + 10*90
+	assert(u.avgLevelValue == 6450, u.avgLevelValue) -- 20*90 + 45*50 + 15*100 + 10*90
 	u.hasAfas = false
 	
 	local willLevelStats = {1, 0, 0, 0, 0, 0, 1}
@@ -187,6 +187,8 @@ if testAll then -- Combat
 	c:willLevel(100) -- don't assert, loaded attacker could be level 20
 	c:expFrom()
 	c:hitEvent(0, "attacker")
+	
+	c.phase = "player"
 	
 	c.attacker.name         = "a"
 	c.attacker.class        = classes.LORD

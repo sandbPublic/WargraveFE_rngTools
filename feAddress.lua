@@ -29,6 +29,14 @@ end
 P.FOG   = P.MONEY + 5 -- {0x2AA55, 0x2BC05, 0x2BCFD}
 P.MAP   = P.MONEY + 6 -- FE6x chapters count from 32
 P.PHASE = P.MONEY + 7
+
+-- 0 = player, 0x40 = other, 0x80 = enemy
+local PHASE_NAMES = {"player", "other", "enemy"}
+
+function P.getPhase()
+	return PHASE_NAMES[1 + memory.readbyte(addr.PHASE)/0x40]
+end
+
 P.TURN  = P.MONEY + 8
 
 

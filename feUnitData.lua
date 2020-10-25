@@ -1220,79 +1220,6 @@ local unitObj = {}
 
 -- non modifying functions
 
-function unitObj:willLevelStats(HP_RN_i)
-	ret = {}
-	for i, growth in ipairs(self.growths) do
-		local nextRN = rns.rng1:getRN(HP_RN_i+i-1)
-	
-		if self.stats[i] >= classes.CAPS[self.class][i] + self.freeStats[i] then
-			ret[i] = -1 -- stat capped
-		elseif nextRN < growth then
-			ret[i] = 1 -- stat grows without afa's
-		elseif nextRN < growth + 5  and self.hasAfas then 
-			-- if growth == 95 and rn = 95, want to report 2, not 0
-			-- (however no canonical unit has a growth of 95)
-			ret[i] = 2 -- stat grows because of afa's
-		elseif nextRN < growth + 5 then
-			ret[i] = -2 -- stat would grow with afa's
-		else
-			ret[i] = 0 -- stat doesn't grow
-		end
-	end
-	return ret
-end
-
-function unitObj:levelUpProcs_string(HP_RN_i)
-	local seq = ""
-	local noStatWillRise = true
-	local noStatIsCapped = true
-
-	for _, proc in ipairs(self:willLevelStats(HP_RN_i)) do		
-		if proc == 1 then
-			seq = seq .. "+" -- grows this stat
-			noStatWillRise = false
-		elseif proc == 2 then
-			seq = seq .. "!" -- grows this stat because of Afa's
-			noStatWillRise = false
-		elseif proc == -2 and P.CAN_ADD_AFAS then
-			seq = seq .. "?" -- stat would grow with afa's
-		elseif proc == -1 then
-			seq = seq .. "_" -- can't grow stat
-			noStatIsCapped = false
-		else
-			seq = seq .. "."
-		end
-	end
-	if noStatWillRise and noStatIsCapped then
-		seq = seq .. " EMPTY, may proc more RNs!" 
-		-- todo how does this work?
-		-- continue rolling, one rn at a time, until a stat grows?
-	end
-	return seq
-end
-
--- gets score for level up starting at rns index HP_RN_i
--- scored such that average level is 0, empty level is -100 exp
--- empty level wipes out value of exp used to level up
-function unitObj:levelScoreInExp(HP_RN_i)
-	if self.avgLevelValue == 0 then return 0 end
-	
-	local procs = self:willLevelStats(HP_RN_i)
-	
-	local score = 0
-	for i = 1, 7 do
-		local statsGained = self.freeStats[i]
-		if procs[i] > 0 then
-			statsGained = statsGained + 1
-		end
-		score = score + statsGained*self.dynamicWeights[i]
-	end
-	score = score * 100
-	
-	score = score - self.avgLevelValue -- score now ranges [-avg, perf-avg]
-	
-	return 100*score/self.avgLevelValue
-end
 
 function unitObj:expValueFactor()
 	return self.avgLevelValue/EXP_VALUE_FACTOR_SCALE
@@ -1405,6 +1332,109 @@ end
 
 -- modifying functions
 
+-- only modifies by possibly updating levelRerolls 
+function unitObj:willLevelStats(HP_RN_i)
+	ret = {}
+	
+	local noStatWillRise = true
+	local noStatIsCapped = true
+	
+	for i, growth in ipairs(self.growths) do
+		local nextRN = rns.rng1:getRN(HP_RN_i + i - 1)
+	
+		if self.stats[i] >= classes.CAPS[self.class][i] + self.freeStats[i] then
+			ret[i] = -1 -- stat capped todo (how do rerolls work with growths >= 100?)
+			noStatIsCapped = false
+		elseif nextRN < growth then
+			ret[i] = 1 -- stat grows without afa's
+			noStatWillRise = false
+		elseif nextRN < growth + 5  and self.hasAfas then 
+			-- if growth == 95 and rn = 95, want to report 2, not 0
+			-- (however no canonical unit has a growth of 95)
+			ret[i] = 2 -- stat grows because of afa's
+			noStatWillRise = false
+		elseif nextRN < growth + 5 then
+			ret[i] = -2 -- stat would grow with afa's
+		else
+			ret[i] = 0 -- stat doesn't grow
+		end
+	end
+	
+	-- continue rolling, one rn at a time, until a stat grows?
+	-- apparently:
+	-- Matthew level at RN 503:
+	-- 96 73 48 98 90 90 83 96 96 19 = skill only, uses 10 rns
+	-- only tries 21 times? (rerolls a level 3 times is the common knowledge)
+	self.levelRerolls = 0
+	if noStatWillRise and noStatIsCapped then
+		while self.levelRerolls < 21 do
+			local nextRN = rns.rng1:getRN(HP_RN_i + 7 + self.levelRerolls)
+			self.levelRerolls = self.levelRerolls + 1
+			local i = self.levelRerolls % 7
+			local growth = self.growths[i]
+			
+			if nextRN < growth then
+				ret[i] = 1 -- stat grows without afa's
+				break
+			elseif nextRN < growth + 5  and self.hasAfas then 
+				-- if growth == 95 and rn = 95, want to report 2, not 0
+				-- (however no canonical unit has a growth of 95)
+				ret[i] = 2 -- stat grows because of afa's
+				break
+			elseif nextRN < growth + 5 then
+				ret[i] = -2 -- stat would grow with afa's
+			end
+		end
+	end
+	
+	return ret
+end
+
+function unitObj:levelUpProcs_string(HP_RN_i)
+	local seq = ""
+
+	for _, proc in ipairs(self:willLevelStats(HP_RN_i)) do		
+		if proc == 1 then
+			seq = seq .. "+" -- grows this stat
+		elseif proc == 2 then
+			seq = seq .. "!" -- grows this stat because of Afa's
+		elseif proc == -2 and P.CAN_ADD_AFAS then
+			seq = seq .. "?" -- stat would grow with afa's
+		elseif proc == -1 then
+			seq = seq .. "_" -- can't grow stat
+		else
+			seq = seq .. "."
+		end
+	end
+	if self.levelRerolls > 0 then
+		seq = seq .. " 1st empty, used more RNs!" 
+	end
+	return seq
+end
+
+-- gets score for level up starting at rns index HP_RN_i
+-- scored such that average level is 0, empty level is -100 exp
+-- empty level wipes out value of exp used to level up
+function unitObj:levelScoreInExp(HP_RN_i)
+	if self.avgLevelValue == 0 then return 0 end
+	
+	local procs = self:willLevelStats(HP_RN_i)
+	
+	local score = 0
+	for i = 1, 7 do
+		local statsGained = self.freeStats[i]
+		if procs[i] > 0 then
+			statsGained = statsGained + 1
+		end
+		score = score + statsGained*self.dynamicWeights[i]
+	end
+	score = score * 100
+	
+	score = score - self.avgLevelValue -- score now ranges [-avg, perf-avg]
+	
+	return 100*score/self.avgLevelValue
+end
+
 function unitObj:toggleAfas()
 	local str = "Afa's "
 	if GAME_VERSION == 8 then
@@ -1489,12 +1519,12 @@ function unitObj:loadRAMvalues(testStats)
 	
 	self.avgLevelValue = 0
 	for i = 1, 7 do
-		-- easier than adding 100*freeStats back to self.growths
-		self.avgLevelValue = self.avgLevelValue + GROWTHS[self.index][i]*self.dynamicWeights[i]
+		-- don't use GROWTHS, fails for tests
+		self.avgLevelValue = self.avgLevelValue + (self.growths[i] + 100*self.freeStats[i])*self.dynamicWeights[i]
 	end
 	
 	self.hasAfas = addr.unitHasAfas(addr.ATTACKER_START)
-	if getPhase() == "enemy" then
+	if addr.getPhase() == "enemy" then
 		self.hasAfas = addr.unitHasAfas(addr.DEFENDER_START)
 	end
 end
@@ -1524,6 +1554,8 @@ function unitObj:new(unit_i)
 	
 	o:loadRAMvalues()
 	
+	o.levelRerolls = 0 -- for empty level rerolls
+	
 	return o
 end
 
@@ -1535,7 +1567,7 @@ units[0] = unitObj:new(0)
 
 function P.currUnit()
 	local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
-	if getPhase() == "enemy" then
+	if addr.getPhase() == "enemy" then
 		nameCode = memory.readword(addr.DEFENDER_START + addr.NAME_CODE_OFFSET)
 	end
 	local name = P.hexCodeToName(nameCode)

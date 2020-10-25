@@ -1183,7 +1183,7 @@ function P.combatObj:new()
 	
 	o.attacker = createCombatant(addr.ATTACKER_START)
 	o.defender = createCombatant(addr.DEFENDER_START)
-	o.phase = getPhase()
+	o.phase = addr.getPhase()
 	
 	o:setNonRAM()
 	o:setExpGain()

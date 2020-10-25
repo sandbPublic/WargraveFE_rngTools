@@ -849,6 +849,9 @@ HEX_CODES[0xFFDC] = "Linus" --  (morph)
 
 	PROMOTED_AT[INDEX_OF_NAME["Merlinus"]] = 20
 	
+	WILL_PROMOTE_AT[INDEX_OF_NAME["Hector"]] = 20
+	WILL_PROMOTE_AT[INDEX_OF_NAME["Matthew"]] = 20
+	
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian"]] = {30, 00, 00, 19, 30, 10, 10}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Nils"]]   = {30, 00, 00, 19, 30, 10, 10}	
 end
@@ -1369,8 +1372,8 @@ function unitObj:willLevelStats(HP_RN_i)
 	if noStatWillRise and noStatIsCapped then
 		while self.levelRerolls < 21 do
 			local nextRN = rns.rng1:getRN(HP_RN_i + 7 + self.levelRerolls)
+			local i = (self.levelRerolls % 7) + 1
 			self.levelRerolls = self.levelRerolls + 1
-			local i = self.levelRerolls % 7
 			local growth = self.growths[i]
 			
 			if nextRN < growth then
@@ -1505,6 +1508,18 @@ function unitObj:loadRAMvalues(testStats)
 	self.class = classes.HEX_CODES[memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)] or classes.OTHER
 	self.canPromote = self.class == BASE_CLASSES[self.index] and self.class ~= self.promotion
 	
+	self.willPromoteAt = WILL_PROMOTE_AT[self.index]
+	if self.willPromoteAt < self.stats[LEVEL_I] and self.canPromote then
+		self.willPromoteAt = self.stats[LEVEL_I]
+		WILL_PROMOTE_AT[self.index] = self.stats[LEVEL_I]
+	end
+	
+	self.willEndAt = WILL_END_AT[self.index]
+	if self.willEndAt < self.stats[LEVEL_I] and not self.canPromote then
+		self.willEndAt = self.stats[LEVEL_I]
+		WILL_END_AT[self.index] = self.stats[LEVEL_I]
+	end
+	
 	-- has promoted, if not promoted these values are already assigned
 	if self.class ~= BASE_CLASSES[self.index] and self.class == self.promotion then
 		for i = 1, 7 do
@@ -1549,8 +1564,6 @@ function unitObj:new(unit_i)
 	o.bases[LEVEL_I] = BASE_STATS[o.index][LEVEL_I]
 
 	o.promotion = PROMOTIONS[unit_i]
-	o.willPromoteAt = WILL_PROMOTE_AT[unit_i]
-	o.willEndAt = WILL_END_AT[unit_i]
 	
 	o:loadRAMvalues()
 	

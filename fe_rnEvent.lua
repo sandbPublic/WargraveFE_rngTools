@@ -104,7 +104,7 @@ function P.rnEventObj:headerString(rnEvent_i)
 	end
 	
 	if self.enemyHPwasCarried then
-		detailString = detailString .. " eHP carried: " .. self.enemyHPstart
+		detailString = detailString .. " " .. self.combatants.enemy.slot .. " eHP: " .. self.enemyHPstart
 	end
 
 	detailString = detailString .. self.combatants.specialWeaponStr

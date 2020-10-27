@@ -339,13 +339,14 @@ local function updateInventories()
 end
 
 local function othersExist()
-	for slot = lastPlayerSlot+1, 128 do -- enemies begin at slot 129
-		if addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET) ~= 0 and 
-			addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
-			print("other at slot", slot, nameFromSlot(slot))
-			return true
-		end
-	end
+	-- enemies begin at slot 129, note that enemy boss is sometimes at 63??
+	--for slot = 65, 128 do
+		--if addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET) ~= 0 and 
+			--addr.byteFromSlot(slot, addr.X_OFFSET) ~= 255 then
+			--print("other at slot", slot, nameFromSlot(slot))
+			--return true
+		--end
+	--end
 	return false
 end
 
@@ -570,6 +571,7 @@ function P.passiveUpdate()
 	end
 end
 
+-- select merlinus before ending chapter if possible to capture his level up
 function P.addLog_RNconsumed()
 	local rnsUsed = rns.rng1.pos - lastRN
 	if rnsUsed < 0 then return end -- don't create a log for the user reverting to savestate

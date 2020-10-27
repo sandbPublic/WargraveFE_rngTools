@@ -649,7 +649,8 @@ function P.isNoncombat(class)
 		class == P.CLERIC or 
 		class == P.PRIEST or 
 		class == P.TROUBADOUR or 
-		class == P.TRANSPORTER or
+		class == P.TRANSPORTER or 
+		class == P.TRANSPO_PROMO or 
 		class == P.EGG
 end
 

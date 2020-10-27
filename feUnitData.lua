@@ -20,9 +20,8 @@ local BASE_STATS = {}
 local BOOSTERS = {}
 local BASE_CLASSES = {}
 local PROMOTIONS = {}
-local PROMOTED_AT = {}
-local WILL_PROMOTE_AT = {} -- for dynamic stat weights, some units will not promote at 10
-local WILL_END_AT = {} -- for dynamic stat weights, units may not reach lvl 20 by endgame
+local PROMOTION_LEVEL = {} -- for dynamic stat weights/effectiveGrowthRate, some units will not promote at 10
+local FINAL_LEVEL = {} -- for dynamic stat weights, units may not reach lvl 20 by endgame
 local HEX_CODES = {}
 
 local DEFAULT_GROWTH_WEIGHTS = {20, 45, 15, 60, 30, 10, 10} 
@@ -41,11 +40,10 @@ local function initializeCommonValues()
 		
 		GROWTH_WEIGHTS[i] = DEFAULT_GROWTH_WEIGHTS
 		BOOSTERS[i] = {0, 0, 0, 0, 0, 0, 0}
-		PROMOTED_AT[i] = 20 -- if unit promoted at is unknown, 
-		-- setting PROMOTED_AT too low can make promoted units appear to have impossible stat gains, 
+		PROMOTION_LEVEL[i] = 20 -- if unit promoted at is unknown, 
+		-- setting PROMOTION_LEVEL too low can make promoted units appear to have impossible stat gains, 
 		-- even before unmarked boosters
-		WILL_PROMOTE_AT[i] = 10
-		WILL_END_AT[i] = 20
+		FINAL_LEVEL[i] = 20
 	end
 end
 
@@ -846,14 +844,31 @@ HEX_CODES[0xFFDC] = "Linus" --  (morph)
 		BASE_STATS[INDEX_OF_NAME["Harken"]]  = {38, 21, 20, 17, 15, 10, 12, 08}
 		BASE_STATS[INDEX_OF_NAME["Vaida"]]   = {43, 20, 19, 13, 21, 06, 11, 09}
 	end
-
-	PROMOTED_AT[INDEX_OF_NAME["Merlinus"]] = 20
 	
-	WILL_PROMOTE_AT[INDEX_OF_NAME["Hector"]] = 20
-	WILL_PROMOTE_AT[INDEX_OF_NAME["Matthew"]] = 20
+	-- default 20 unless specified here
+	PROMOTION_LEVEL[INDEX_OF_NAME["Eliwood"]] = 19
+	PROMOTION_LEVEL[INDEX_OF_NAME["Rebecca"]] = 15
+	PROMOTION_LEVEL[INDEX_OF_NAME["Lowen"]] = 19
+	FINAL_LEVEL[INDEX_OF_NAME["Hector"]] = 7
+	PROMOTION_LEVEL[INDEX_OF_NAME["Guy"]] = 17
+	PROMOTION_LEVEL[INDEX_OF_NAME["Wil"]] = 12
+	FINAL_LEVEL[INDEX_OF_NAME["Wil"]] = 18
+	PROMOTION_LEVEL[INDEX_OF_NAME["Kent"]] = 11
+	PROMOTION_LEVEL[INDEX_OF_NAME["Lucius"]] = 19
+	FINAL_LEVEL[INDEX_OF_NAME["Lucius"]] = 18
+	PROMOTION_LEVEL[INDEX_OF_NAME["Canas"]] = 16
+	PROMOTION_LEVEL[INDEX_OF_NAME["Fiora"]] = 11
+	FINAL_LEVEL[INDEX_OF_NAME["Ninian"]] = 10
+	FINAL_LEVEL[INDEX_OF_NAME["Nils"]] = 10
+	PROMOTION_LEVEL[INDEX_OF_NAME["Heath"]] = 11
+	FINAL_LEVEL[INDEX_OF_NAME["Louise"]] = 15
+	FINAL_LEVEL[INDEX_OF_NAME["Renault"]] = 18
 	
-	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian"]] = {30, 00, 00, 19, 30, 10, 10}
-	GROWTH_WEIGHTS[INDEX_OF_NAME["Nils"]]   = {30, 00, 00, 19, 30, 10, 10}	
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Serra"]]     = {30, 60, 05, 19, 30, 10, 10}
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Merlinus"]]  = {10, 00, 00, 09, 10, 03, 05}
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Priscilla"]] = {30, 60, 05, 19, 30, 10, 10}
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian"]]    = {30, 00, 00, 19, 30, 10, 10}
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Nils"]]      = {30, 00, 00, 19, 30, 10, 10}	
 end
 
 if GAME_VERSION == 8 then
@@ -1105,9 +1120,9 @@ HEX_CODES[0x4620] = "Hayden"
 	BOOSTERS[INDEX_OF_NAME["Tana"]] = {7, 0, 0, 0, 2, 0, 0}
 	BOOSTERS[INDEX_OF_NAME["Dozla"]] = {0, 0, 2, 2, 0, 0, 2}
 	
-	PROMOTED_AT[INDEX_OF_NAME["Franz"]] = 17
-	PROMOTED_AT[INDEX_OF_NAME["Lute"]] = 15
-	PROMOTED_AT[INDEX_OF_NAME["Gerik"]] = 10
+	PROMOTION_LEVEL[INDEX_OF_NAME["Franz"]] = 17
+	PROMOTION_LEVEL[INDEX_OF_NAME["Lute"]] = 15
+	PROMOTION_LEVEL[INDEX_OF_NAME["Gerik"]] = 10
 	
 	GROWTH_WEIGHTS[INDEX_OF_NAME["L\'Arachel"]] = {30, 60, 05, 19, 30, 10, 10}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
@@ -1123,9 +1138,8 @@ BASE_STATS[0] = {0, 0, 0, 0, 0, 0, 0, 0}
 BOOSTERS[0] = {0, 0, 0, 0, 0, 0, 0}
 BASE_CLASSES[0] = classes.OTHER
 PROMOTIONS[0] = classes.OTHER_PROMOTED 
-PROMOTED_AT[0] = 0
-WILL_PROMOTE_AT[0] = 0
-WILL_END_AT[0] = 0
+PROMOTION_LEVEL[0] = 20
+FINAL_LEVEL[0] = 20
 HEX_CODES[0x0000] = "empty slot"
  
 P.CAN_ADD_AFAS = (GAME_VERSION == 7 and memory.readbyte(addr.MAP) >= 31) or -- ch 31 == hector chapter 24
@@ -1459,9 +1473,9 @@ function unitObj:setDynamicWeights()
 	self.dynamicWeights = {0, 0, 0, 0, 0, 0, 0}
 	if self.stats[LEVEL_I] >= 20 then return end
 	
-	local levelsTilEnd = self.willEndAt - self.stats[LEVEL_I]
+	local levelsTilEnd = self.finalLevel - self.stats[LEVEL_I]
 	if self.canPromote then
-		levelsTilEnd = self.willPromoteAt - self.stats[LEVEL_I]
+		levelsTilEnd = self.promotionLevel - self.stats[LEVEL_I]
 	end
 	
 	for i = 1, 7 do
@@ -1485,7 +1499,7 @@ function unitObj:setDynamicWeights()
 		-- if more likely to hit promoted class cap than unpromoted, use that probability
 		if self.canPromote then
 			-- may need levels to even reach promotion
-			local levelsTilEnd_P = self.willEndAt - 1 + math.max(self.willPromoteAt - self.stats[LEVEL_I], 0)
+			local levelsTilEnd_P = self.finalLevel - 1 + math.max(self.promotionLevel - self.stats[LEVEL_I], 0)
 			
 			local gainsTilStatCap_P = classes.CAPS[self.promotion][i] 
 				- self.stats[i] - classes.PROMO_GAINS[self.promotion][i] - levelsTilEnd_P*self.freeStats[i]
@@ -1508,16 +1522,18 @@ function unitObj:loadRAMvalues(testStats)
 	self.class = classes.HEX_CODES[memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)] or classes.OTHER
 	self.canPromote = self.class == BASE_CLASSES[self.index] and self.class ~= self.promotion
 	
-	self.willPromoteAt = WILL_PROMOTE_AT[self.index]
-	if self.willPromoteAt < self.stats[LEVEL_I] and self.canPromote then
-		self.willPromoteAt = self.stats[LEVEL_I]
-		WILL_PROMOTE_AT[self.index] = self.stats[LEVEL_I]
+	self.promotionLevel = PROMOTION_LEVEL[self.index]
+	if self.promotionLevel < self.stats[LEVEL_I] and self.canPromote then
+		self.promotionLevel = self.stats[LEVEL_I]
+		print("PROMOTION_LEVEL for", self.name, "lower than actual level", self.stats[LEVEL_I])
+		PROMOTION_LEVEL[self.index] = self.stats[LEVEL_I]
 	end
 	
-	self.willEndAt = WILL_END_AT[self.index]
-	if self.willEndAt < self.stats[LEVEL_I] and not self.canPromote then
-		self.willEndAt = self.stats[LEVEL_I]
-		WILL_END_AT[self.index] = self.stats[LEVEL_I]
+	self.finalLevel = FINAL_LEVEL[self.index]
+	if self.finalLevel < self.stats[LEVEL_I] and not self.canPromote then
+		self.finalLevel = self.stats[LEVEL_I]
+		print("FINAL_LEVEL for", self.name, "lower than actual level", self.stats[LEVEL_I])
+		FINAL_LEVEL[self.index] = self.stats[LEVEL_I]
 	end
 	
 	-- has promoted, if not promoted these values are already assigned
@@ -1527,7 +1543,7 @@ function unitObj:loadRAMvalues(testStats)
 		end
 		
 		-- "base" level is <= 1 after promotion since it is used to calculate levels gained
-		self.bases[LEVEL_I] = 1 + BASE_STATS[self.index][LEVEL_I] - PROMOTED_AT[self.index]
+		self.bases[LEVEL_I] = 1 + BASE_STATS[self.index][LEVEL_I] - PROMOTION_LEVEL[self.index]
 	end
 	
 	self:setDynamicWeights()

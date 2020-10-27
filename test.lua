@@ -83,8 +83,8 @@ if testAll then -- Unit Data
 	u.bases = {20, 0, 0, 0, 0, 0, 0, 1}
 
 	u.promotion = classes.OTHER_PROMOTED
-	u.willPromoteAt = 11 -- gain 10 levels before promotion
-	u.willEndAt = 20
+	u.promotionLevel = 11 -- gain 10 levels before promotion
+	u.finalLevel = 20
 	
 	u:loadRAMvalues({20, 1, 2, 3, 4, 5, 6, 11, 0})
 	u.class = classes.OTHER
@@ -147,7 +147,7 @@ if testAll then -- Unit Data
 	-- promote
 	u.class = classes.OTHER_PROMOTED
 	u.canPromote = true
-	u.bases[8] = 1 + u.bases[8] - u.willPromoteAt
+	u.bases[8] = 1 + u.bases[8] - u.promotionLevel
 	
 	for i = 1, 7 do
 		assert(u.growthWeights[i] == u.dynamicWeights[i], "assertion failed! " .. i)

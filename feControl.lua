@@ -22,16 +22,14 @@ f:close()
 
 local ctrlObj = {}
 
-function ctrlObj:pressed(key, repeatRate)
-	if repeatRate then
-		return (self.inputs[key].framesHeldFor % repeatRate) == 0
-	end
-
+function ctrlObj:pressed(key)
 	return self.inputs[key].framesHeldFor == 0
 end
 
-function ctrlObj:held(key)
-	return self.inputs[key].framesHeldFor >= 0
+function ctrlObj:held(key, repeatRate)
+	repeatRate = repeatRate or 1
+
+	return (self.inputs[key].framesHeldFor % repeatRate) == 0 and self.inputs[key].framesHeldFor >= 0
 end
 
 function ctrlObj:released(key)
@@ -44,7 +42,6 @@ end
 -- modifying functions
 
 function ctrlObj:update(currFrame)
-	self.anythingHeld = false
 	for key, _ in pairs(self.inputs) do
 		if currFrame[key] then
 			self.inputs[key].framesHeldFor = self.inputs[key].framesHeldFor + 1
@@ -68,7 +65,6 @@ function ctrlObj:new()
 	self.__index = self
 	
 	o.inputs = {}
-	o.anythingHeld = false
 	
 	return o
 end

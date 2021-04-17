@@ -81,14 +81,14 @@ if testAll then -- Unit Data
 	u.freeStats = {0, 0, 1, 0, 0, 0, 0}
 	u.growthWeights = {20, 45, 15, 60, 30, 10, 10}
 	u.bases = {20, 0, 0, 0, 0, 0, 0, 1}
-
+	
+	u:loadRAMvalues({20, 1, 2, 3, 4, 5, 6, 11, 0})
+	
+	u.class = classes.OTHER
+	u.canPromote = true
 	u.promotion = classes.OTHER_PROMOTED
 	u.promotionLevel = 11 -- gain 10 levels before promotion
 	u.finalLevel = 20
-	
-	u:loadRAMvalues({20, 1, 2, 3, 4, 5, 6, 11, 0})
-	u.class = classes.OTHER
-	u.canPromote = true
 	assert(u.avgLevelValue == 6450, u.avgLevelValue) -- 20*90 + 45*50 + 15*100 + 10*90
 	u.hasAfas = false
 	
@@ -143,6 +143,7 @@ if testAll then -- Unit Data
 	rns.rng1[1] = 89
 	
 	
+	
 		
 	-- promote
 	u.class = classes.OTHER_PROMOTED
@@ -156,7 +157,7 @@ if testAll then -- Unit Data
 		u:statAverage(i)
 		u:statDeviation(i)
 		u:statStdDev(i)
-		assert(u:effectiveGrowthRate(i) == u:statsGained(i)*5, "assertion failed! " .. i)
+		assert(u:effectiveGrowthRate(i) == 100*u:statsGained(i)/20, "assertion failed! " .. i)
 	end
 	assert(u:statsGained(8) == u.stats[8] - u.bases[8])
 	

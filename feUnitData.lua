@@ -849,11 +849,13 @@ HEX_CODES[0xFFDC] = "Linus" --  (morph)
 	PROMOTION_LEVEL[INDEX_OF_NAME["Eliwood"]] = 19
 	PROMOTION_LEVEL[INDEX_OF_NAME["Rebecca"]] = 15
 	PROMOTION_LEVEL[INDEX_OF_NAME["Lowen"]] = 19
+	PROMOTION_LEVEL[INDEX_OF_NAME["Bartre"]] = 12
 	FINAL_LEVEL[INDEX_OF_NAME["Hector"]] = 7
 	PROMOTION_LEVEL[INDEX_OF_NAME["Guy"]] = 17
 	PROMOTION_LEVEL[INDEX_OF_NAME["Wil"]] = 12
 	FINAL_LEVEL[INDEX_OF_NAME["Wil"]] = 18
 	PROMOTION_LEVEL[INDEX_OF_NAME["Kent"]] = 11
+	PROMOTION_LEVEL[INDEX_OF_NAME["Sain"]] = 10
 	PROMOTION_LEVEL[INDEX_OF_NAME["Lucius"]] = 19
 	FINAL_LEVEL[INDEX_OF_NAME["Lucius"]] = 18
 	PROMOTION_LEVEL[INDEX_OF_NAME["Canas"]] = 16
@@ -1178,9 +1180,9 @@ function P.hexCodeToName(hexCode)
 	end
 end
 
-local RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
+P.RANK_NAMES = {"Sword", "Lance", "Axe", "Bow", "Staff", "Anima", "Light", "Dark"}
 function P.printRanks()
-	for i, name in ipairs(RANK_NAMES) do
+	for i, name in ipairs(P.RANK_NAMES) do
 		local rank = memory.readbyte(addr.ATTACKER_START + addr.RANKS_OFFSET + i - 1)
 		if rank > 0 then
 			print(name .. " rank " .. rank)
@@ -1525,14 +1527,15 @@ function unitObj:loadRAMvalues(testStats)
 	self.promotionLevel = PROMOTION_LEVEL[self.index]
 	if self.promotionLevel < self.stats[LEVEL_I] and self.canPromote then
 		self.promotionLevel = self.stats[LEVEL_I]
-		print("PROMOTION_LEVEL for", self.name, "lower than actual level", self.stats[LEVEL_I])
+		print("PROMOTION_LEVEL", PROMOTION_LEVEL[self.index], "for", self.name, "lower than actual level", self.stats[LEVEL_I])
 		PROMOTION_LEVEL[self.index] = self.stats[LEVEL_I]
 	end
 	
 	self.finalLevel = FINAL_LEVEL[self.index]
 	if self.finalLevel < self.stats[LEVEL_I] and not self.canPromote then
 		self.finalLevel = self.stats[LEVEL_I]
-		print("FINAL_LEVEL for", self.name, "lower than actual level", self.stats[LEVEL_I])
+		print("FINAL_LEVEL", FINAL_LEVEL[self.index], "for", self.name, "lower than actual level", self.stats[LEVEL_I])
+		print(BASE_CLASSES[self.index], self.class, self.promotion)
 		FINAL_LEVEL[self.index] = self.stats[LEVEL_I]
 	end
 	

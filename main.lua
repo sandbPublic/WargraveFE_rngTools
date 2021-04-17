@@ -89,18 +89,18 @@ while true do
 
 	if canModifyWindow(feGUI.RN_EVENT_I) then
 		-- change burns
-		if ctrl.gamepad:pressed("left", REPEAT_RATE) then
+		if ctrl.gamepad:held("left", REPEAT_RATE) then
 			rnEvent.change("burns", -rnStepSize)
 		end
-		if ctrl.gamepad:pressed("right", REPEAT_RATE) then
+		if ctrl.gamepad:held("right", REPEAT_RATE) then
 			rnEvent.change("burns", rnStepSize)
 		end
 		
 		-- change selection
-		if ctrl.gamepad:pressed("up", REPEAT_RATE) then
+		if ctrl.gamepad:held("up", REPEAT_RATE) then
 			changeSelection(rnEvent.events, -1)
 		end
-		if ctrl.gamepad:pressed("down", REPEAT_RATE) then
+		if ctrl.gamepad:held("down", REPEAT_RATE) then
 			changeSelection(rnEvent.events, 1)
 		end
 		
@@ -126,12 +126,22 @@ while true do
 	-- move within autolog display
 	if canModifyWindow(feGUI.AUTOLOG_I) then
 		-- change depth
-		if ctrl.gamepad:pressed("up", REPEAT_RATE) then
+		if ctrl.gamepad:held("up", REPEAT_RATE) then
 			if autolog.GUInode.parent then
 				autolog.GUInode = autolog.GUInode.parent
 			end
 		end
-		if ctrl.gamepad:pressed("down", REPEAT_RATE) then
+		if ctrl.gamepad:held("down", REPEAT_RATE) then
+			if autolog.GUInode.children then
+				autolog.GUInode = selected(autolog.GUInode.children)
+			end
+		end
+		if ctrl.gamepad:held("L") then
+			if autolog.GUInode.parent then
+				autolog.GUInode = autolog.GUInode.parent
+			end
+		end
+		if ctrl.gamepad:held("R") then
 			if autolog.GUInode.children then
 				autolog.GUInode = selected(autolog.GUInode.children)
 			end
@@ -147,6 +157,10 @@ while true do
 			if autolog.GUInode.children then
 				changeSelection(autolog.GUInode.children, 1)
 			end
+		end
+		
+		if ctrl.gamepad:pressed("A") then
+			autolog.attemptSync()
 		end
 	end
 	
@@ -222,19 +236,19 @@ while true do
 		
 		if ctrl.keyboard:pressed("M") then print("moving rn position...") end
 		if ctrl.keyboard:held("M") then -- move rn position
-			if ctrl.gamepad:pressed("left", REPEAT_RATE) then
+			if ctrl.gamepad:held("left", REPEAT_RATE) then
 				currentRNG:moveRNpos(-rnStepSize)
 				rnEvent.update_rnEvents(1)
 			end
-			if ctrl.gamepad:pressed("right", REPEAT_RATE) then
+			if ctrl.gamepad:held("right", REPEAT_RATE) then
 				currentRNG:moveRNpos(rnStepSize)
 				rnEvent.update_rnEvents(1)
 			end
-			if ctrl.gamepad:pressed("up", REPEAT_RATE) then
+			if ctrl.gamepad:held("up", REPEAT_RATE) then
 				rnStepSize = rnStepSize * 10
 				print("rnStepSize now " .. rnStepSize)
 			end
-			if ctrl.gamepad:pressed("down", REPEAT_RATE) then
+			if ctrl.gamepad:held("down", REPEAT_RATE) then
 				rnStepSize = rnStepSize / 10
 				if rnStepSize < 1 then
 					rnStepSize = 1
@@ -327,9 +341,47 @@ while true do
 				RAMoffset,
 				AND(address, 0xFFFFF),
 				memory.readbyte(address)))
+				
 			for k, v in pairs(addr) do
 				if v == RAMoffset then
 					print(k)
+				end
+			end
+			
+			stat = RAMoffset - addr.MAX_HP_OFFSET -- both max and current hp
+			if stat == 0 then
+				print("Max HP")
+			elseif stat == 1 then
+				print("Current HP")
+			elseif stat == 2 then
+				print("Strength")
+			elseif stat == 3 then
+				print("Skill")
+			elseif stat == 4 then
+				print("Speed")
+			elseif stat == 5 then
+				print("Defense")
+			elseif stat == 6 then
+				print("Resistance")
+			elseif stat == 7 then
+				print("Luck")
+			end
+			
+			if RAMoffset == addr.CARRYING_SLOT_OFFSET then
+				print(unitData.hexCodeToName(addr.wordFromSlot(memory.readbyte(address), addr.NAME_CODE_OFFSET)))
+			end
+			
+			itemSlot = (RAMoffset - addr.ITEMS_OFFSET) / 2
+			for i = 0, 4 do
+				if itemSlot == i then
+					print(combat.ITEM_NAMES[memory.readbyte(address)])
+				end
+			end
+			
+			rank = RAMoffset - addr.RANKS_OFFSET
+			for i = 0, 7 do
+				if rank == i then
+					print(unitData.RANK_NAMES[i + 1])
 				end
 			end
 		end

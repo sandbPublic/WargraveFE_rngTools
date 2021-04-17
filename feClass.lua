@@ -18,31 +18,31 @@ P.PUPIL 			= nextInd()
 -- UNPROMOTED
 P.LORD 				= nextInd()
 
-P.MAGE 				= nextInd()
+P.MAGE 				= nextInd() -- 5
 P.MONK 				= nextInd()
 P.CLERIC 			= nextInd()
 P.PRIEST 			= nextInd()
 P.TROUBADOUR 		= nextInd()
-P.SHAMAN 			= nextInd()
+P.SHAMAN 			= nextInd() -- 10
 P.MID_PUPIL 		= nextInd()
 
 P.WYVERN_RIDER 		= nextInd()
 P.PEGASUS_KNIGHT 	= nextInd()
 
 P.CAVALIER 			= nextInd()
-P.ARMOR_KNIGHT 		= nextInd()
+P.ARMOR_KNIGHT 		= nextInd() -- 15
 P.MID_RECRUIT 		= nextInd()
 
 P.FIGHTER 			= nextInd()
 P.BRIGAND 			= nextInd()
 P.PIRATE 			= nextInd()
-P.MERCENARY 		= nextInd()
+P.MERCENARY 		= nextInd() -- 20
 P.NOMAD 			= nextInd()
 P.ARCHER 			= nextInd()
 P.SOLDIER           = nextInd()
 P.MID_JOURNEYMAN 	= nextInd()
 
-P.MYRMIDON 			= nextInd()
+P.MYRMIDON 			= nextInd() -- 25
 P.THIEF 			= nextInd()
 
 P.TRANSPORTER 		= nextInd()

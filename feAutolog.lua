@@ -6,9 +6,14 @@ autolog = P
 local filesWritten = 0
 
 local root = {}
-root.depth = 0
+root.turn = 0
+root.phase = "prep"
+root.RN = 0
 root.frame = -1
-root.text = "Start"
+root.text = "Root"
+
+root.depth = 0
+root.path = "root"
 
 local currNode = root
 P.GUInode = root
@@ -174,19 +179,33 @@ function P.addLog(str)
 		currNode.children = {}
 	end
 	
-	local child = {}
-	child.frame = emu.framecount()
-	child.text = str
-	child.parent = currNode
-	child.depth = currNode.depth + 1
-	table.insert(currNode.children, child)
+	local newChild = {}
+	newChild.turn = memory.readbyte(addr.TURN)
+	newChild.phase = addr.getPhase()
+	newChild.RN = rns.rng1.pos
+	newChild.frame = emu.framecount()
+	newChild.text = str
+	
+	newChild.parent = currNode
+	newChild.depth = newChild.parent.depth + 1
+	newChild.path = newChild.parent.path
+	
+	table.insert(currNode.children, newChild)
 	currNode.children.sel_i = #currNode.children
-	if #currNode.children > 1 then
-		print("Added autolog branch")
+	if #currNode.children == 2 then
+		currNode.children[1].path = currNode.children[1].path .. ",1"
+		print("Added autolog branch " .. currNode.children[1].path)
 	end
-	currNode = child
+	if #currNode.children > 1 then
+		newChild.path = newChild.path .. "," .. #currNode.children
+		print("Added autolog branch " .. newChild.path)
+	end
+	
+	currNode = newChild
 	P.GUInode = currNode
 end
+
+P.addLog("Start")
 
 -- note this saves under vba movie directory when running movie
 function P.writeLogs()
@@ -239,8 +258,6 @@ local lastRN = 0
 local currTurn = -1
 local currPhase = "player"
 local currMoney = addr.getMoney()
-
-
 
 
 
@@ -372,8 +389,29 @@ end
 
 
 
+local currNodeIsSynced = true
+
+local function nodeIsSynced(node)
+	return node.turn == memory.readbyte(addr.TURN) and node.phase == addr.getPhase() and node.RN == rns.rng1.pos
+end
+
+function P.attemptSync()
+	if nodeIsSynced(P.GUInode) then
+		currNode = P.GUInode
+		print("Now resynced! Logging resumed.")
+		reloadAll()
+		currNodeIsSynced = true
+	else
+		print("Resync failed")
+	end
+end
 
 function P.passiveUpdate()
+	if not currNodeIsSynced then 
+		currFrame = vba.framecount()
+		return 
+	end
+
 	-- erase subsequent logs if jumped back via savestate
 	-- script should be started at or before first savestate,
 	-- so that first turn logs are not overwritten when jumping back
@@ -391,7 +429,7 @@ function P.passiveUpdate()
 	-- and will may not log a "stop" if that movement is confirmed?
 	-- don't savestate mid movement
 	if currFrame ~= vba.framecount() - 1 then
-		print("autolog jump detected")
+		print("autolog detected frame jump, " .. currFrame .. " to " .. vba.framecount())
 		
 		reloadAll()
 		
@@ -403,6 +441,15 @@ function P.passiveUpdate()
 		end
 		
 		P.GUInode = currNode
+		
+		if not nodeIsSynced(currNode) then
+			print()
+			print("WARNING! Probable log desync.")
+			print("Frame-synced node on path " .. currNode.path .. " expects:")
+			print("Turn " .. currNode.turn .. " " .. currNode.phase .. " phase, RN " .. currNode.RN)
+			print("Select node and press A to attempt resync.")
+			currNodeIsSynced = false
+		end
 	end
 	currFrame = vba.framecount()
 
@@ -415,8 +462,7 @@ function P.passiveUpdate()
 		-- or items since these should be known from last player phase
 		reloadAll()
 		
-		if currPhase ~= "other" or othersExist() then
-		
+		if currPhase ~= "other" or othersExist() then -- othersExist may not update in time if an other is deploying?
 			P.addLog("")
 			P.addLog(string.format("Turn %d %s phase, RN %d",
 				currTurn,

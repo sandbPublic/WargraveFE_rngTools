@@ -5,18 +5,77 @@ autolog = P
 
 local filesWritten = 0
 
-local root = {}
-root.turn = 0
-root.phase = "prep"
-root.RN = 0
-root.frame = -1
-root.text = "Root"
 
-root.depth = 0
-root.path = "root"
 
+
+local nodeObj = {}
+
+function nodeObj:new(parent, text)
+	local o = {}
+	setmetatable(o, self)
+	self.__index = self
+	
+	if parent then
+		o.turn = memory.readbyte(addr.TURN)
+		o.phase = addr.getPhase()
+		o.RN = rns.rng1.pos
+		
+		o.text = text
+		
+		o.parent = parent
+		o.depth = parent.depth + 1
+		
+		table.insert(parent.children, o)
+		parent.children.sel_i = #parent.children
+		
+		if #parent.children > 1 then
+			print("Added autolog branch " .. o:pathString())
+		end
+	else
+		o.turn = 0
+		o.phase = "prep"
+		o.RN = 0
+		
+		o.text = "Root"
+
+		o.depth = 0
+	end
+	
+	return o
+end
+
+function nodeObj:pathString()
+	path = ""
+	
+	traceNode = self
+	while traceNode.parent do
+		if #traceNode.parent.children > 1 then
+			for i, child in ipairs(traceNode.parent.children) do
+				if child == self then
+					path = "," .. i .. path
+					break
+				end
+			end
+		end
+		traceNode = traceNode.parent
+	end
+	
+	return "root" .. path
+end
+
+function nodeObj:isSynced()
+	return self.turn == memory.readbyte(addr.TURN) and self.phase == addr.getPhase() and self.RN == rns.rng1.pos
+end
+
+
+
+
+local root = nodeObj:new()
 local currNode = root
 P.GUInode = root
+
+
+
 
 local slotData = {}
 for slot = 0, 255 do
@@ -33,10 +92,6 @@ end
 
 
 -- non-modifying functions
-
-local function equalNodes(a, b)
-	return a.depth == b.depth and a.frame == b.frame and a.text == b.text
-end
 
 local function nameFromSlot(slot)
 	return unitData.hexCodeToName(addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET))
@@ -76,6 +131,8 @@ end
 
 
 
+local savedNodes = {}
+
 -- up to 16 strings, first use children, then parents
 -- string up to 59 chars
 local CHAR_PER_LINE = 59
@@ -90,26 +147,41 @@ function P.GUIstrings()
 		
 		-- construct GUI prefix
 		local str = " "
-		if equalNodes(nodeToRead, currNode) then
-			str = "<"
+		
+		-- mark savestate
+		for i = 1, 10 do
+			if nodeToRead == savedNodes[i] then
+				str = i % 10
+				break
+			end
 		end
+		
+		-- mark branching point
 		if childCount > 1 then
 			str = str .. "+"
 		else
 			str = str .. " "
 		end
+		
+		-- mark current
+		if nodeToRead == currNode then
+			str = str .. "c"
+		else
+			str = str .. " "
+		end
+		
+		-- mark selection
 		if nodeToRead.depth == P.GUInode.depth then
 			str = str .. ">"
 		else
 			str = str .. " "
 		end
-		if str == "   " then
-			str = string.format("%5d ", nodeToRead.depth % 10000)
-		else
-			str = str .. string.format("%02d ", nodeToRead.depth % 100)
+		
+		if str == "    " then
+			str = string.format("%04d", nodeToRead.depth % 1000)
 		end
 	
-		str = str .. nodeToRead.text
+		str = str .. " " .. nodeToRead.text
 		
 		if childCount > 1 then
 			str = str .. string.format(" %d/%d", nodeToRead.children.sel_i, childCount)
@@ -153,25 +225,14 @@ function P.GUIstrings()
 	return strs
 end
 
-function P.addLog(str)
+function P.addLog(text)
 	if currNode.children then
 		for i, child in ipairs(currNode.children) do
-			if child.text == str then
-				-- forward-track instead of creating a redundant node/branch
-			
+			if child.text == text then
+				-- forward-track instead of creating a duplicate node/branch			
 				currNode.children.sel_i = i
 				currNode = child
 				P.GUInode = currNode
-				
-				-- move frames back if needed, for example
-				-- node A at frame 1000, before savestate 1 at frame 1001
-				-- node B at frame 2000
-				-- jump to savestate 1, then complete B by frame 1500, then savestate 2 at 1501
-				-- then jumping back to savestate 2 would unwind past B even though the state is later
-				-- unless the frame for B is updated during the faster completion/forward-track
-				if currNode.frame > emu.framecount() then
-					currNode.frame = emu.framecount()
-				end
 				return
 			end
 		end
@@ -179,33 +240,11 @@ function P.addLog(str)
 		currNode.children = {}
 	end
 	
-	local newChild = {}
-	newChild.turn = memory.readbyte(addr.TURN)
-	newChild.phase = addr.getPhase()
-	newChild.RN = rns.rng1.pos
-	newChild.frame = emu.framecount()
-	newChild.text = str
-	
-	newChild.parent = currNode
-	newChild.depth = newChild.parent.depth + 1
-	newChild.path = newChild.parent.path
-	
-	table.insert(currNode.children, newChild)
-	currNode.children.sel_i = #currNode.children
-	if #currNode.children == 2 then
-		currNode.children[1].path = currNode.children[1].path .. ",1"
-		print("Added autolog branch " .. currNode.children[1].path)
-	end
-	if #currNode.children > 1 then
-		newChild.path = newChild.path .. "," .. #currNode.children
-		print("Added autolog branch " .. newChild.path)
-	end
-	
-	currNode = newChild
+	currNode = nodeObj:new(currNode, text)
 	P.GUInode = currNode
 end
 
-P.addLog("Start")
+P.addLog("Log start")
 
 -- note this saves under vba movie directory when running movie
 function P.writeLogs()
@@ -253,8 +292,7 @@ end
 
 
 
-local currFrame = vba.framecount() - 1
-local lastRN = 0
+local prevRN = 0
 local currTurn = -1
 local currPhase = "player"
 local currMoney = addr.getMoney()
@@ -355,7 +393,7 @@ local function updateInventories()
 	end
 end
 
-local function othersExist()
+local function othersExist() -- todo
 	-- enemies begin at slot 129, note that enemy boss is sometimes at 63??
 	--for slot = 65, 128 do
 		--if addr.wordFromSlot(slot, addr.NAME_CODE_OFFSET) ~= 0 and 
@@ -373,8 +411,7 @@ end
 local function reloadAll()
 	updateLastPlayerSlot()
 
-	currFrame = vba.framecount()
-	lastRN = rns.rng1.pos
+	prevRN = rns.rng1.pos
 	currTurn = memory.readbyte(addr.TURN)
 	currPhase = addr.getPhase()
 	currMoney = addr.getMoney()
@@ -389,71 +426,63 @@ end
 
 
 
-local currNodeIsSynced = true
 
-local function nodeIsSynced(node)
-	return node.turn == memory.readbyte(addr.TURN) and node.phase == addr.getPhase() and node.RN == rns.rng1.pos
+local logIsSynced = true
+local resyncFailedThisFrame = false
+local prevFrame = emu.framecount() - 1
+
+function P.attemptSync(node)
+	if node:isSynced() then
+		if not logIsSynced then
+			logIsSynced = true
+			print("Now resynced! Logging resumed.")
+		end
+		reloadAll()
+	else
+		resyncFailedThisFrame = true
+		print("Sync failed")
+	end
+	currNode = node
+	P.GUInode = currNode
 end
 
-function P.attemptSync()
-	if nodeIsSynced(P.GUInode) then
-		currNode = P.GUInode
-		print("Now resynced! Logging resumed.")
-		reloadAll()
-		currNodeIsSynced = true
+function P.saveNode(i)
+	if currNode:isSynced() then
+		savedNodes[i] = currNode
+		print("Log saved state " .. i)
 	else
-		print("Resync failed")
+		print("Log can't save state " .. i .. ", not synced")
 	end
 end
+
+function P.loadNode(i)
+	if savedNodes[i] then
+		P.attemptSync(savedNodes[i])
+	else
+		print("Log can't load state " .. i .. ", attempting save...")
+		P.saveNode(i)
+	end
+end
+
+
+
 
 function P.passiveUpdate()
-	if not currNodeIsSynced then 
-		currFrame = vba.framecount()
-		return 
-	end
-
-	-- erase subsequent logs if jumped back via savestate
-	-- script should be started at or before first savestate,
-	-- so that first turn logs are not overwritten when jumping back
-	-- this may desync volatiles like inventory and skipNextStopLogAt
-	-- since they are deferred and don't create logs
-	-- if between state A and B, inventory changed but is not logged, 
-	-- jumping back to A and continuing will produce different logs than 
-	-- jumping back to B (from B may be incomplete record of inventory)
-	-- similarly skipNextStopLogAt must be lost (or potentially invalid from 
-	-- deleted future)
-	
-	-- if a savestate has a selected unit set to move but waiting for confirmation,
-	-- then the reload will have their location set to that point,
-	-- and will log a "warp" log to their original location if the move is cancelled
-	-- and will may not log a "stop" if that movement is confirmed?
-	-- don't savestate mid movement
-	if currFrame ~= vba.framecount() - 1 then
-		print("autolog detected frame jump, " .. currFrame .. " to " .. vba.framecount())
-		
-		reloadAll()
-		
-		while currNode.frame > currFrame do
-			currNode = currNode.parent
-		end
-		while currNode.children and selected(currNode.children).frame <= currFrame do
-			currNode = selected(currNode.children)
-		end
-		
-		P.GUInode = currNode
-		
-		if not nodeIsSynced(currNode) then
+	if prevFrame ~= emu.framecount() - 1 or resyncFailedThisFrame then
+		if not currNode:isSynced() then
 			print()
-			print("WARNING! Probable log desync.")
-			print("Frame-synced node on path " .. currNode.path .. " expects:")
+			print("WARNING! Log desync.")
+			print("Current node on path " .. currNode:pathString() .. " expects:")
 			print("Turn " .. currNode.turn .. " " .. currNode.phase .. " phase, RN " .. currNode.RN)
-			print("Select node and press A to attempt resync.")
-			currNodeIsSynced = false
+			print("Select node and press select to try resync.")
+			logIsSynced = false
 		end
 	end
-	currFrame = vba.framecount()
-
 	
+	prevFrame = emu.framecount()
+	resyncFailedThisFrame = false
+	
+	if not logIsSynced then return end
 	
 	-- note turn 1 may begin with cutscene when units are not deployed if no preps
 	if (currTurn ~= memory.readbyte(addr.TURN)) or (currPhase ~= addr.getPhase()) then
@@ -611,23 +640,21 @@ function P.passiveUpdate()
 
 	
 	
-	if lastRN ~= rns.rng1.pos then
+	if prevRN ~= rns.rng1.pos then
 		P.addLog_RNconsumed()
-		lastRN = rns.rng1.pos
+		prevRN = rns.rng1.pos
 	end
 end
 
 -- select merlinus before ending chapter if possible to capture his level up
 function P.addLog_RNconsumed()
-	local rnsUsed = rns.rng1.pos - lastRN
+	local rnsUsed = rns.rng1.pos - prevRN
 	if rnsUsed < 0 then return end -- don't create a log for the user reverting to savestate
 	
 	local lastEvent = rnEvent.rnEventObj:new()
-	lastEvent.startRN_i = lastRN
-	lastEvent.postBurnsRN_i = lastRN
+	lastEvent.startRN_i = prevRN
+	lastEvent.postBurnsRN_i = prevRN
 	lastEvent:updateFull()
-	
-	if lastEvent.length ~= rnsUsed then return end
 	
 	local a = lastEvent.combatants.attacker
 	local d = lastEvent.combatants.defender
@@ -635,6 +662,14 @@ function P.addLog_RNconsumed()
 	-- slot may be erased by now, use combatant data
 	local aLoc = string.format("at %2d,%2d %s", a.x, a.y, a.name)
 	local dLoc = string.format("at %2d,%2d %s", d.x, d.y, d.name)
+	
+	if lastEvent.length ~= rnsUsed then 
+		-- reinforcements may consume rns after start of player phase but before game displays "player phase"
+		if rnsUsed % 12 == 0 then
+			P.addLog(aLoc .. " reinforcements?")
+		end
+		return 
+	end
 	
 	local aWep = string.format(" %s %2d", a.weapon, a.weaponUses)
 	local dWep = string.format(" %s %2d", d.weapon, d.weaponUses)
@@ -671,9 +706,9 @@ function P.addLog_RNconsumed()
 	-- don't match with last event of player phase
 	elseif a.slot > lastPlayerSlot then
 		-- possible for AI movement burns to have a false match with length of last event
-		P.addLog(aLoc .. aWep .. " AI event?")
+		P.addLog(aLoc .. aWep)
 		P.addLog(dLoc .. dWep .. resultStr)
-		P.addLog(string.format("RN %5d->%5d (%+d)", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
+		P.addLog(string.format("RN %5d->%5d (%+d) AI event?", rns.rng1.prevPos, rns.rng1.pos, rnsUsed))
 	end
 end
 

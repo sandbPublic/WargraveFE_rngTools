@@ -37,9 +37,9 @@ local POISON_B_ID  = {0,0,0,0,0, -1, 47, 48}
 local POISON_CLAW_ID  = 175 -- FE8 only
 local POISON_TALON_ID = 176 -- FE8 only
 local STONE_ID        = 181 -- FE8 only
-local SILENCE_ID    = {0,0,0,0,0, 75, 79, 81}
-local SLEEP_ID      = {0,0,0,0,0, 76, 80, 82}
-local BERSERK_ID    = {0,0,0,0,0, 80, 81, 83}
+local SILENCE_ID    = {0,0,0,0,0, 75, 80, 81}
+local SLEEP_ID      = {0,0,0,0,0, 76, 81, 82}
+local BERSERK_ID    = {0,0,0,0,0, 80, 82, 83}
 
 local function weaponIdToType(id)
 	if (id == BRAVE_S_ID[GAME_VERSION] 
@@ -62,7 +62,7 @@ local function weaponIdToType(id)
 		return "poison"
 	elseif id == STONE_ID then
 		return "stone"
-	elseif id == SILENCE_ID or id == SLEEP_ID or id == BERSERK_ID then
+	elseif id == SILENCE_ID[GAME_VERSION] or id == SLEEP_ID[GAME_VERSION] or id == BERSERK_ID[GAME_VERSION] then
 		return "staff"
 	end
 	
@@ -94,8 +94,8 @@ P.ITEM_NAMES = {
 		"Steel Lance",
 		"Silver Lance",
 		"Slim Lance",
-		"Poison Lance",	
-		-- 20
+		"Poison Lance",	 -- 20
+		
 		"Brave Lance",
 		"Javelin",
 		"Maltet",
@@ -118,8 +118,8 @@ P.ITEM_NAMES = {
 		"Devil Axe", -- 2nd?
 		"Halberd", -- 2nd?
 		"Iron Bow",
-		"Steel Bow",
-		-- 40
+		"Steel Bow", -- 40
+		
 		"Silver Bow",
 		"Poison Bow",
 		"Killer Bow",
@@ -142,8 +142,8 @@ P.ITEM_NAMES = {
 		"Bolting",
 		"Forblaze",
 		"Lightning",
-		"Divine",
-		-- 60
+		"Divine", -- 60
+		
 		"Purge",
 		"Aureola",
 		"Flux",
@@ -166,8 +166,8 @@ P.ITEM_NAMES = {
 		"Torch",
 		"Hammerne",
 		"? Makes closed areas visible",
-		"Berserk",
-		-- 80
+		"Berserk", -- 80
+		
 		"Unlock",
 		"Barrier",
 		"Firestone",
@@ -190,8 +190,8 @@ P.ITEM_NAMES = {
 		"Orion's bolt",
 		"Elysian whip",
 		"Guiding ring",
-		"Chest key",
-		-- 100
+		"Chest key", -- 100
+		
 		"Door key",
 		"?", -- desc crashes
 		"Lockpick",
@@ -212,10 +212,10 @@ P.ITEM_NAMES = {
 		
 		"Al's sword",
 		"Gant's lance",
-		"Tina'd staff",
+		"Tina's staff",
 		"Saint's Staff",
-		"Wyrmslayer",
-		-- 120
+		"Wyrmslayer", -- 120
+		
 		"White gem",
 		"Blue gem",
 		"Red gem",
@@ -247,8 +247,8 @@ P.ITEM_NAMES = {
 		"Runesword",
 		"Lancereaver",
 		"Longsword",
-		"Iron Lance",
-		-- 20
+		"Iron Lance", -- 20
+		
 		"Slim Lance",
 		"Steel Lance",
 		"Silver Lance",
@@ -271,8 +271,8 @@ P.ITEM_NAMES = {
 		"Halberd",
 		"Hammer",
 		"Devil Axe",
-		"Hand Axe",
-		-- 40
+		"Hand Axe", -- 40
+		
 		"Tomahawk",
 		"Swordreaver",
 		"Swordslayer",
@@ -290,126 +290,127 @@ P.ITEM_NAMES = {
 		"Iron ballista",
 		"Killer ballista",
 		"Fire",
-		"Thunder",
 		
+		"Thunder",
 		"Elfire",
 		"Bolting",
 		"Fimbulvetr",
-		"Forblaze",
+		"Forblaze", -- 60
+		
 		"Excalibur",
-		-- 60
 		"Lightning",
 		"Shine",
 		"Divine",
 		"Purge",
-		"Aura",
 		
+		"Aura",
 		"Luce",
 		"Flux",
 		"Luna",
 		"Nosferatu",
-		"Eclipse",
 		
+		"Eclipse",
 		"Fenrir",
 		"Gespenst",
 		"Heal",
 		"Mend",
-		"Recover",
 		
+		"Recover",
 		"Physic",
 		"Fortify",
 		"Restore",
-		"Silence",
+		"Silence", -- 80
+		
 		"Sleep",
-		-- 80
 		"Berserk",
 		"Warp",
 		"Rescue",
 		"Torch",
-		"Hammerne",
 		
+		"Hammerne",
 		"Unlock",
 		"Barrier",
 		"Dragon Axe",
 		"Angelic robe",
-		"Energy ring",
 		
+		"Energy ring",
 		"Secret book",
 		"Speedwings",
 		"Goddess icon",
 		"Dragonshield",
-		"Talisman",
 		
+		"Talisman",
 		"Boots",
 		"Body ring",
 		"Hero crest",
-		"Knight crest",
+		"Knight crest", -- 100
+		
 		"Orion's bolt",
-		-- 100
 		"Elysian whip",
 		"Guiding ring",
 		"Chest key",
 		"Door key",
-		"Lockpick",
 		
+		"Lockpick",
 		"Vulnerary",
 		"Elixir",
 		"Pure water",
 		"Antitoxin",
-		"Torch",
 		
+		"Torch",
 		"Delphi Shield",
 		"Member Card",
 		"Silver Card",
 		"White gem",
-		"Blue gem",
 		
+		"Blue gem",
 		"Red Gem",
 		"30 G",
 		"Vaida's Spear",
-		"Chest key",
+		"Chest key", -- 120
+		
 		"Mine",
-		-- 120
 		"Light rune",
 		"Iron rune",
 		"Filla's Might",
 		"Ninis's Grace",
-		"Thor's Ire",
 		
+		"Thor's Ire",
 		"Set's Litany",
 		"Emblem blade",
 		"Emblem lance",
 		"Emblem axe",
-		"Emblem bow",
 		
+		"Emblem bow",
 		"Durandal",
 		"Armads",
 		"Aureola",
 		"Earth seal",
-		"Afa's Drops",
 		
+		"Afa's Drops",
 		"Heaven seal",
 		"Emblem seal",
 		"Fell contract",
-		"Sol Katti",
+		"Sol Katti", -- 140
+		
 		"Wolf Beil",
-		-- 140
 		"Ereshkigal",
 		"Flametongue",
 		"Regal blade",
 		"Rex Hasta",
-		"Basilikos",
 		
+		"Basilikos",
 		"Reinfleche",
 		"Heavy spear",
 		"Short spear",
 		"Ocean seal",
-		"3000 G",
 		
+		"3000 G",
 		"5000 G",
 		"Wind Sword",
 		"Vulnerary 60",
 		"Vulnerary 60",
+		
 		"Vulnerary 60" -- invalid text from this point
 	},
 	-- FE8
@@ -436,8 +437,8 @@ P.ITEM_NAMES = {
 		"Runesword",
 		"Lancereaver",
 		"Zanbato",
-		"Iron Lance",
-		-- 20
+		"Iron Lance", -- 20
+		
 		"Slim Lance",
 		"Steel Lance",
 		"Silver Lance",
@@ -460,8 +461,8 @@ P.ITEM_NAMES = {
 		"Halberd",
 		"Hammer",
 		"Devil Axe",
-		"Hand Axe",
-		-- 40
+		"Hand Axe", -- 40
+		
 		"Tomahawk",
 		"Swordreaver",
 		"Swordslayer",
@@ -484,8 +485,8 @@ P.ITEM_NAMES = {
 		"Thunder",
 		"Elfire",
 		"Bolting",
-		"Fimbulvetr",
-		-- 60
+		"Fimbulvetr", -- 60
+		
 		"Dummy", -- was Forblaze
 		"Excalibur",
 		"Lightning",
@@ -508,8 +509,8 @@ P.ITEM_NAMES = {
 		"Recover",
 		"Physic",
 		"Fortify",
-		"Restore",
-		-- 80
+		"Restore", -- 80
+		
 		"Silence",
 		"Sleep",
 		"Berserk",
@@ -532,8 +533,8 @@ P.ITEM_NAMES = {
 		"Talisman",
 		"Swiftsole", -- was Boots
 		"Body ring",
-		"Hero crest",
-		-- 100
+		"Hero crest", -- 100
+		
 		"Knight crest",
 		"Orion's bolt",
 		"Elysian whip",
@@ -556,8 +557,8 @@ P.ITEM_NAMES = {
 		"Blue gem",
 		"Red gem",
 		"Gold", -- was Vaida's Spear
-		"Reginleif", -- was Chest key
-		-- 120
+		"Reginleif", -- was Chest key -- 120
+		
 		"Chest key",
 		"Dummy",
 		"Dummy",
@@ -580,8 +581,8 @@ P.ITEM_NAMES = {
 		"Metis's Tome",
 		"Dummy",
 		"Sharp Claw",
-		"Latona",
-		-- 140
+		"Latona", -- 140
+		
 		"Dragonspear",
 		"Vidofnir",
 		"Naglfar",
@@ -604,8 +605,8 @@ P.ITEM_NAMES = {
 		"50 Gold",
 		"100 Gold",
 		"3000 Gold",
-		"5000 Gold",
-		-- 160
+		"5000 Gold", -- 160
+		
 		"Wind Sword",
 		"Vulnerary 60",
 		"Vulnerary 60",
@@ -628,8 +629,8 @@ P.ITEM_NAMES = {
 		"Fiery Fang",
 		"Hellfang",
 		"Evil Eye",
-		"Crimson Eye",
-		-- 180
+		"Crimson Eye", -- 180
+		
 		"Stone",
 		"Alacalibur",
 		"Juna Fruit",

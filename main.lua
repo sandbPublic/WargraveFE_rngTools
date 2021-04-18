@@ -56,9 +56,9 @@ local currPhase = "player"
 
 local RAMoffset = 0
 
-	-- disable if using a keyboard hotkey which may combine with game controls or modify displays
+-- disable if using a keyboard hotkey which may combine with game controls or modify displays
 local function canModifyWindow(window)
-	return feGUI.rects.sel_i == window and selected(feGUI.rects).opacity > 0 and not ctrl.keyboard.hotkeyHeld
+	return feGUI.rects.sel_i == window and selected(feGUI.rects).opacity > 0 and not ctrl.keyboard.anythingHeld
 end
 
 local REPEAT_RATE = 10
@@ -76,9 +76,20 @@ while true do
 		rnEvent.update_rnEvents(1)
 	end
 
-	autolog.passiveUpdate()
-	
 	ctrl.keyboard:update(input.get())
+	
+	for i = 1, 10 do
+		if ctrl.keyboard:pressed("F" .. i) then
+			if ctrl.keyboard:held("shift") then
+				autolog.saveNode(i)
+			else
+				autolog.loadNode(i)
+			end
+		end
+	end
+	
+	autolog.passiveUpdate()	
+	
 	-- Returns a table of all buttons. Does not read movie input. 
 	-- Key values are 1 for pressed, nil for not pressed. Keys for joypad table: 
 	-- (A, B, select, start, right, left, up, down, R, L). Keys are case-sensitive. 
@@ -86,7 +97,6 @@ while true do
 	ctrl.gamepad:update(joypad.get(0))
 	
 	-- alter burns, select, delete/undo, swap, toggle swapping
-
 	if canModifyWindow(feGUI.RN_EVENT_I) then
 		-- change burns
 		if ctrl.gamepad:held("left", REPEAT_RATE) then
@@ -159,8 +169,8 @@ while true do
 			end
 		end
 		
-		if ctrl.gamepad:pressed("A") then
-			autolog.attemptSync()
+		if ctrl.gamepad:pressed("select") then
+			autolog.attemptSync(autolog.GUInode)
 		end
 	end
 	

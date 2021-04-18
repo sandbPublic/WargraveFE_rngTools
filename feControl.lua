@@ -42,10 +42,12 @@ end
 -- modifying functions
 
 function ctrlObj:update(currFrame)
+	self.anythingHeld = false
 	for key, _ in pairs(self.inputs) do
 		if currFrame[key] then
 			self.inputs[key].framesHeldFor = self.inputs[key].framesHeldFor + 1
 			self.inputs[key].framesNotHeldFor = -1
+			self.anythingHeld = true
 		else
 			self.inputs[key].framesNotHeldFor = self.inputs[key].framesNotHeldFor + 1
 			self.inputs[key].framesHeldFor = -1
@@ -76,6 +78,11 @@ P.keyboard = ctrlObj:new()
 for i, hotkey in ipairs(P.hotkeys) do
 	P.keyboard:register(hotkey.key)
 end
+-- savestates
+for i = 1, 10 do
+	P.keyboard:register("F" .. i)
+end
+P.keyboard:register("shift")
 
 P.gamepad = ctrlObj:new()
 local gbaButtons = {"A", "B", "select", "start", "right", "left", "up", "down", "R", "L"}

@@ -643,12 +643,16 @@ P.ITEM_NAMES = {
 }
 
 P.ITEM_NAMES = P.ITEM_NAMES[GAME_VERSION - 5]
-while #P.ITEM_NAMES <= 255 do
+while #P.ITEM_NAMES < 255 do
 	table.insert(P.ITEM_NAMES, "Item code too large")
 end
 P.ITEM_NAMES[0] = "Nothing"
 
-
+P.ITEM_COLOR_SEGS = {}
+while #P.ITEM_COLOR_SEGS < 255 do
+	table.insert(P.ITEM_COLOR_SEGS, 
+	             {P.ITEM_NAMES[#P.ITEM_COLOR_SEGS + 1]:len(), colorUtil.interpolate((#P.ITEM_COLOR_SEGS/255), colorUtil.chromaticLoop)})
+end
 
 
 P.combatObj = {}
@@ -1051,9 +1055,9 @@ local function createCombatant(startAddr)
 
 	c.maxHP        = memory.readbyte(startAddr + addr.MAX_HP_OFFSET)
 	c.luck         = memory.readbyte(startAddr + addr.MAX_HP_OFFSET + 7)
-	local wCode    = memory.readbyte(startAddr + addr.ITEMS_OFFSET)
-	c.weapon       = P.ITEM_NAMES[wCode]
-	c.weaponType   = weaponIdToType(wCode)
+	c.weaponCode   = memory.readbyte(startAddr + addr.ITEMS_OFFSET)
+	c.weapon       = P.ITEM_NAMES[c.weaponCode]
+	c.weaponType   = weaponIdToType(c.weaponCode)
 	c.weaponUses   = memory.readbyte(startAddr + addr.ITEMS_OFFSET + 1)
 	
 	for i = 4, 7 do

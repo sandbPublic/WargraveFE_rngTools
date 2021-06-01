@@ -72,11 +72,6 @@ function P.rnEventObj:resultString()
 end
 
 function P.rnEventObj:headerString(rnEvent_i)
-	local hString = "  "
-	if rnEvent_i == P.events.sel_i then
-		hString = "->" 
-	end
-	
 	local detailString = ""
 	if self.combatants.phase ~= "player" then
 		detailString = " " .. self.combatants.phase
@@ -113,7 +108,12 @@ function P.rnEventObj:headerString(rnEvent_i)
 		detailString = detailString .. string.format(" hpw %d %d", self.pHPweight, self.eHPweight)
 	end
 	
-	return hString .. string.format("%2d %s%s%s",
+	local arrow = "  "
+	if rnEvent_i == P.events.sel_i then
+		arrow = "->" 
+	end
+	
+	return arrow .. string.format("%2d %s%s%s",
 		self.ID, 
 		self.unit.name, 
 		self:resultString(), 
@@ -346,25 +346,27 @@ function P.printDiagnostic()
 	selected(P.events):printDiagnostic()
 end
 
--- rns blank to be colorized
-function P.toStrings(isColored)
+function P.toStrings()
 	local rStrings = {}
+	local colorSegmentLists = {} -- arrays of {length, color, borderColor}
 	
 	if #P.events <= 0 then
 		rStrings[1] = "rnEvents empty"
-		return rStrings
+		return rStrings, colorSegmentLists
 	end
 	
 	for rnEvent_i, event in ipairs(P.events) do
 		table.insert(rStrings, event:headerString(rnEvent_i))
-		local prefix = string.format("%5d ", event.startRN_i % 100000)
-		if isColored then
-			table.insert(rStrings, prefix)
-		else
-			table.insert(rStrings, prefix .. rns.rng1:rnSeqString(event.startRN_i, event.length))
-		end
+		table.insert(colorSegmentLists, {{5}, 
+										 event.unit.colorSegment,
+										 combat.ITEM_COLOR_SEGS[event.combatants.attacker.weaponCode]})
+		
+		local prefix = string.format("%5d", event.startRN_i % 100000)
+		
+		table.insert(rStrings, string.format("%5d%s", event.startRN_i % 100000, rns.rng1:rnSeqString(event.startRN_i, event.length)))
+		table.insert(colorSegmentLists, rns.rng1:rnSeqColorSegments(event.startRN_i, event.length, {{6}}))
 	end
-	return rStrings
+	return rStrings, colorSegmentLists
 end
 
 

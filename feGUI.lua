@@ -14,7 +14,7 @@ P.STAT_DATA_I	= 4
 P.COMBAT_I 	    = 5
 P.COMPACT_BPS_I	= 6
 P.COORD_I		= 7
-
+P.rects.sel_i = P.AUTOLOG_I
 
 local RECT_COLORS = {
 	"blue",
@@ -47,10 +47,6 @@ local CHAR_PIXELS = 4 -- can fit ~60 chars within 240 pixel window
 -- for the rnStream rect's colorized rns
 local RNS_PER_LINE = 15
 local NUM_RN_LINES = 15
-
-P.rects.sel_i = P.RN_EVENT_I
-
-
 
 
 
@@ -112,10 +108,6 @@ function rectObj:width()
 			stringLen = stringLen + rnEvent.events[line_i/2].length * 3
 		end
 		
-		if self.ID == P.RN_STREAM_I then
-			stringLen = stringLen + RNS_PER_LINE * 3
-		end
-		
 		if longestStringLength < stringLen then
 			longestStringLength = stringLen
 		end
@@ -166,12 +158,18 @@ function rectObj:drawBackgroundBox()
 end
 
 function rectObj:drawString(line_i, char_offset, str, color, borderColor)
-	color = color or "white"
-	borderColor = borderColor or "black"
+	if not color then
+		color = "white"
+		borderColor = "black"
+	elseif not borderColor then
+		borderColor = colorUtil.darken(color)
+	end
 	
 	gui.text(self:left() + 3 + char_offset*CHAR_PIXELS, 
 			 self:top() + 2 + (line_i - 1)*self:linePixels(), 
-			 str, color, borderColor)
+			 str, 
+			 color, 
+			 borderColor)
 end
 
 function rectObj:drawBox(line_i, char_offset, length, color)
@@ -217,101 +215,86 @@ function rectObj:drawEventBoxes(event, rnEvent_i)
 	end
 end
 
--- color code rns
--- 00 = blue
--- 25 = teal
--- 50 = white
--- 75 = yellow
--- 99 = red
-
-local COLOR_SEGMENTS = {
-	{63,128,255},
-	{63,255,128},
-	{255,255,255},
-	{255,255,0},
-	{255,0,0}
-}
-
-local rnColors = {}
-local rnBorderColors = {}
-local COLOR_SEGMENT_SIZE = 25
-
-local function setRNColor(rnCent)
-	rnColors[rnCent] = {}
-	rnColors[rnCent].a = 0xFF
-	
-	local i = math.floor(rnCent / COLOR_SEGMENT_SIZE) + 1
-	local thisColor = COLOR_SEGMENTS[i]
-	local nextColor = COLOR_SEGMENTS[i+1]
-	local nextColorWeight = (rnCent % COLOR_SEGMENT_SIZE) / COLOR_SEGMENT_SIZE
-	local thisColorWeight = 1 - nextColorWeight
-	
-	rnColors[rnCent].r = thisColor[1] * thisColorWeight + nextColor[1] * nextColorWeight		
-	rnColors[rnCent].g = thisColor[2] * thisColorWeight + nextColor[2] * nextColorWeight		
-	rnColors[rnCent].b = thisColor[3] * thisColorWeight + nextColor[3] * nextColorWeight
-	
-	rnBorderColors[rnCent] = {}
-	rnBorderColors[rnCent].a = 0xFF	
-	rnBorderColors[rnCent].r = rnColors[rnCent].r/4
-	rnBorderColors[rnCent].g = rnColors[rnCent].g/4
-	rnBorderColors[rnCent].b = rnColors[rnCent].b/4
-end
-for rnCent = 0, 99 do
-	setRNColor(rnCent)
-end
-
-function rectObj:drawColorizedRNString(line_i, char_offset, RN_start, length)
-	for rn_offset = 0, length-1 do
-		local rn = rns.rng1:getRN(RN_start + rn_offset)
-		
-		self:drawString(line_i, char_offset + 3*rn_offset,
-			rns.rng1.strings[RN_start + rn_offset], rnColors[rn], rnBorderColors[rn])
-	end
-end
-
 function rectObj:draw()
 	if self.opacity <= 0 then return end
 	
+	local colorSegmentLists = {}
+	
 	if self.ID == P.RN_EVENT_I then
-		self.strings = rnEvent.toStrings("isColored")
-	elseif self.ID == P.RN_STREAM_I then
-		self.strings = rns.rng1:RNstream_strings(true, NUM_RN_LINES, RNS_PER_LINE)
-	elseif self.ID == P.STAT_DATA_I then
-		self.strings = unitData.currUnit():statData_strings(isPulsePhase(480) and (P.rects.sel_i == P.STAT_DATA_I))
+	
+		self.strings, colorSegmentLists = rnEvent.toStrings()
+		
 	elseif self.ID == P.AUTOLOG_I then
-		self.strings = autolog.GUIstrings()
+	
+		self.strings, colorSegmentLists = autolog.GUIstrings()
+		
+	elseif self.ID == P.RN_STREAM_I then
+	
+		self.strings, colorSegmentLists = rns.rng1:RNstream_strings(NUM_RN_LINES, RNS_PER_LINE)
+		
+	elseif self.ID == P.STAT_DATA_I then
+	
+		self.strings, colorSegmentLists = unitData.currUnit():statData_strings(isPulsePhase(480) and (P.rects.sel_i == P.STAT_DATA_I))
+		
 	elseif self.ID == P.COMBAT_I then
+	
 		self.strings = combat.combatObj:new():toStrings()
+		
 	elseif self.ID == P.COMPACT_BPS_I then
+	
 		self.strings = combat.combatObj:new():toCompactStrings()
+		
 	elseif self.ID == P.COORD_I then
+	
 		self.strings = {string.format("%02d,%02d", memory.readbyte(addr.CURSOR_X), memory.readbyte(addr.CURSOR_Y))}
+		
 	end
 	
 	gui.opacity(self.opacity)
 	self:drawBackgroundBox()
 	
 	for line_i, line in ipairs(self.strings) do
-		self:drawString(line_i, 0, line)
+		
+		local charsUsed = 0
+		local colorSegments = colorSegmentLists[line_i] or {}
+		
+		for _, segment in ipairs(colorSegments) do
+			if type(segment[1]) ~= "number" then
+				print()
+				print(debug.traceback())
+				print()
+				print(self.ID)
+				print()
+				for j, segment2 in ipairs(colorSegments) do
+					print(j, segment2)
+				end
+				print()
+				print(line, line_i)
+				print()
+				print(segment)
+				print()
+				print(segment[1])
+			end
+		
+			local nextCharsUsed = charsUsed + segment[1]
+			self:drawString(line_i, 
+							charsUsed, 
+							line:sub(charsUsed + 1, nextCharsUsed), 
+							segment[2], 
+							segment[3])
+			charsUsed = nextCharsUsed
+			
+		end
+		
+		self:drawString(line_i, charsUsed, line:sub(charsUsed + 1)) -- if unspecified, draw until end in white
 	end
 	
 	-- color highlighted RN strings, draw boxes
 	if self.ID == P.RN_EVENT_I then
 		for i, event in ipairs(rnEvent.events) do
-			self:drawColorizedRNString(2*i, 6, -- 5 digits, space
-				event.startRN_i, event.length)
 			self:drawEventBoxes(event, i)
 		end	
 	elseif self.ID == P.RN_STREAM_I then
-		-- draw the previous line for context
-		local firstLineRnPos = (math.floor(rns.rng1.pos/RNS_PER_LINE) - 1)*RNS_PER_LINE
-		if firstLineRnPos < 0 then firstLineRnPos = 0 end
-		
-		for line_i = 1, NUM_RN_LINES do
-			self:drawColorizedRNString(line_i, 7, -- 5 digits, :, space
-				firstLineRnPos + (line_i - 1)*RNS_PER_LINE, RNS_PER_LINE)
-		end
-		
 		if rns.rng1.pos >= RNS_PER_LINE then
 			self:drawBox(2, 7 + (rns.rng1.pos % RNS_PER_LINE)*3, 3, "white")
 		else

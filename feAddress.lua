@@ -1,7 +1,10 @@
+require("feMisc")
+
+
 local P = {}
 addr = P
 
-GAME_VERSION = 7
+
 
 local RAM_BASE = 0x02000000
 

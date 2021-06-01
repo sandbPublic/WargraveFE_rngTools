@@ -1,8 +1,6 @@
-require("feAddress")
-
-
 HARD_MODE = true
 WINDOW_WIDTH = 45
+GAME_VERSION = 7
 
 
 
@@ -61,5 +59,12 @@ function changeSelection(tbl_, amount, lock)
 	end
 	while tbl_.sel_i < 1 do
 		tbl_.sel_i = tbl_.sel_i + #tbl_
+	end
+end
+
+-- Inserts each ipair indexed value from 2 into 1.
+function insertAll(tbl1, tbl2)
+	for _, v in ipairs(tbl2) do
+		table.insert(tbl1, v)
 	end
 end

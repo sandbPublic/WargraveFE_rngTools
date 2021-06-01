@@ -9,8 +9,10 @@
 --           unit
 --             rn
 --               class
+--               address
 --                 misc
---                   address
+--               color
+
 
 require("feGUI")
 require("feControl")
@@ -78,6 +80,7 @@ while true do
 
 	ctrl.keyboard:update(input.get())
 	
+	-- saving state while paused will not be captured here
 	for i = 1, 10 do
 		if ctrl.keyboard:pressed("F" .. i) then
 			if ctrl.keyboard:held("shift") then
@@ -142,7 +145,7 @@ while true do
 			end
 		end
 		if ctrl.gamepad:held("down", REPEAT_RATE) then
-			if autolog.GUInode.children then
+			if #autolog.GUInode.children > 0 then
 				autolog.GUInode = selected(autolog.GUInode.children)
 			end
 		end
@@ -152,7 +155,7 @@ while true do
 			end
 		end
 		if ctrl.gamepad:held("R") then
-			if autolog.GUInode.children then
+			if #autolog.GUInode.children > 0 then
 				autolog.GUInode = selected(autolog.GUInode.children)
 			end
 		end
@@ -171,6 +174,10 @@ while true do
 		
 		if ctrl.gamepad:pressed("select") then
 			autolog.attemptSync(autolog.GUInode)
+		end
+		
+		if ctrl.gamepad:pressed("start") then
+			autolog.attemptMarriage(autolog.GUInode)
 		end
 	end
 	
@@ -230,17 +237,22 @@ while true do
 		if ctrl.keyboard:pressed("N") then
 			printStringArray(combat.combatObj:new():toStrings())
 			
-			printStringArray(unitData.currUnit():statData_strings())
+			local unit = unitData.currUnit()
+			
+			printStringArray(unit:statData_strings())
 			
 			unitData.printRanks()
 			unitData.printSupports()
 			
 			print()
+			
 			local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
-			print(string.format("unit %s 0x%04X", unitData.hexCodeToName(nameCode), nameCode))
+			print(string.format("unit %s, 0x%04X", unitData.hexCodeToName(nameCode), nameCode))
+			
 			local classCode = memory.readword(addr.ATTACKER_START + addr.CLASS_CODE_OFFSET)
 			local class = classes.HEX_CODES[classCode] or classes.OTHER
-			print(string.format("class %d 0x%04X", class, classCode))
+			print(string.format("class %s, %d 0x%04X", classes.NAMES[class], class, classCode))
+			
 			print(string.format("slot %d", memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)))
 		end
 		
@@ -340,7 +352,7 @@ while true do
 			print(string.format("Switching to %s rng", currentRNG:name()))
 		end
 		
-		local function printRAMhelp()
+		local function printRAMhelp() 
 			print()
 			local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
 			local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
@@ -358,7 +370,7 @@ while true do
 				end
 			end
 			
-			stat = RAMoffset - addr.MAX_HP_OFFSET -- both max and current hp
+			local stat = RAMoffset - addr.MAX_HP_OFFSET -- both max and current hp
 			if stat == 0 then
 				print("Max HP")
 			elseif stat == 1 then
@@ -381,14 +393,14 @@ while true do
 				print(unitData.hexCodeToName(addr.wordFromSlot(memory.readbyte(address), addr.NAME_CODE_OFFSET)))
 			end
 			
-			itemSlot = (RAMoffset - addr.ITEMS_OFFSET) / 2
+			local itemSlot = (RAMoffset - addr.ITEMS_OFFSET) / 2
 			for i = 0, 4 do
 				if itemSlot == i then
 					print(combat.ITEM_NAMES[memory.readbyte(address)])
 				end
 			end
 			
-			rank = RAMoffset - addr.RANKS_OFFSET
+			local rank = RAMoffset - addr.RANKS_OFFSET
 			for i = 0, 7 do
 				if rank == i then
 					print(unitData.RANK_NAMES[i + 1])
@@ -402,7 +414,7 @@ while true do
 		end
 		if ctrl.keyboard:held("N") then
 			-- change offset
-			if ctrl.gamepad:pressed("up", REPEAT_RATE) then
+			if ctrl.gamepad:held("up", REPEAT_RATE) then
 				RAMoffset = RAMoffset - 1
 				if RAMoffset < 0 then
 					RAMoffset = 0
@@ -412,7 +424,7 @@ while true do
 					printRAMhelp()
 				end
 			end
-			if ctrl.gamepad:pressed("down", REPEAT_RATE) then
+			if ctrl.gamepad:held("down", REPEAT_RATE) then
 				RAMoffset = RAMoffset + 1
 				if RAMoffset > 71 then
 					RAMoffset = 71
@@ -424,7 +436,7 @@ while true do
 			end
 			
 			-- modify value
-			if ctrl.gamepad:pressed("left", REPEAT_RATE) then
+			if ctrl.gamepad:held("left", REPEAT_RATE) then
 				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
 				local data = addr.byteFromSlot(slotID, RAMoffset)
 				data = data - 1
@@ -436,7 +448,7 @@ while true do
 					printRAMhelp()
 				end
 			end
-			if ctrl.gamepad:pressed("right", REPEAT_RATE) then
+			if ctrl.gamepad:held("right", REPEAT_RATE) then
 				local slotID = memory.readbyte(addr.ATTACKER_START + addr.SLOT_ID_OFFSET)
 				local data = addr.byteFromSlot(slotID, RAMoffset)
 				data = data + 1
@@ -454,19 +466,19 @@ while true do
 		if ctrl.keyboard:held("M") then
 			local currMoney = addr.getMoney()
 		
-			if ctrl.gamepad:pressed("left", REPEAT_RATE) then
+			if ctrl.gamepad:held("left", REPEAT_RATE) then
 				addr.setMoney(math.max(currMoney - moneyStepSize, 0))
 				print("money now " .. math.max(currMoney - moneyStepSize, 0))
 			end
-			if ctrl.gamepad:pressed("right", REPEAT_RATE) then
+			if ctrl.gamepad:held("right", REPEAT_RATE) then
 				addr.setMoney(math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
 				print("money now " .. math.min(currMoney + moneyStepSize, 0x7FFFFFFF))
 			end
-			if ctrl.gamepad:pressed("up", REPEAT_RATE) then
+			if ctrl.gamepad:held("up", REPEAT_RATE) then
 				moneyStepSize = moneyStepSize * 10
 				print("moneyStepSize now " .. moneyStepSize)
 			end
-			if ctrl.gamepad:pressed("down", REPEAT_RATE) then
+			if ctrl.gamepad:held("down", REPEAT_RATE) then
 				moneyStepSize = moneyStepSize / 10
 				if moneyStepSize < 1 then
 					moneyStepSize = 1

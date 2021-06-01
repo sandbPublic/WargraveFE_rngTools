@@ -1,5 +1,6 @@
 require("feMisc")
 
+
 local P = {}
 classes = P
 
@@ -10,6 +11,7 @@ local function nextInd()
 	indexer = indexer + 1
 	return indexer
 end
+
 -- TRAINEES
 P.JOURNEYMAN 		= nextInd()
 P.RECRUIT 			= nextInd()
@@ -50,7 +52,7 @@ P.TRANSPORTER 		= nextInd()
 -- don't give promoted exp
 P.MANAKETE 			= nextInd() -- enemy manaketes count as promoted?
 P.DANCER 			= nextInd()
-P.BARD 				= nextInd()
+P.BARD 				= nextInd() -- 30
 
 P.EGG    		    = nextInd() -- special exp properties
 
@@ -67,46 +69,46 @@ P.GREAT_LORD_8_F	= nextInd() -- Eirika
 P.GREAT_LORD_8_M 	= nextInd() -- Ephraim
 
 P.WYVERN_LORD_F 	= nextInd()
-P.WYVERN_LORD_M 	= nextInd()
+P.WYVERN_LORD_M 	= nextInd() -- 40
 P.FALCO_KNIGHT 		= nextInd()
 P.WYVERN_KNIGHT_F 	= nextInd()
 P.WYVERN_KNIGHT_M 	= nextInd()
 
 P.BISHOP_F 			= nextInd()
-P.BISHOP_M 			= nextInd()
+P.BISHOP_M 			= nextInd() -- 45
 P.SAGE_F 			= nextInd()
 P.SAGE_M 			= nextInd()
 P.DRUID_F 			= nextInd()
 P.DRUID_M 			= nextInd()
-P.VALKYRIE 			= nextInd()
+P.VALKYRIE 			= nextInd() -- 50
 P.MAGE_KNIGHT_F 	= nextInd()
 P.MAGE_KNIGHT_M 	= nextInd()
 P.SUMMONER 			= nextInd()
 P.S_PUPIL 			= nextInd()
 
-P.PALADIN_F 		= nextInd()
+P.PALADIN_F 		= nextInd() -- 55
 P.PALADIN_M 		= nextInd()
 P.GENERAL_F 		= nextInd()
 P.GENERAL_M 		= nextInd()
 P.GREAT_KNIGHT_F 	= nextInd()
-P.GREAT_KNIGHT_M 	= nextInd()
+P.GREAT_KNIGHT_M 	= nextInd() -- 60
 P.S_RECRUIT 		= nextInd()
 
 P.WARRIOR 			= nextInd()
 P.BERSERKER 		= nextInd()
 P.HERO_F 			= nextInd()
-P.HERO_M 			= nextInd()
+P.HERO_M 			= nextInd() -- 65
 P.TROOPER_F 		= nextInd() -- doubles as ranger
 P.TROOPER_M 		= nextInd()
 P.SNIPER_F 			= nextInd()
 P.SNIPER_M 			= nextInd()
-P.S_JOURNEYMAN 		= nextInd()
+P.S_JOURNEYMAN 		= nextInd() -- 70
 
 P.SWORDMASTER_F 	= nextInd()
 P.SWORDMASTER_M 	= nextInd()
 P.ASSASSIN_F 		= nextInd()
 P.ASSASSIN_M 		= nextInd()
-P.ROGUE 			= nextInd()
+P.ROGUE 			= nextInd() -- 75
 
 P.TRANSPO_PROMO		= nextInd()
 
@@ -114,8 +116,91 @@ P.ARCHSAGE 			= nextInd()
 P.NECROMANCER 		= nextInd()
 
 P.ENTOMBED          = nextInd()
-P.OTHER_PROMOTED    = nextInd()
+P.OTHER_PROMOTED    = nextInd() -- 80
 end
+
+P.NAMES = {
+"Journeyman",
+"Recruit",
+"Pupil",
+"Lord",
+"Mage",
+"Monk",
+"Cleric",
+"Priest",
+"Troubadour",
+"Shaman",
+"Mid_Pupil",
+"Wyvern_Rider",
+"Pegasus_Knight",
+"Cavalier",
+"Armor_Knight",
+"Mid_Recruit",
+"Fighter",
+"Brigand",
+"Pirate",
+"Mercenary",
+"Nomad",
+"Archer",
+"Soldier",
+"Mid_Journeyman",
+"Myrmidon",
+"Thief",
+"Transporter",
+"Manakete",
+"Dancer",
+"Bard",
+"Egg",
+"Other",
+"Master_Lord",
+"Blade_Lord",
+"Knight_Lord",
+"Great_Lord_7",
+"Great_Lord_8_F",
+"Great_Lord_8_M",
+"Wyvern_Lord_F",
+"Wyvern_Lord_M",
+"Falco_Knight",
+"Wyvern_Knight_F",
+"Wyvern_Knight_M",
+"Bishop_F",
+"Bishop_M",
+"Sage_F",
+"Sage_M",
+"Druid_F",
+"Druid_M",
+"Valkyrie",
+"Mage_Knight_F",
+"Mage_Knight_M",
+"Summoner",
+"S_Pupil",
+"Paladin_F",
+"Paladin_M",
+"General_F ",
+"General_M",
+"Great_Knight_F",
+"Great_Knight_M",
+"S_Recruit",
+"Warrior",
+"Berserker",
+"Hero_F",
+"Hero_M ",
+"Trooper_F",
+"Trooper_M",
+"Sniper_F",
+"Sniper_M",
+"S_Journeyman",
+"Swordmaster_F",
+"Swordmaster_M ",
+"Assassin_F",
+"Assassin_M",
+"Rogue",
+"Transpo_Promo",
+"Archsage",
+"Necromancer",
+"Entombed",
+"Other_Promoted"
+}
 
 -- todo inanimate classes eg wall, snag
 

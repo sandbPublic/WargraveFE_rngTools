@@ -1,4 +1,5 @@
 require("feRandomNumbers")
+require("feAddress")
 
 local P = {}
 unitData = P
@@ -35,7 +36,7 @@ for _, v in ipairs(DEFAULT_GROWTH_WEIGHTS) do
 end
 
 local function initializeCommonValues()
-	for i, name in pairs(NAMES) do 
+	for i, name in ipairs(NAMES) do 
 		INDEX_OF_NAME[name] = i
 		
 		GROWTH_WEIGHTS[i] = DEFAULT_GROWTH_WEIGHTS
@@ -377,6 +378,10 @@ HEX_CODES[0x8360] = "Guinevere"
 		BASE_STATS[INDEX_OF_NAME["Zeis"]]     = {37, 19, 13, 11, 15, 03, 09, 07}
 	end
 
+	PROMOTION_LEVEL[INDEX_OF_NAME["Ellen"]] = 10
+	PROMOTION_LEVEL[INDEX_OF_NAME["Clarine"]] = 10
+	PROMOTION_LEVEL[INDEX_OF_NAME["Saul"]] = 10
+
 	-- ideally won't take more than 1 hit anyway, so hp is closer to def+res
 	-- speed gives twice the avoid of luck, but luck also gives crit evade so 2 points luck slightly better
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Lalum"]] = {30, 00, 00, 19, 30, 10, 10} 
@@ -587,6 +592,7 @@ if GAME_VERSION == 7 then
 	initializeCommonValues()
 	
 	do -- HEX_CODES
+HEX_CODES[0x0148] = "Wall"
 HEX_CODES[0x017C] = "Snag"
 HEX_CODES[0xCE4C] = "Eliwood"
 HEX_CODES[0xCE80] = "Hector"
@@ -849,16 +855,19 @@ HEX_CODES[0xFFDC] = "Linus" --  (morph)
 	PROMOTION_LEVEL[INDEX_OF_NAME["Eliwood"]] = 19
 	PROMOTION_LEVEL[INDEX_OF_NAME["Rebecca"]] = 15
 	PROMOTION_LEVEL[INDEX_OF_NAME["Lowen"]] = 19
-	PROMOTION_LEVEL[INDEX_OF_NAME["Bartre"]] = 12
+	PROMOTION_LEVEL[INDEX_OF_NAME["Bartre"]] = 14
 	FINAL_LEVEL[INDEX_OF_NAME["Hector"]] = 7
+	PROMOTION_LEVEL[INDEX_OF_NAME["Serra"]] = 10
 	PROMOTION_LEVEL[INDEX_OF_NAME["Guy"]] = 17
+	PROMOTION_LEVEL[INDEX_OF_NAME["Priscilla"]] = 10
 	PROMOTION_LEVEL[INDEX_OF_NAME["Wil"]] = 12
 	FINAL_LEVEL[INDEX_OF_NAME["Wil"]] = 18
 	PROMOTION_LEVEL[INDEX_OF_NAME["Kent"]] = 11
-	PROMOTION_LEVEL[INDEX_OF_NAME["Sain"]] = 10
+	PROMOTION_LEVEL[INDEX_OF_NAME["Sain"]] = 11
 	PROMOTION_LEVEL[INDEX_OF_NAME["Lucius"]] = 19
 	FINAL_LEVEL[INDEX_OF_NAME["Lucius"]] = 18
 	PROMOTION_LEVEL[INDEX_OF_NAME["Canas"]] = 16
+	PROMOTION_LEVEL[INDEX_OF_NAME["Dart"]] = 12
 	PROMOTION_LEVEL[INDEX_OF_NAME["Fiora"]] = 11
 	FINAL_LEVEL[INDEX_OF_NAME["Ninian"]] = 10
 	FINAL_LEVEL[INDEX_OF_NAME["Nils"]] = 10
@@ -870,7 +879,10 @@ HEX_CODES[0xFFDC] = "Linus" --  (morph)
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Merlinus"]]  = {10, 00, 00, 09, 10, 03, 05}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Priscilla"]] = {30, 60, 05, 19, 30, 10, 10}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Ninian"]]    = {30, 00, 00, 19, 30, 10, 10}
-	GROWTH_WEIGHTS[INDEX_OF_NAME["Nils"]]      = {30, 00, 00, 19, 30, 10, 10}	
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Nils"]]      = {30, 00, 00, 19, 30, 10, 10}
+	
+	BOOSTERS[INDEX_OF_NAME["Sain"]] = {0, 0, 0, 2, 0, 0, 0} -- wings
+	BOOSTERS[INDEX_OF_NAME["Ninian"]] = {7, 0, 0, 0, 0, 0, 0} -- robe
 end
 
 if GAME_VERSION == 8 then
@@ -1123,9 +1135,14 @@ HEX_CODES[0x4620] = "Hayden"
 	BOOSTERS[INDEX_OF_NAME["Dozla"]] = {0, 0, 2, 2, 0, 0, 2}
 	
 	PROMOTION_LEVEL[INDEX_OF_NAME["Franz"]] = 17
+	PROMOTION_LEVEL[INDEX_OF_NAME["Moulder"]] = 10
 	PROMOTION_LEVEL[INDEX_OF_NAME["Lute"]] = 15
+	PROMOTION_LEVEL[INDEX_OF_NAME["Natasha"]] = 10
 	PROMOTION_LEVEL[INDEX_OF_NAME["Gerik"]] = 10
+	PROMOTION_LEVEL[INDEX_OF_NAME["L\'Arachel"]] = 10
 	
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Moulder"]] = {30, 60, 05, 19, 30, 10, 10}
+	GROWTH_WEIGHTS[INDEX_OF_NAME["Natasha"]] = {30, 60, 05, 19, 30, 10, 10}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["L\'Arachel"]] = {30, 60, 05, 19, 30, 10, 10}
 	GROWTH_WEIGHTS[INDEX_OF_NAME["Tethys"]] = {30, 00, 00, 19, 30, 10, 10}
 
@@ -1280,26 +1297,50 @@ function unitObj:statData_strings(showPromo)
 	showPromo = (showPromo and self.canPromote)
 	
 	local statHeader = string.format("%-10.10s      Hp St Sk Sp Df Rs Lk", self.name)
+	local statHeaderColorSegs = {{10, self.color, self.color2}}
 	
 	local baseStr       = "Base + boost   "
+	local baseColorSegs = {{15}}
+	
 	local statStr       = "Stat at " .. string.format("%2d.%02d  ", self.stats[LEVEL_I], self.stats[EXP_I])
 	if self.stats[EXP_I] == 255 then
 		statStr         = "Stat at " .. string.format("%2d.--  ", self.stats[LEVEL_I])
 	end
+	
+	local statColorSegs = {{8}, 
+	                       {3, colorUtil.interpolate(self.stats[LEVEL_I]/20, colorUtil.redToBlue)}, 
+						   {2, colorUtil.interpolate(self.stats[EXP_I]/100, colorUtil.redToBlue)},
+						   {2}}
+	
 	local capStr        = "Cap            "
+	local capColorSegs = {{15}}
+	
 	if showPromo then
 		statStr         = "Stat at PROMO  "
+		statColorSegs = {{8}, {7, "green", "black"}}
+		
 		capStr          = "Cap     PROMO  "
+		capColorSegs = {{8}, {7, "green", "black"}}
 	end
 	
-	local weightStr     = "Weight   " .. string.format(" x%4.2f", self:expValueFactor())
+	local e = self:expValueFactor()
+	local weightStr     = "Weight   " .. string.format(" x%4.2f", e)
+	local weightColorSegs = {{9}, {7, colorUtil.interpolate(e, colorUtil.redToBlue)}}
+	
 	local growthStr     = "Growth         "
 	if self.hasAfas then
 		growthStr       = "Growth +Afa's  "
 	end
+	local growthColorSegs = {{15}}
+	
 	local trueGrowthStr = "Actual Growth  "
+	local trueGrowthColorSegs = {{15}}
+	
 	local percentileStr = "Percentile     "
+	local percentileColorSegs = {{15}}
+	
 	local stndDevStr    = "Standard Dev   "
+	local stndDevColorSegs = {{15}}
 	
 	local function twoDigits(x)
 		if x >= 100 then
@@ -1309,43 +1350,62 @@ function unitObj:statData_strings(showPromo)
 	end
 	
 	for i = 1, 7 do
+		local maxForColor = 30 -- since we want colors to be directly comparable on an absolute scale, use 30 and not classes.CAPS[self.class][i]
+		if i == 1 then
+			maxForColor = 60
+		end
+	
 		baseStr = baseStr .. twoDigits(self.bases[i])
+		table.insert(baseColorSegs, {3, colorUtil.interpolate(self.bases[i]/maxForColor, colorUtil.redToBlue)})
 		
+		local stat = self.stats[i]
+		local cap = classes.CAPS[self.class][i]
 		if showPromo then
-			statStr = statStr .. twoDigits(self.stats[i] 
-					+ classes.PROMO_GAINS[self.promotion][i])
-			capStr = capStr .. twoDigits(classes.CAPS[self.promotion][i])
-		else
-			statStr = statStr .. twoDigits(self.stats[i])
-			capStr = capStr .. twoDigits(classes.CAPS[self.class][i])
+			stat = self.stats[i] + classes.PROMO_GAINS[self.promotion][i]
+			cap = classes.CAPS[self.promotion][i]
 		end
 		
-		weightStr = weightStr .. twoDigits(self.dynamicWeights[i])
+		statStr = statStr .. twoDigits(stat)
+		table.insert(statColorSegs, {3, colorUtil.interpolate(stat/maxForColor, colorUtil.redToBlue)})
 		
-		trueGrowthStr = trueGrowthStr .. twoDigits(self:effectiveGrowthRate(i))
+		capStr = capStr .. twoDigits(cap)
+		table.insert(capColorSegs, {3, colorUtil.interpolate(cap/maxForColor, colorUtil.redToBlue)})
+		
+		weightStr = weightStr .. twoDigits(self.dynamicWeights[i])
+		table.insert(weightColorSegs, {3, colorUtil.interpolate(self.dynamicWeights[i]/60, colorUtil.redToBlue)})
 		
 		local growth = GROWTHS[self.index][i] -- easier than adding freeStats
 		if self.hasAfas then
 			growth = growth + 5
 		end
-		
 		growthStr = growthStr .. twoDigits(growth)
+		table.insert(growthColorSegs, {3, colorUtil.interpolate(growth/100, colorUtil.redToBlue)})
+		
+		trueGrowthStr = trueGrowthStr .. twoDigits(self:effectiveGrowthRate(i))
+		table.insert(trueGrowthColorSegs, {3, colorUtil.interpolate(self:effectiveGrowthRate(i)/100, colorUtil.redToBlue)})
 		
 		-- for stats with >= 100 growths, subtract as needed from statsGained
-		percentileStr = percentileStr .. twoDigits(
-			100*percentile(
+		local ptile = 100*percentile(
 				self:statsGained(i)-self.freeStats[i]*self:statsGained(LEVEL_I), 
 				self:statsGained(LEVEL_I), 
-				self.growths[i]/100))
+				self.growths[i]/100)
+		percentileStr = percentileStr .. twoDigits(ptile)
+		table.insert(percentileColorSegs, {3, colorUtil.interpolate(ptile/100, colorUtil.redToBlue)})
 		
-		local stdDv = self:statStdDev(i)
-		stndDevStr = stndDevStr .. string.format("%+03d", 10*stdDv)
+		--local stdDv = self:statStdDev(i)
+		--stndDevStr = stndDevStr .. string.format("%+03d", 10*stdDv)
 	end
 	
-	return {statHeader, baseStr, statStr, capStr, weightStr, growthStr, trueGrowthStr, percentileStr}
+	return {statHeader, baseStr, statStr, capStr, weightStr, growthStr, trueGrowthStr, percentileStr},
+		   {statHeaderColorSegs, 
+		   baseColorSegs, 
+		   statColorSegs, 
+		   capColorSegs, 
+		   weightColorSegs,
+		   growthColorSegs,
+		   trueGrowthColorSegs,
+		   percentileColorSegs}
 end
-
-
 
 
 
@@ -1569,7 +1629,11 @@ function unitObj:new(unit_i)
 	self.__index = self
 	
 	o.index = unit_i
+
 	o.name = NAMES[unit_i]
+	local color = colorUtil.interpolate(unit_i/#NAMES, colorUtil.chromaticLoop)
+	o.colorSegment = {o.name:len(), color, colorUtil.darken(color)}
+
 	o.growths = {}
 	o.freeStats = {} -- for stats with growth rate >= 100
 	o.growthWeights = GROWTH_WEIGHTS[unit_i]
@@ -1591,11 +1655,13 @@ function unitObj:new(unit_i)
 	return o
 end
 
-local units = {}
+P.units = {}
 for unit_i = 1, #NAMES do
-	table.insert(units, unitObj:new(unit_i))
+	table.insert(P.units, unitObj:new(unit_i))
+	
+	P.units[NAMES[unit_i]] = P.units[unit_i] -- can also reference by name
 end
-units[0] = unitObj:new(0)
+P.units[0] = unitObj:new(0)
 
 function P.currUnit()
 	local nameCode = memory.readword(addr.ATTACKER_START + addr.NAME_CODE_OFFSET)
@@ -1604,9 +1670,9 @@ function P.currUnit()
 	end
 	local name = P.hexCodeToName(nameCode)
 	
-	local u = units[0]
+	local u = P.units[0]
 	if INDEX_OF_NAME[name] then
-		u = units[INDEX_OF_NAME[name]]
+		u = P.units[INDEX_OF_NAME[name]]
 	end
 	
 	u:loadRAMvalues()

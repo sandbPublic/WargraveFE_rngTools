@@ -1,8 +1,8 @@
 require("feClass")
+require("feColor")
 
 local P = {}
 rns = P
-
 
 
 
@@ -17,6 +17,7 @@ end
 -- http://bbs.fireemblem.net/read.php?tid=184603&fpage=2
 -- digging/anna blinking consumes 1, looking at items/attack consumes 2, trade 4,
 local function nextrng2(generator)
+	-- Lua _VERSION 5.1 does not include bitwise operators eg &
 	local lowerWord = AND(generator, 0x0000FFFF)
 	local upperWord = AND(generator, 0xFFFF0000)/0x10000
 
@@ -104,42 +105,57 @@ function rnStreamObj:isAtCurrentPosition()
 			 gen == self:generator(1)+self:generator(2)*0x10000)
 end
 
- -- string, append space after each rn
-function rnStreamObj:rnSeqString(index, length)
-	self:getRN(index + length - 1)
+ -- space before each rn
+function rnStreamObj:rnSeqString(start, length)
+	self:getRN(start + length - 1)
 
-	local seq = ""
-	for offset = 0, length - 1 do
-		seq = seq .. self.strings[index + offset] .. " "
+	local rString = ""
+	for rnPos = start, start + length - 1 do
+		rString = rString .. " " .. self.strings[rnPos]
 	end
-	return seq
+	return rString
 end
 
--- isColored for gui leaves the numbers blank so they can be drawn colored later
-function rnStreamObj:RNstream_strings(isColored, numLines, rnsPerLine)
+-- color code rns
+-- 00 = blue
+-- 25 = teal
+-- 50 = white
+-- 75 = yellow
+-- 100 = red
+
+local rnColors = {}
+local rnBorderColors = {}
+
+for rnCent = 0, 100 do
+	rnColors[rnCent] = colorUtil.interpolate(rnCent/100, colorUtil.blueToRed)
+	rnBorderColors[rnCent] = colorUtil.darken(rnColors[rnCent])
+end
+
+function rnStreamObj:rnSeqColorSegments(start, length, colorSegs)
+	self:getRN(start + length - 1)
+	
+	colorSegs = colorSegs or {}
+	for rnPos = start, start + length - 1 do
+		table.insert(colorSegs, {3, rnColors[self[rnPos]], rnBorderColors[self[rnPos]]})
+	end
+	return colorSegs
+end
+
+function rnStreamObj:RNstream_strings(numLines, rnsPerLine)
 	local rStrings = {}
+	local colorSegmentLists = {} -- arrays of {length, color, borderColor}
 	
 	-- put the prior line before the current position for context
 	local currLineRnPos = math.floor(self.pos/rnsPerLine-1)*rnsPerLine
 	if currLineRnPos < 0 then currLineRnPos = 0 end
 	
 	for line_i = 1, numLines do
-		local lineString = string.format("%05d:", (currLineRnPos)%100000)
-		
-		if not isColored then
-			for rnPos = currLineRnPos, currLineRnPos + rnsPerLine - 1 do
-				if rnPos == self.pos then
-					lineString = lineString .. ">" .. self.strings[rnPos]
-				else
-					lineString = lineString .. " " .. self.strings[rnPos]
-				end
-			end
-		end
-		
+		table.insert(rStrings, string.format("%05d:%s", (currLineRnPos)%100000, self:rnSeqString(currLineRnPos, rnsPerLine)))
+		table.insert(colorSegmentLists, self:rnSeqColorSegments(currLineRnPos, rnsPerLine, {{6}}))
 		currLineRnPos = currLineRnPos + rnsPerLine
-		table.insert(rStrings, lineString)
 	end
-	return rStrings
+	
+	return rStrings, colorSegmentLists
 end
 
 
@@ -212,7 +228,7 @@ function rnStreamObj:moveRNpos(delta)
 	local destination = self.pos + delta
 	if destination < 0 then destination = 0 end
 	
-	gen = self:getRN(destination-1, "isRaw")
+	local gen = self:getRN(destination-1, "isRaw")
 	
 	if self.isPrimary then
 		memory.writeword(self.rngAddr, gen)
@@ -234,7 +250,7 @@ function rnStreamObj:new(rngMemoryOffset, primary)
 	o.rawBytes = {} -- save these in memory to find or move to correct position
 	o.strings = {} -- only for primary
 	o.rngAddr = rngMemoryOffset
-	o.isPrimary = primary
+	o.isPrimary = primary or true
 	
 	if o.isPrimary then
 		o.rawBytes[-3] = 0x1496

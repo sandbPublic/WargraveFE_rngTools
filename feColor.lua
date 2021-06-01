@@ -24,7 +24,7 @@ P.red = {r = 255, g = 0, b = 0}
 P.orange = {r = 255, g = 127, b = 0}
 P.yellow = {r = 255, g = 255, b = 0}
 P.green = {r = 0, g = 255, b = 0}
-P.blue = {r = 0, g = 0, b = 255}
+P.blue = {r = 0, g = 63, b = 255} -- blue is darkest on screen
 P.violet = {r = 255, g = 0, b = 255}
 
 P.right = P.red
@@ -33,9 +33,9 @@ P.down = P.yellow
 P.up = P.blue
 
 P.phaseColors = {}
-P.phaseColors["player"] = {r = 63, g = 63, b = 255}
-P.phaseColors["enemy"] = {r = 255, g = 63, b = 63}
-P.phaseColors["other"] = {r = 63, g = 255, b = 63}
+P.phaseColors["player"] = P.blue
+P.phaseColors["enemy"] = P.red
+P.phaseColors["other"] = P.green
 
 P.blueToRed = {
 	{63,128,255},

@@ -644,8 +644,8 @@ function P.passiveUpdate()
 		if slotData[selSlot].carrying ~= newCarry then
 			updateAllInventories()
 			
-			local logStr = " carry " .. nameFromSlot(newCarry)
-			local colorSegments = {{7, colorUtil.orange}}
+			local logStr = " take " .. nameFromSlot(newCarry)
+			local colorSegments = {{6, colorUtil.orange}}
 			
 			if newCarry == 0 then
 				local xDiff = addr.byteFromSlot(slotData[selSlot].carrying, addr.X_OFFSET) - 
@@ -653,20 +653,20 @@ function P.passiveUpdate()
 				
 				if xDiff > 0 then
 					logStr = " drop >"
-					colorSegments = {{7, colorUtil.right}}
+					colorSegments = {{6, colorUtil.orange}, {1, colorUtil.right}}
 				elseif xDiff < 0 then
 					logStr = " drop <"
-					colorSegments = {{7, colorUtil.left}}
+					colorSegments = {{6, colorUtil.orange}, {1, colorUtil.left}}
 				else
 					local yDiff = addr.byteFromSlot(slotData[selSlot].carrying, addr.Y_OFFSET) - 
 						addr.byteFromSlot(selSlot, addr.Y_OFFSET)
 				
 					if yDiff > 0 then
 						logStr = " drop v"
-						colorSegments = {{7, colorUtil.down}}
+						colorSegments = {{6, colorUtil.orange}, {1, colorUtil.down}}
 					elseif yDiff < 0 then
 						logStr = " drop ^"
-						colorSegments = {{7, colorUtil.up}}
+						colorSegments = {{6, colorUtil.orange}, {1, colorUtil.up}}
 					end
 				end
 				updateLoc(slotData[selSlot].carrying)
@@ -732,7 +732,7 @@ function P.passiveUpdate()
 		updateAllInventories()
 		
 		logAtLoc(string.format(" shop %6d %+6d", currMoney, addr.getMoney() - currMoney),
-				 {19, colorUtil.yellow})
+				 {{19, colorUtil.yellow}})
 		updateLoc(selSlot)
 		skipNextStopLog()
 		
